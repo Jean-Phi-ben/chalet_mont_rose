@@ -1,0 +1,70 @@
+<nav class="bg-white border-b border-stone-200" style="font-family: 'Lato', sans-serif;">
+      <div class="max-w-7xl mx-auto px-8 py-5 flex justify-between items-center">
+
+        <!-- Logo -->
+        <%= link_to root_path, class: "group" do %>
+          <span class="text-2xl tracking-[0.15em] uppercase text-stone-800 font-light" style="font-family: 'Playfair Display', serif;">
+            Chalet Mont Rose
+          </span>
+        <% end %>
+
+        <!-- Navigation centrale -->
+        <div class="flex items-center gap-10">
+          <a href="#gallery" class="text-xs tracking-[0.2em] uppercase text-stone-500 hover:text-stone-900 transition-colors duration-300">Galerie</a>
+          <a href="#" class="text-xs tracking-[0.2em] uppercase text-stone-500 hover:text-stone-900 transition-colors duration-300">Le chalet</a>
+          <a href="#" class="text-xs tracking-[0.2em] uppercase text-stone-500 hover:text-stone-900 transition-colors duration-300">Prestations</a>
+          <a href="#" class="text-xs tracking-[0.2em] uppercase text-stone-500 hover:text-stone-900 transition-colors duration-300">Contact</a>
+        </div>
+
+        <!-- Auth -->
+        <div class="dropdown relative inline-flex [--auto-close:outside] [--placement:bottom-end] z-50" data-controller="dropdown">
+        <button id="dropdown-auth" type="button" class="dropdown-toggle btn btn-text flex items-center justify-center gap-2 text-stone-600 hover:text-stone-900 hover:bg-stone-100 min-w-[3rem]" aria-haspopup="menu" aria-expanded="false">
+            <i class="fa-solid fa-house-chimney text-xl"></i>
+            <span class="icon-[tabler--chevron-down] size-4"></span>
+        </button>
+
+            <% if authenticated? %>
+            <li class="px-4 py-2 border-bottom border-slate-50 mb-1">
+                <p class="text-xs text-slate-500 uppercase tracking-widest">Mon Compte</p>
+                <p class="text-sm font-medium text-slate-900 truncate"><%= Current.user.email_address %></p>
+            </li>
+            <li>
+                <a class="dropdown-item flex items-center gap-2 p-3 rounded-lg hover:bg-slate-50 text-slate-700" href="#">
+                <i class="fa-solid fa-user-gear size-4 opacity-70"></i>
+                Profil
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item flex items-center gap-2 p-3 rounded-lg hover:bg-slate-50 text-slate-700" href="#">
+                <i class="fa-solid fa-calendar-check size-4 opacity-70"></i>
+                Mes Reservations
+                </a>
+            </li>
+            <% if Current.user.admin? %>
+            <li>
+                <%= link_to admin_root_path, class: "dropdown-item flex items-center gap-2 p-3 rounded-lg hover:bg-slate-50 text-slate-700" do %>
+                <i class="fa-solid fa-gauge size-4 opacity-70"></i>
+                Dashboard Admin
+                <% end %>
+            </li>
+            <% end %>
+            <div class="my-1 border-t border-slate-100"></div>
+            <li>
+                <%= button_to session_path, method: :delete, class: "dropdown-item flex w-full items-center gap-2 p-3 rounded-lg hover:bg-red-50 text-red-600 transition" do %>
+                <i class="fa-solid fa-arrow-right-from-bracket size-4"></i>
+                Deconnexion
+                <% end %>
+            </li>
+            <% else %>
+            <li>
+                <%= link_to new_session_path, class: "dropdown-item flex items-center gap-2 p-3 rounded-lg hover:bg-slate-50 text-slate-700" do %>
+                <i class="fa-solid fa-key size-4 opacity-70"></i>
+                Se connecter
+                <% end %>
+            </li>
+            <% end %>
+        </ul>
+        </div>
+
+      </div>
+    </nav>
