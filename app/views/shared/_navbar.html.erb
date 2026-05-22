@@ -1,70 +1,133 @@
-<nav class="bg-white border-b border-stone-200" style="font-family: 'Lato', sans-serif;">
-      <div class="max-w-7xl mx-auto px-8 py-5 flex justify-between items-center">
+<nav class="bg-white border-b border-stone-200 sticky top-0 z-40"
+     style="font-family: 'Lato', sans-serif;"
+     data-controller="navbar">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-5 flex justify-between items-center gap-4">
 
-        <!-- Logo -->
-        <%= link_to root_path, class: "group" do %>
-          <span class="text-2xl tracking-[0.15em] uppercase text-stone-800 font-light" style="font-family: 'Playfair Display', serif;">
-            Chalet Mont Rose
-          </span>
-        <% end %>
+    <!-- Logo -->
+    <%= link_to root_path, class: "group shrink-0" do %>
+      <span class="text-lg sm:text-xl lg:text-2xl tracking-[0.15em] uppercase text-stone-800 font-light whitespace-nowrap"
+            style="font-family: 'Playfair Display', serif;">
+        Chalet Mont Rose
+      </span>
+    <% end %>
 
-        <!-- Navigation centrale -->
-        <div class="flex items-center gap-10">
-          <a href="#gallery" class="text-xs tracking-[0.2em] uppercase text-stone-500 hover:text-stone-900 transition-colors duration-300">Galerie</a>
-          <a href="#" class="text-xs tracking-[0.2em] uppercase text-stone-500 hover:text-stone-900 transition-colors duration-300">Le chalet</a>
-          <a href="#" class="text-xs tracking-[0.2em] uppercase text-stone-500 hover:text-stone-900 transition-colors duration-300">Prestations</a>
-          <a href="#" class="text-xs tracking-[0.2em] uppercase text-stone-500 hover:text-stone-900 transition-colors duration-300">Contact</a>
-        </div>
+    <!-- Navigation centrale (desktop) -->
+    <div class="hidden lg:flex items-center gap-10">
+      <a href="#gallery" class="text-xs tracking-[0.2em] uppercase text-stone-500 hover:text-stone-900 transition-colors duration-300">Galerie</a>
+      <a href="#amenities" class="text-xs tracking-[0.2em] uppercase text-stone-500 hover:text-stone-900 transition-colors duration-300">Le chalet</a>
+      <a href="#location" class="text-xs tracking-[0.2em] uppercase text-stone-500 hover:text-stone-900 transition-colors duration-300">Localisation</a>
+      <a href="#contact" class="text-xs tracking-[0.2em] uppercase text-stone-500 hover:text-stone-900 transition-colors duration-300">Contact</a>
+    </div>
 
-        <!-- Auth -->
-        <div class="dropdown relative inline-flex [--auto-close:outside] [--placement:bottom-end] z-50" data-controller="dropdown">
-        <button id="dropdown-auth" type="button" class="dropdown-toggle btn btn-text flex items-center justify-center gap-2 text-stone-600 hover:text-stone-900 hover:bg-stone-100 min-w-[3rem]" aria-haspopup="menu" aria-expanded="false">
-            <i class="fa-solid fa-house-chimney text-xl"></i>
-            <span class="icon-[tabler--chevron-down] size-4"></span>
+    <div class="flex items-center gap-2">
+      <!-- Auth dropdown (desktop) -->
+      <div class="dropdown relative hidden lg:inline-flex [--auto-close:outside] [--placement:bottom-end] z-50"
+           data-controller="dropdown">
+        <button id="dropdown-auth" type="button"
+                class="dropdown-toggle btn btn-text flex items-center justify-center gap-2 text-stone-600 hover:text-stone-900 hover:bg-stone-100 min-w-[3rem]"
+                aria-haspopup="menu" aria-expanded="false">
+          <i class="fa-solid fa-house-chimney text-xl"></i>
+          <span class="icon-[tabler--chevron-down] size-4"></span>
         </button>
 
-            <% if authenticated? %>
-            <li class="px-4 py-2 border-bottom border-slate-50 mb-1">
-                <p class="text-xs text-slate-500 uppercase tracking-widest">Mon Compte</p>
-                <p class="text-sm font-medium text-slate-900 truncate"><%= Current.user.email_address %></p>
+        <ul class="dropdown-menu hidden min-w-60 bg-white shadow-lg rounded-xl border border-stone-100 p-2" role="menu" aria-labelledby="dropdown-auth">
+          <% if authenticated? %>
+            <li class="px-4 py-2 border-b border-stone-100 mb-1">
+              <p class="text-xs text-stone-500 uppercase tracking-widest">Mon Compte</p>
+              <p class="text-sm font-medium text-stone-900 truncate"><%= Current.user.email_address %></p>
             </li>
             <li>
-                <a class="dropdown-item flex items-center gap-2 p-3 rounded-lg hover:bg-slate-50 text-slate-700" href="#">
+              <button type="button" class="dropdown-item w-full text-left flex items-center gap-2 p-3 rounded-lg hover:bg-stone-50 text-stone-700">
                 <i class="fa-solid fa-user-gear size-4 opacity-70"></i>
                 Profil
-                </a>
+              </button>
             </li>
             <li>
-                <a class="dropdown-item flex items-center gap-2 p-3 rounded-lg hover:bg-slate-50 text-slate-700" href="#">
+              <button type="button" class="dropdown-item w-full text-left flex items-center gap-2 p-3 rounded-lg hover:bg-stone-50 text-stone-700">
                 <i class="fa-solid fa-calendar-check size-4 opacity-70"></i>
-                Mes Reservations
-                </a>
+                Mes Réservations
+              </button>
             </li>
             <% if Current.user.admin? %>
-            <li>
-                <%= link_to admin_root_path, class: "dropdown-item flex items-center gap-2 p-3 rounded-lg hover:bg-slate-50 text-slate-700" do %>
-                <i class="fa-solid fa-gauge size-4 opacity-70"></i>
-                Dashboard Admin
+              <li>
+                <%= link_to admin_root_path, class: "dropdown-item flex items-center gap-2 p-3 rounded-lg hover:bg-stone-50 text-stone-700" do %>
+                  <i class="fa-solid fa-gauge size-4 opacity-70"></i>
+                  Dashboard Admin
                 <% end %>
-            </li>
+              </li>
             <% end %>
-            <div class="my-1 border-t border-slate-100"></div>
+            <li><div class="my-1 border-t border-stone-100"></div></li>
             <li>
-                <%= button_to session_path, method: :delete, class: "dropdown-item flex w-full items-center gap-2 p-3 rounded-lg hover:bg-red-50 text-red-600 transition" do %>
+              <%= button_to session_path, method: :delete, class: "dropdown-item flex w-full items-center gap-2 p-3 rounded-lg hover:bg-red-50 text-red-600 transition" do %>
                 <i class="fa-solid fa-arrow-right-from-bracket size-4"></i>
-                Deconnexion
-                <% end %>
+                Déconnexion
+              <% end %>
             </li>
-            <% else %>
+          <% else %>
             <li>
-                <%= link_to new_session_path, class: "dropdown-item flex items-center gap-2 p-3 rounded-lg hover:bg-slate-50 text-slate-700" do %>
+              <%= link_to new_session_path, class: "dropdown-item flex items-center gap-2 p-3 rounded-lg hover:bg-stone-50 text-stone-700" do %>
                 <i class="fa-solid fa-key size-4 opacity-70"></i>
                 Se connecter
-                <% end %>
+              <% end %>
             </li>
-            <% end %>
+          <% end %>
         </ul>
-        </div>
-
       </div>
-    </nav>
+
+      <!-- Hamburger (mobile / tablet) -->
+      <button type="button"
+              class="lg:hidden inline-flex items-center justify-center w-11 h-11 rounded-full text-stone-700 hover:bg-stone-100 transition"
+              aria-label="Ouvrir le menu"
+              aria-controls="mobile-menu"
+              aria-expanded="false"
+              data-navbar-target="toggle"
+              data-action="click->navbar#toggle">
+        <i class="fa-solid fa-bars text-lg" data-navbar-target="iconOpen"></i>
+        <i class="fa-solid fa-xmark text-lg hidden" data-navbar-target="iconClose"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Menu mobile -->
+  <div id="mobile-menu"
+       class="lg:hidden hidden border-t border-stone-100 bg-white"
+       data-navbar-target="menu">
+    <div class="px-4 sm:px-6 py-4 flex flex-col gap-1">
+      <a href="#gallery" data-action="click->navbar#close"
+         class="block px-3 py-3 rounded-lg text-sm tracking-[0.2em] uppercase text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition">Galerie</a>
+      <a href="#amenities" data-action="click->navbar#close"
+         class="block px-3 py-3 rounded-lg text-sm tracking-[0.2em] uppercase text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition">Le chalet</a>
+      <a href="#location" data-action="click->navbar#close"
+         class="block px-3 py-3 rounded-lg text-sm tracking-[0.2em] uppercase text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition">Localisation</a>
+      <a href="#contact" data-action="click->navbar#close"
+         class="block px-3 py-3 rounded-lg text-sm tracking-[0.2em] uppercase text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition">Contact</a>
+
+      <div class="my-3 border-t border-stone-100"></div>
+
+      <% if authenticated? %>
+        <div class="px-3 py-2">
+          <p class="text-[10px] text-stone-400 uppercase tracking-widest">Mon Compte</p>
+          <p class="text-sm font-medium text-stone-900 truncate"><%= Current.user.email_address %></p>
+        </div>
+        <button type="button" class="flex items-center gap-3 px-3 py-3 rounded-lg text-stone-700 hover:bg-stone-50 w-full text-left">
+          <i class="fa-solid fa-user-gear w-4 text-center opacity-70"></i> Profil
+        </button>
+        <button type="button" class="flex items-center gap-3 px-3 py-3 rounded-lg text-stone-700 hover:bg-stone-50 w-full text-left">
+          <i class="fa-solid fa-calendar-check w-4 text-center opacity-70"></i> Mes Réservations
+        </button>
+        <% if Current.user.admin? %>
+          <%= link_to admin_root_path, class: "flex items-center gap-3 px-3 py-3 rounded-lg text-stone-700 hover:bg-stone-50" do %>
+            <i class="fa-solid fa-gauge w-4 text-center opacity-70"></i> Dashboard Admin
+          <% end %>
+        <% end %>
+        <%= button_to session_path, method: :delete, class: "flex items-center gap-3 px-3 py-3 rounded-lg text-red-600 hover:bg-red-50 w-full" do %>
+          <i class="fa-solid fa-arrow-right-from-bracket w-4 text-center"></i> Déconnexion
+        <% end %>
+      <% else %>
+        <%= link_to new_session_path, class: "flex items-center gap-3 px-3 py-3 rounded-lg text-stone-700 hover:bg-stone-50" do %>
+          <i class="fa-solid fa-key w-4 text-center opacity-70"></i> Se connecter
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</nav>

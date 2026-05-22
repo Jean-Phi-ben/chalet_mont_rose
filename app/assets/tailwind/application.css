@@ -2,3 +2,13 @@
 @plugin "flyonui";
 @import "flyonui/variants.css";
 @source "./node_modules/flyonui/flyonui.js";
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+  }
+  @media (min-width: 1024px) {
+    html { scroll-padding-top: 6rem; }
+  }
+}

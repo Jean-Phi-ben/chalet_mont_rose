@@ -27,17 +27,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   </head>
 
-  <body class="bg-stone-50">
-    
-        <%= render "shared/navbar" %>
-        <%= render "shared/flashes" %>
+  <body class="bg-stone-50 overflow-x-hidden" data-controller="modal">
+    <%= render "shared/navbar" %>
+    <%= render "shared/flashes" %>
 
     <%= content_for?(:full_width) ? yield(:full_width) : "" %>
 
-    <div id="main-content" class="max-w-7xl mx-auto px-4 py-8">
+    <div id="main-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <%= yield %>
     </div>
-
   </body>
   
 </html>

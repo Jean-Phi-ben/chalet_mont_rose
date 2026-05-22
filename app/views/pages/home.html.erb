@@ -1,66 +1,367 @@
-<% content_for :full_width do %>
-  <div class="relative h-[45vh] md:h-[900px] w-full overflow-hidden">
-    <%= image_tag "chalet_main.jpg", class: "absolute inset-0 w-full h-full object-cover object-center" %>
+<% photos = [
+  { src: "salon.jpg",       alt: "Le Grand Salon" },
+  { src: "chambre.jpg",     alt: "Suite de Maître" },
+  { src: "vue.jpg",         alt: "Panorama Alpin" },
+  { src: "spa.jpg",         alt: "Espace Bien-être" },
+  { src: "chalet_1.jpg",    alt: "Le Chalet" },
+  { src: "chalet_3.jpg",    alt: "Le Chalet, façade Sud" }
+] %>
 
-    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col items-center justify-end text-center px-4 pb-12 md:pb-20">
-      <h1 class="text-white uppercase text-[28px] md:text-[50px] font-serif font-light tracking-[0.30em] drop-shadow-2xl leading-tight">
+<% content_for :full_width do %>
+  <!-- HERO -->
+  <div class="relative h-[60vh] sm:h-[70vh] md:h-[85vh] w-full overflow-hidden">
+    <%= image_tag "chalet_main.jpg", class: "absolute inset-0 w-full h-full object-cover object-center" %>
+    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-transparent"></div>
+
+    <div class="absolute inset-0 flex flex-col items-center justify-end text-center px-4 pb-12 sm:pb-16 md:pb-24">
+      <h1 class="text-white uppercase text-2xl sm:text-4xl md:text-6xl font-serif font-light tracking-[0.18em] sm:tracking-[0.25em] drop-shadow-2xl leading-tight">
         Chalet Mont Rose
       </h1>
-      
-      <p class="text-white text-[14px] md:text-[22px] font-extralight tracking-[0.3em] drop-shadow-md mt-4 opacity-90">
+      <p class="text-white/90 text-xs sm:text-base md:text-xl font-light tracking-[0.18em] sm:tracking-[0.2em] mt-3 sm:mt-4">
         L'exception au sommet des Alpes
       </p>
+
+      <!-- Bouton Réservation -->
+      <button type="button"
+              data-action="click->modal#open"
+              aria-controls="reservation-modal"
+              class="mt-6 sm:mt-8 inline-flex items-center gap-3 bg-white/95 text-stone-900 px-7 sm:px-10 py-3.5 sm:py-4 rounded-full text-xs sm:text-sm uppercase tracking-[0.25em] font-medium shadow-xl hover:bg-white hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 backdrop-blur-sm">
+        <i class="fa-solid fa-calendar-plus"></i>
+        Réserver
+      </button>
     </div>
+
+
   </div>
 <% end %>
 
-<div id="gallery" class="max-w-7xl mx-auto py-16 px-4">
-  <h2 class="text-3xl font-serif font-bold text-slate-900 mb-8">Galerie de Prestige</h2>
+<!-- PROPERTY HEADLINE -->
+<div class="border-b border-stone-200 pb-6 sm:pb-8 mb-10 text-center">
+  <div class="mx-auto max-w-fit flex flex-nowrap items-end justify-center gap-x-3 sm:gap-x-4 md:gap-x-6 lg:gap-x-10 text-stone-600">
+    <div class="flex flex-col items-center">
+      <i class="fa-solid fa-users text-sm sm:text-base md:text-lg lg:text-xl mb-0.5 sm:mb-1"></i>
+      <span class="text-[9px] sm:text-[11px] md:text-xs lg:text-sm tracking-wider uppercase whitespace-nowrap">12 voyageurs</span>
+    </div>
+    <div class="flex flex-col items-center">
+      <i class="fa-solid fa-bed text-sm sm:text-base md:text-lg lg:text-xl mb-0.5 sm:mb-1"></i>
+      <span class="text-[9px] sm:text-[11px] md:text-xs lg:text-sm tracking-wider uppercase whitespace-nowrap">5 chambres</span>
+    </div>
+    <div class="flex flex-col items-center">
+      <i class="fa-solid fa-bath text-sm sm:text-base md:text-lg lg:text-xl mb-0.5 sm:mb-1"></i>
+      <span class="text-[9px] sm:text-[11px] md:text-xs lg:text-sm tracking-wider uppercase whitespace-nowrap">6 sdb</span>
+    </div>
+    <div class="flex flex-col items-center">
+      <i class="fa-solid fa-film text-sm sm:text-base md:text-lg lg:text-xl mb-0.5 sm:mb-1"></i>
+      <span class="text-[9px] sm:text-[11px] md:text-xs lg:text-sm tracking-wider uppercase whitespace-nowrap">Salle ciné</span>
+    </div>
+    <div class="flex flex-col items-center">
+      <i class="fa-solid fa-ruler-combined text-sm sm:text-base md:text-lg lg:text-xl mb-0.5 sm:mb-1"></i>
+      <span class="text-[9px] sm:text-[11px] md:text-xs lg:text-sm tracking-wider uppercase whitespace-nowrap">260 m²</span>
+    </div>
+  </div>
+</div>
 
-  <div
-    data-carousel='{ "loadingClasses": "opacity-0", "dotsItemClasses": "carousel-dot carousel-active:bg-primary", "slidesQty": { "xs": 1, "lg": 3 }, "isCentered": true, "isSnap": true }'
-    class="relative w-full"
-  >
-    <div class="carousel overflow-y-auto flex h-80 snap-x snap-mandatory overflow-x-auto">
-      <div class="carousel-body h-full gap-4 opacity-0">
-        <!-- Slide 1 : Le Grand Salon -->
-        <div class="carousel-slide snap-center">
-          <div class="h-full overflow-hidden rounded-2xl shadow-md">
-            <%= image_tag "salon.jpg", class: "w-full h-full object-cover hover:scale-105 transition duration-500" %>
-          </div>
+<!-- KEY FEATURES -->
+<div class="mb-14">
+  <div class="grid grid-cols-3 sm:grid-cols-3 md:flex md:flex-wrap md:justify-center gap-4 sm:gap-6 md:gap-10">
+    <% [
+      ["fa-person-skiing", "ski à 4 min"],
+      ["fa-mountain-sun", "Vue panoramique"],
+      ["fa-hot-tub-person", "Bain nordique & Sauna"],
+      ["fa-fire", "Cheminée"],
+      ["fa-temperature-arrow-up", "Sol chauffant"],
+      ["fa-wifi", "Wi-Fi<br>Starlink".html_safe]
+    ].each do |icon, label| %>
+      <div class="flex flex-col items-center gap-2 text-stone-600">
+        <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-stone-100 flex items-center justify-center">
+          <i class="fa-solid <%= icon %> text-lg sm:text-xl"></i>
         </div>
-        <!-- Slide 2 : Suites de Maitre -->
-        <div class="carousel-slide snap-center">
-          <div class="h-full overflow-hidden rounded-2xl shadow-md">
-            <%= image_tag "chambre.jpg", class: "w-full h-full object-cover hover:scale-105 transition duration-500" %>
+        <span class="text-[10px] sm:text-xs tracking-wider uppercase text-center leading-tight"><%= label %></span>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- PHOTO CAROUSEL -->
+<div id="gallery" class="mb-14" data-controller="carousel">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-serif text-stone-900 tracking-wide">Galerie</h2>
+    <span class="text-xs sm:text-sm text-stone-400 tracking-widest" data-carousel-target="counter">1 / <%= photos.size %></span>
+  </div>
+
+  <div class="relative group">
+    <!-- Viewport -->
+    <div class="overflow-hidden rounded-2xl bg-stone-100">
+      <div class="flex" data-carousel-target="track">
+        <% photos.each do |photo| %>
+          <div class="shrink-0 w-full" data-carousel-target="slide">
+            <%= image_tag photo[:src],
+                          alt: photo[:alt],
+                          class: "w-full h-[260px] sm:h-[440px] md:h-[560px] object-cover select-none",
+                          draggable: false %>
           </div>
-        </div>
-        <!-- Slide 3 : Panorama Alpin -->
-        <div class="carousel-slide snap-center">
-          <div class="h-full overflow-hidden rounded-2xl shadow-md">
-            <%= image_tag "vue.jpg", class: "w-full h-full object-cover hover:scale-105 transition duration-500" %>
-          </div>
-        </div>
-        <!-- Slide 4 : Espace Bien-etre -->
-        <div class="carousel-slide snap-center">
-          <div class="h-full overflow-hidden rounded-2xl shadow-md">
-            <%= image_tag "spa.jpg", class: "w-full h-full object-cover hover:scale-105 transition duration-500" %>
-          </div>
-        </div>
+        <% end %>
       </div>
     </div>
 
-    <!-- Previous Slide -->
-    <button type="button" class="carousel-prev start-5 max-sm:start-3 carousel-disabled:opacity-50 size-9.5 bg-base-100 flex items-center justify-center rounded-full shadow-base-300/20 shadow-sm">
-      <span class="icon-[tabler--chevron-left] size-5 cursor-pointer"></span>
-      <span class="sr-only">Previous</span>
+    <!-- Flèches -->
+    <button type="button"
+            data-action="click->carousel#prev"
+            aria-label="Photo précédente"
+            class="absolute top-1/2 -translate-y-1/2 left-3 sm:left-5 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/85 hover:bg-white text-stone-700 hover:text-stone-900 shadow-md hover:shadow-lg flex items-center justify-center backdrop-blur-sm transition-all duration-300 opacity-80 group-hover:opacity-100">
+      <i class="fa-solid fa-chevron-left text-sm"></i>
     </button>
-    <!-- Next Slide -->
-    <button type="button" class="carousel-next end-5 max-sm:end-3 carousel-disabled:opacity-50 size-9.5 bg-base-100 flex items-center justify-center rounded-full shadow-base-300/20 shadow-sm">
-      <span class="icon-[tabler--chevron-right] size-5"></span>
-      <span class="sr-only">Next</span>
+    <button type="button"
+            data-action="click->carousel#next"
+            aria-label="Photo suivante"
+            class="absolute top-1/2 -translate-y-1/2 right-3 sm:right-5 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/85 hover:bg-white text-stone-700 hover:text-stone-900 shadow-md hover:shadow-lg flex items-center justify-center backdrop-blur-sm transition-all duration-300 opacity-80 group-hover:opacity-100">
+      <i class="fa-solid fa-chevron-right text-sm"></i>
     </button>
 
-    <div class="carousel-pagination absolute bottom-3 end-0 start-0 flex justify-center gap-3"></div>
+    <!-- Dots -->
+    <div class="flex items-center justify-center gap-2 mt-5">
+      <% photos.each_with_index do |_, i| %>
+        <button type="button"
+                data-carousel-target="dot"
+                data-action="click->carousel#goTo"
+                data-index="<%= i %>"
+                aria-label="Aller à la photo <%= i + 1 %>"
+                class="h-2 rounded-full transition-all duration-300 <%= i.zero? ? 'w-8 bg-stone-900' : 'w-2 bg-stone-300' %>"></button>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<!-- DESCRIPTION -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 mb-14">
+  <div class="md:col-span-2">
+    <h2 class="text-2xl font-serif text-stone-900 tracking-wide mb-6">Le Chalet</h2>
+    <div class="text-stone-600 leading-relaxed space-y-4">
+      <p>
+        Niché au cœur des Alpes, le Chalet Mont Rose est un havre de paix alliant élégance contemporaine
+        et charme authentique de la montagne. Avec ses 280 m² répartis sur trois niveaux, il offre
+        un cadre exceptionnel pour des vacances inoubliables en famille ou entre amis.
+      </p>
+      <p>
+        Le grand salon, baigné de lumière naturelle, s'ouvre sur une terrasse panoramique avec vue
+        imprenable sur les sommets enneigés. La décoration mêle bois noble, pierre locale et
+        textiles raffinés pour une atmosphère chaleureuse et sophistiquée.
+      </p>
+      <p>
+        Les cinq suites, chacune dotée de sa propre salle de bain, ont été pensées comme de
+        véritables cocons. L'espace bien-être privatif avec sauna et spa complète cette
+        expérience d'exception.
+      </p>
+    </div>
+  </div>
+
+  <!-- BOOKING CARD -->
+  <div class="md:col-span-1">
+    <div class="bg-white border border-stone-200 rounded-2xl p-6 shadow-sm md:sticky md:top-28">
+      <p class="text-sm text-stone-400 uppercase tracking-wider mb-1">À partir de</p>
+      <p class="text-3xl font-serif text-stone-900 mb-4">5 800 € <span class="text-base font-sans text-stone-400">/ semaine</span></p>
+      <div class="space-y-3 mb-6">
+        <div class="grid grid-cols-2 gap-3">
+          <div class="border border-stone-200 rounded-lg p-3">
+            <p class="text-[10px] text-stone-400 uppercase tracking-wider">Arrivée</p>
+            <p class="text-sm text-stone-700">Sélectionner</p>
+          </div>
+          <div class="border border-stone-200 rounded-lg p-3">
+            <p class="text-[10px] text-stone-400 uppercase tracking-wider">Départ</p>
+            <p class="text-sm text-stone-700">Sélectionner</p>
+          </div>
+        </div>
+        <div class="border border-stone-200 rounded-lg p-3">
+          <p class="text-[10px] text-stone-400 uppercase tracking-wider">Voyageurs</p>
+          <p class="text-sm text-stone-700">10 voyageurs max.</p>
+        </div>
+      </div>
+      <button type="button"
+              data-action="click->modal#open"
+              aria-controls="reservation-modal"
+              class="block w-full text-center bg-stone-900 text-white py-3.5 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition cursor-pointer">
+        Demander une réservation
+      </button>
+      <p class="text-xs text-stone-400 text-center mt-3">Aucun paiement immédiat requis</p>
+    </div>
+  </div>
+</div>
+
+<!-- AMENITIES -->
+<div id="amenities" class="mb-14">
+  <h2 class="text-2xl font-serif text-stone-900 tracking-wide mb-6">Équipements</h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div>
+      <h3 class="text-sm uppercase tracking-widest text-stone-400 mb-4">Intérieur</h3>
+      <ul class="space-y-3 text-stone-600">
+        <li class="flex items-center gap-3"><i class="fa-solid fa-couch w-5 text-center text-stone-400"></i> Grand salon avec cheminée</li>
+        <li class="flex items-center gap-3"><i class="fa-solid fa-tv w-5 text-center text-stone-400"></i> TV écran plat &amp; système audio</li>
+        <li class="flex items-center gap-3"><i class="fa-solid fa-utensils w-5 text-center text-stone-400"></i> Cuisine équipée haut de gamme</li>
+        <li class="flex items-center gap-3"><i class="fa-solid fa-wine-glass w-5 text-center text-stone-400"></i> Cave à vins</li>
+        <li class="flex items-center gap-3"><i class="fa-solid fa-gamepad w-5 text-center text-stone-400"></i> Salle de jeux</li>
+        <li class="flex items-center gap-3"><i class="fa-solid fa-temperature-arrow-up w-5 text-center text-stone-400"></i> Plancher chauffant</li>
+        <li class="flex items-center gap-3"><i class="fa-solid fa-shirt w-5 text-center text-stone-400"></i> Buanderie</li>
+        <li class="flex items-center gap-3"><i class="fa-solid fa-wifi w-5 text-center text-stone-400"></i> Wi-Fi haut débit</li>
+      </ul>
+    </div>
+
+    <div>
+      <h3 class="text-sm uppercase tracking-widest text-stone-400 mb-4">Extérieur &amp; Bien-être</h3>
+      <ul class="space-y-3 text-stone-600">
+        <li class="flex items-center gap-3"><i class="fa-solid fa-hot-tub-person w-5 text-center text-stone-400"></i> Jacuzzi privatif</li>
+        <li class="flex items-center gap-3"><i class="fa-solid fa-spa w-5 text-center text-stone-400"></i> Sauna finlandais</li>
+        <li class="flex items-center gap-3"><i class="fa-solid fa-person-skiing w-5 text-center text-stone-400"></i> Local à skis chauffé</li>
+        <li class="flex items-center gap-3"><i class="fa-solid fa-mountain-sun w-5 text-center text-stone-400"></i> Terrasse panoramique</li>
+        <li class="flex items-center gap-3"><i class="fa-solid fa-square-parking w-5 text-center text-stone-400"></i> Parking privé</li>
+        <li class="flex items-center gap-3"><i class="fa-solid fa-fire-burner w-5 text-center text-stone-400"></i> Barbecue</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- SERVICES -->
+<div class="mb-14">
+  <h2 class="text-2xl font-serif text-stone-900 tracking-wide mb-6">Services inclus</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <% [
+      ["fa-broom", "Ménage quotidien", "Entretien du chalet pendant tout votre séjour"],
+      ["fa-concierge-bell", "Conciergerie dédiée", "Un interlocuteur unique avant et pendant votre séjour"],
+      ["fa-champagne-glasses", "Accueil personnalisé", "Panier de bienvenue et provisions pour les premiers jours"],
+      ["fa-bed", "Linge de maison", "Draps, serviettes & peignoirs haut de gamme fournis"]
+    ].each do |icon, title, desc| %>
+      <div class="bg-white border border-stone-200 rounded-xl p-5 flex items-start gap-4">
+        <div class="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center shrink-0">
+          <i class="fa-solid <%= icon %> text-stone-500"></i>
+        </div>
+        <div class="min-w-0">
+          <p class="font-medium text-stone-800"><%= title %></p>
+          <p class="text-sm text-stone-500"><%= desc %></p>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- LOCATION -->
+<div id="location" class="mb-14">
+  <h2 class="text-2xl font-serif text-stone-900 tracking-wide mb-6">Localisation</h2>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <% [
+      ["fa-person-skiing", "Pistes de ski", "1 min à pied"],
+      ["fa-shop", "Commerces", "3 min à pied"],
+      ["fa-utensils", "Restaurants", "3 min à pied"],
+      ["fa-city", "Centre-ville", "5 min en voiture"]
+    ].each do |icon, title, dist| %>
+      <div class="bg-white border border-stone-200 rounded-xl p-4 sm:p-5 text-center">
+        <i class="fa-solid <%= icon %> text-2xl text-stone-400 mb-2"></i>
+        <p class="text-sm font-medium text-stone-800"><%= title %></p>
+        <p class="text-xs text-stone-400 mt-1"><%= dist %></p>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<!-- CONTACT -->
+<div id="contact" class="mb-8">
+  <div class="bg-stone-900 rounded-2xl p-6 sm:p-8 md:p-12 text-center">
+    <h2 class="text-2xl md:text-3xl font-serif text-white tracking-wide mb-3">Une question ?</h2>
+    <p class="text-stone-400 mb-6">Notre équipe est à votre disposition pour organiser votre séjour sur mesure.</p>
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+      <a href="tel:+33100000000" class="inline-flex items-center gap-2 bg-white text-stone-900 px-6 py-3 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-100 transition">
+        <i class="fa-solid fa-phone"></i> Nous appeler
+      </a>
+      <a href="mailto:contact@chaletmontrose.com" class="inline-flex items-center gap-2 border border-white/30 text-white px-6 py-3 rounded-xl text-sm uppercase tracking-widest hover:bg-white/10 transition">
+        <i class="fa-solid fa-envelope"></i> Nous écrire
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ================== MODALE RESERVATION ================== -->
+<div id="reservation-modal"
+     class="hidden fixed inset-0 z-[60]"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="reservation-title"
+     data-modal-target="root"
+     data-action="click->modal#backdropClose">
+  <div data-modal-target="backdrop"
+       class="absolute inset-0 bg-stone-900/60 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+
+  <div class="relative h-full w-full flex items-center justify-center p-4 pointer-events-none">
+    <div data-modal-target="dialog"
+         class="pointer-events-auto bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto opacity-0 translate-y-4 scale-95 transition-all duration-300">
+      <!-- Header -->
+      <div class="px-6 sm:px-8 pt-6 sm:pt-8 pb-4 border-b border-stone-100 flex items-start justify-between gap-4">
+        <div>
+          <p class="text-[10px] sm:text-xs text-stone-400 uppercase tracking-[0.25em] mb-1">Chalet Mont Rose</p>
+          <h3 id="reservation-title" class="text-xl sm:text-2xl font-serif text-stone-900 tracking-wide">Demande de réservation</h3>
+        </div>
+        <button type="button"
+                data-action="click->modal#close"
+                aria-label="Fermer"
+                class="w-9 h-9 rounded-full text-stone-500 hover:text-stone-900 hover:bg-stone-100 transition flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <form class="px-6 sm:px-8 py-6 space-y-5" onsubmit="event.preventDefault();">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Arrivée</label>
+            <input type="date" autocomplete="off" class="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition">
+          </div>
+          <div>
+            <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Départ</label>
+            <input type="date" autocomplete="off" class="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Voyageurs</label>
+          <select class="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition">
+            <% (1..10).each do |n| %>
+              <option><%= n %> voyageur<%= "s" if n > 1 %></option>
+            <% end %>
+          </select>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Prénom</label>
+            <input type="text" autocomplete="given-name" class="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition">
+          </div>
+          <div>
+            <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Nom</label>
+            <input type="text" autocomplete="family-name" class="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Email</label>
+          <input type="email" autocomplete="email" class="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition">
+        </div>
+
+        <div>
+          <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Message (optionnel)</label>
+          <textarea rows="3" class="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition resize-none"></textarea>
+        </div>
+
+        <div class="pt-2 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3">
+          <button type="button"
+                  data-action="click->modal#close"
+                  class="text-sm text-stone-500 hover:text-stone-900 uppercase tracking-widest py-3 sm:py-2 px-4 transition">
+            Annuler
+          </button>
+          <button type="submit"
+                  class="bg-stone-900 text-white py-3 px-7 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition">
+            Envoyer la demande
+          </button>
+        </div>
+        <p class="text-[11px] text-stone-400 text-center pt-1">Aucun paiement immédiat requis</p>
+      </form>
+    </div>
   </div>
 </div>
