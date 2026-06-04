@@ -18,7 +18,7 @@
         Chalet Mont Rose
       </h1>
       <p class="text-white/90 text-xs sm:text-base md:text-xl font-light tracking-[0.18em] sm:tracking-[0.2em] mt-3 sm:mt-4">
-        L'exception au sommet des Alpes
+        Le haut de gamme en famille
       </p>
 
       <!-- Bouton Réservation -->
@@ -266,7 +266,7 @@
 <div id="contact" class="mb-8">
   <div class="bg-stone-900 rounded-2xl p-6 sm:p-8 md:p-12 text-center">
     <h2 class="text-2xl md:text-3xl font-serif text-white tracking-wide mb-3">Une question ?</h2>
-    <p class="text-stone-400 mb-6">Notre équipe est à votre disposition pour organiser votre séjour sur mesure.</p>
+    <p class="text-stone-400 mb-6">Nous sommes à votre disposition pour organiser votre séjour sur mesure.</p>
     <div class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
       <a href="tel:+33100000000" class="inline-flex items-center gap-2 bg-white text-stone-900 px-6 py-3 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-100 transition">
         <i class="fa-solid fa-phone"></i> Nous appeler
@@ -278,90 +278,169 @@
   </div>
 </div>
 
-<!-- ================== MODALE RESERVATION ================== -->
-<div id="reservation-modal"
-     class="hidden fixed inset-0 z-[60]"
-     role="dialog"
-     aria-modal="true"
-     aria-labelledby="reservation-title"
-     data-modal-target="root"
-     data-action="click->modal#backdropClose">
-  <div data-modal-target="backdrop"
-       class="absolute inset-0 bg-stone-900/60 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+<!-- ============ MODALE RÉSERVATION + SÉLECTEUR DE DATES ============ -->
+<div data-controller="calendar" data-calendar-quote-url-value="<%= calendar_quote_path %>">
 
-  <div class="relative h-full w-full flex items-center justify-center p-4 pointer-events-none">
-    <div data-modal-target="dialog"
-         class="pointer-events-auto bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto opacity-0 translate-y-4 scale-95 transition-all duration-300">
-      <!-- Header -->
-      <div class="px-6 sm:px-8 pt-6 sm:pt-8 pb-4 border-b border-stone-100 flex items-start justify-between gap-4">
-        <div>
-          <p class="text-[10px] sm:text-xs text-stone-400 uppercase tracking-[0.25em] mb-1">Chalet Mont Rose</p>
-          <h3 id="reservation-title" class="text-xl sm:text-2xl font-serif text-stone-900 tracking-wide">Demande de réservation</h3>
-        </div>
-        <button type="button"
-                data-action="click->modal#close"
-                aria-label="Fermer"
-                class="w-9 h-9 rounded-full text-stone-500 hover:text-stone-900 hover:bg-stone-100 transition flex items-center justify-center shrink-0">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
+  <!-- Modale de demande -->
+  <div id="reservation-modal"
+       class="hidden fixed inset-0 z-[60]"
+       role="dialog"
+       aria-modal="true"
+       aria-labelledby="reservation-title"
+       data-modal-target="root"
+       data-action="click->modal#backdropClose">
+    <div data-modal-target="backdrop"
+         class="absolute inset-0 bg-stone-900/60 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
 
-      <!-- Body -->
-      <form class="px-6 sm:px-8 py-6 space-y-5" onsubmit="event.preventDefault();">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="relative h-full w-full flex items-center justify-center p-4 pointer-events-none">
+      <div data-modal-target="dialog"
+           class="pointer-events-auto bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto opacity-0 translate-y-4 scale-95 transition-all duration-300">
+        <!-- Header -->
+        <div class="px-6 sm:px-8 pt-6 sm:pt-8 pb-4 border-b border-stone-100 flex items-start justify-between gap-4">
           <div>
-            <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Arrivée</label>
-            <input type="date" autocomplete="off" class="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition">
+            <p class="text-[10px] sm:text-xs text-stone-400 uppercase tracking-[0.25em] mb-1">Chalet Mont Rose</p>
+            <h3 id="reservation-title" class="text-xl sm:text-2xl font-serif text-stone-900 tracking-wide">Demande de réservation</h3>
           </div>
-          <div>
-            <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Départ</label>
-            <input type="date" autocomplete="off" class="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition">
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Voyageurs</label>
-          <select class="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition">
-            <% (1..10).each do |n| %>
-              <option><%= n %> voyageur<%= "s" if n > 1 %></option>
-            <% end %>
-          </select>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Prénom</label>
-            <input type="text" autocomplete="given-name" class="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition">
-          </div>
-          <div>
-            <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Nom</label>
-            <input type="text" autocomplete="family-name" class="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition">
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Email</label>
-          <input type="email" autocomplete="email" class="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition">
-        </div>
-
-        <div>
-          <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Message (optionnel)</label>
-          <textarea rows="3" class="w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition resize-none"></textarea>
-        </div>
-
-        <div class="pt-2 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3">
           <button type="button"
                   data-action="click->modal#close"
-                  class="text-sm text-stone-500 hover:text-stone-900 uppercase tracking-widest py-3 sm:py-2 px-4 transition">
-            Annuler
-          </button>
-          <button type="submit"
-                  class="bg-stone-900 text-white py-3 px-7 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition">
-            Envoyer la demande
+                  aria-label="Fermer"
+                  class="w-9 h-9 rounded-full text-stone-500 hover:text-stone-900 hover:bg-stone-100 transition flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
-        <p class="text-[11px] text-stone-400 text-center pt-1">Aucun paiement immédiat requis</p>
-      </form>
+
+        <%= form_with url: reservations_path, method: :post, scope: :booking, class: "px-6 sm:px-8 py-6 space-y-5" do |f| %>
+          <!-- Bouton unique de choix des dates -->
+          <div>
+            <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Dates (samedi → samedi)</label>
+            <button type="button" data-action="click->calendar#openPicker"
+                    class="w-full flex items-center justify-between gap-3 border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 hover:border-stone-900 transition text-left">
+              <span class="inline-flex items-center gap-2">
+                <i class="fa-regular fa-calendar text-stone-400"></i>
+                <span data-calendar-target="datesLabel">Choisir les dates</span>
+              </span>
+              <i class="fa-solid fa-chevron-right text-stone-300 text-xs"></i>
+            </button>
+            <%= f.hidden_field :check_in,  data: { calendar_target: "checkIn" } %>
+            <%= f.hidden_field :check_out, data: { calendar_target: "checkOut" } %>
+          </div>
+
+          <!-- Récapitulatif tarif (après sélection) -->
+          <div data-calendar-target="summary" class="hidden bg-stone-50 border border-stone-100 rounded-xl p-4 space-y-2">
+            <div class="flex justify-between text-sm text-stone-700">
+              <span data-calendar-target="recapDates">—</span>
+              <span class="text-stone-500"><span data-calendar-target="recapNights"></span> nuits</span>
+            </div>
+            <div class="flex justify-between text-xs text-stone-500">
+              <span>Frais de ménage</span><span data-calendar-target="recapCleaning"></span>
+            </div>
+            <div class="flex justify-between text-xs text-stone-500">
+              <span>Taxe de séjour</span><span data-calendar-target="recapTax"></span>
+            </div>
+            <div class="flex justify-between text-sm font-medium text-stone-900 border-t border-stone-200 pt-2">
+              <span>Total</span><span data-calendar-target="recapTotal"></span>
+            </div>
+            <div class="flex justify-between text-xs text-stone-500">
+              <span>Arrhes (30 % de l'hébergement)</span><span data-calendar-target="recapDeposit"></span>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Voyageurs</label>
+            <%= f.select :guests_count, (1..10).map { |n| ["#{n} voyageur#{'s' if n > 1}", n] }, {},
+                  data: { calendar_target: "guests", action: "change->calendar#guestsChanged" },
+                  class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Prénom</label>
+              <%= f.text_field :first_name, required: true, autocomplete: "given-name",
+                    class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+            </div>
+            <div>
+              <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Nom</label>
+              <%= f.text_field :last_name, required: true, autocomplete: "family-name",
+                    class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Email</label>
+              <%= f.email_field :email, required: true, autocomplete: "email",
+                    pattern: '[^@\s]+@[^@\s]+\.[^@\s.]{2,}',
+                    title: "Veuillez saisir une adresse email complète (ex. nom@domaine.fr).",
+                    class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+            </div>
+            <div>
+              <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Téléphone</label>
+              <%= f.telephone_field :phone, required: true, autocomplete: "tel",
+                    class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Adresse (optionnel)</label>
+            <%= f.text_area :address, rows: 2, autocomplete: "street-address",
+                  class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition resize-none" %>
+          </div>
+
+          <div>
+            <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Message (optionnel)</label>
+            <%= f.text_area :message, rows: 3,
+                  class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition resize-none" %>
+          </div>
+
+          <div class="pt-2 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3">
+            <button type="button"
+                    data-action="click->modal#close"
+                    class="text-sm text-stone-500 hover:text-stone-900 uppercase tracking-widest py-3 sm:py-2 px-4 transition">
+              Annuler
+            </button>
+            <%= f.submit "Envoyer la demande", disabled: true, data: { calendar_target: "submit" },
+                  class: "bg-stone-900 text-white py-3 px-7 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed" %>
+          </div>
+          <p class="text-[11px] text-stone-400 text-center pt-1">Sélectionnez d'abord vos dates. Aucun paiement immédiat requis.</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sélecteur de dates (au-dessus de la modale) -->
+  <div data-calendar-target="picker"
+       class="hidden fixed inset-0 z-[70] opacity-0 transition-opacity duration-300"
+       data-action="click->calendar#backdropClosePicker">
+    <div data-calendar-target="pickerBackdrop"
+         class="absolute inset-0 bg-stone-900/70 backdrop-blur-sm"></div>
+
+    <div class="relative h-full w-full flex items-center justify-center p-4 pointer-events-none">
+      <div data-calendar-target="pickerPanel"
+           class="pointer-events-auto bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[92vh] overflow-y-auto opacity-0 translate-y-4 scale-95 transition-all duration-300">
+        <div class="px-6 pt-6 pb-4 border-b border-stone-100 flex items-start justify-between gap-4">
+          <div>
+            <p class="text-[10px] text-stone-400 uppercase tracking-[0.25em] mb-1">Vos dates</p>
+            <h3 class="text-lg font-serif text-stone-900">Choisissez une semaine</h3>
+            <p class="text-xs text-stone-400 mt-1">Arrivée et départ le <strong>samedi</strong>.</p>
+          </div>
+          <button type="button" data-action="click->calendar#closePicker" aria-label="Fermer"
+                  class="w-9 h-9 rounded-full text-stone-500 hover:text-stone-900 hover:bg-stone-100 transition flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="p-4 sm:p-6">
+          <%= render "bookings/calendar", max_height: "55vh" %>
+
+          <p data-calendar-target="message" class="hidden mt-4 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3"></p>
+          <p data-calendar-target="pickerInfo" class="hidden mt-4 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg p-3"></p>
+
+          <button type="button" data-calendar-target="confirm" data-action="click->calendar#closePicker" disabled
+                  class="mt-5 w-full bg-stone-900 text-white py-3 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition disabled:opacity-40 disabled:cursor-not-allowed">
+            Valider ces dates
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>

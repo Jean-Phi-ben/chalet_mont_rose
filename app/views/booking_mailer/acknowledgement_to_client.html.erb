@@ -1,0 +1,23 @@
+<h2 style="font-family: Georgia, serif; color:#1c1917;">Merci pour votre demande</h2>
+
+<p>Bonjour <%= @booking.first_name %>,</p>
+
+<p>
+  Nous avons bien reçu votre demande de réservation pour le Chalet Mont Rose.
+  Elle est <strong>en attente de validation</strong> ; nous reviendrons vers vous
+  très rapidement pour la confirmer.
+</p>
+
+<table cellpadding="6" style="border-collapse: collapse; font-family: Arial, sans-serif; color:#1c1917;">
+  <tr><td><strong>Arrivée</strong></td><td><%= fr_date_full(@booking.check_in) %></td></tr>
+  <tr><td><strong>Départ</strong></td><td><%= fr_date_full(@booking.check_out) %></td></tr>
+  <tr><td><strong>Durée</strong></td><td><%= @booking.weeks %> semaine(s)</td></tr>
+  <tr><td><strong>Total estimé</strong></td><td><%= money(@booking.total_price_cents) %></td></tr>
+</table>
+
+<p style="margin-top:24px;">
+  Vous pouvez suivre l'état de votre demande à tout moment :<br>
+  <a href="<%= reservation_url(@booking.token) %>"><%= reservation_url(@booking.token) %></a>
+</p>
+
+<p>À très bientôt,<br>Chalet Mont Rose</p>

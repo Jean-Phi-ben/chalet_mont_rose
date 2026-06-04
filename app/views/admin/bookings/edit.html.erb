@@ -1,0 +1,13 @@
+<% content_for :title, "Modifier la réservation — Admin" %>
+
+<div class="mb-6">
+  <%= link_to admin_booking_path(@booking), class: "text-xs text-stone-400 hover:text-stone-700" do %>
+    <i class="fa-solid fa-arrow-left mr-1"></i> Retour à la réservation
+  <% end %>
+  <h1 class="text-2xl font-serif text-stone-900 tracking-wide mt-2" style="font-family: 'Playfair Display', serif;">Modifier la réservation</h1>
+  <p class="text-sm text-stone-500 mt-1">Le total sera recalculé d'après les semaines tarifées.</p>
+</div>
+
+<div class="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 max-w-2xl">
+  <%= render "form", booking: @booking %>
+</div>

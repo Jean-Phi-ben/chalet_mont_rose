@@ -1,0 +1,158 @@
+<% content_for :title, "Nouvelle réservation — Admin" %>
+
+<div class="mb-6">
+  <%= link_to admin_bookings_path, class: "text-xs text-stone-400 hover:text-stone-700" do %>
+    <i class="fa-solid fa-arrow-left mr-1"></i> Toutes les réservations
+  <% end %>
+  <h1 class="text-2xl font-serif text-stone-900 tracking-wide mt-2" style="font-family: 'Playfair Display', serif;">Nouvelle réservation</h1>
+  <p class="text-sm text-stone-500 mt-1">Saisie manuelle d'une demande reçue hors ligne. Cliquez « Choisir les dates » pour ouvrir le calendrier (samedi → samedi).</p>
+</div>
+
+<div data-controller="calendar" data-calendar-quote-url-value="<%= calendar_quote_path %>">
+  <div class="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 max-w-2xl">
+    <%= form_with model: [:admin, @booking], class: "space-y-5" do |f| %>
+      <% if @booking.errors.any? %>
+        <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm">
+          <p class="font-medium mb-1"><%= pluralize(@booking.errors.count, "erreur") %> :</p>
+          <ul class="list-disc list-inside">
+            <% @booking.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <!-- Bouton unique de choix des dates -->
+      <div>
+        <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Période (samedi → samedi)</label>
+        <button type="button" data-action="click->calendar#openPicker"
+                class="w-full flex items-center justify-between gap-3 border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 hover:border-stone-900 transition text-left">
+          <span class="inline-flex items-center gap-2">
+            <i class="fa-regular fa-calendar text-stone-400"></i>
+            <span data-calendar-target="datesLabel">Choisir les dates</span>
+          </span>
+          <i class="fa-solid fa-chevron-right text-stone-300 text-xs"></i>
+        </button>
+        <%= f.hidden_field :check_in,  data: { calendar_target: "checkIn" } %>
+        <%= f.hidden_field :check_out, data: { calendar_target: "checkOut" } %>
+      </div>
+
+      <!-- Récap tarif (visible après sélection) -->
+      <div data-calendar-target="summary" class="hidden bg-stone-50 border border-stone-100 rounded-xl p-4 space-y-2">
+        <div class="flex justify-between text-sm text-stone-700">
+          <span data-calendar-target="recapDates">—</span>
+          <span class="text-stone-500"><span data-calendar-target="recapNights"></span> nuits</span>
+        </div>
+        <div class="flex justify-between text-xs text-stone-500">
+          <span>Frais de ménage</span><span data-calendar-target="recapCleaning"></span>
+        </div>
+        <div class="flex justify-between text-xs text-stone-500">
+          <span>Taxe de séjour</span><span data-calendar-target="recapTax"></span>
+        </div>
+        <div class="flex justify-between text-sm font-medium text-stone-900 border-t border-stone-200 pt-2">
+          <span>Total</span><span data-calendar-target="recapTotal"></span>
+        </div>
+        <div class="flex justify-between text-xs text-stone-500">
+          <span>Arrhes (30 % de l'hébergement)</span><span data-calendar-target="recapDeposit"></span>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Voyageurs</label>
+        <%= f.select :guests_count, (1..10).map { |n| ["#{n} voyageur#{'s' if n > 1}", n] }, {},
+              data: { calendar_target: "guests", action: "change->calendar#guestsChanged" },
+              class: "w-full sm:w-48 border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+      </div>
+
+      <div>
+        <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Prix d'hébergement (€) — facultatif</label>
+        <%= f.number_field :accommodation_euros, step: 1, min: 0, value: nil,
+              placeholder: "Auto",
+              data: { calendar_target: "accommodationPlaceholder" },
+              class: "w-full sm:w-48 border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition placeholder:text-stone-400" %>
+        <p class="text-xs text-stone-400 mt-1">Le placeholder affiche le tarif <strong>auto</strong> (somme des semaines en base) dès la sélection des dates. Laissez vide pour le conserver, ou saisissez un override.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-stone-100 pt-5">
+        <div>
+          <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Prénom</label>
+          <%= f.text_field :first_name, required: true, autocomplete: "given-name",
+                class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+        </div>
+        <div>
+          <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Nom</label>
+          <%= f.text_field :last_name, required: true, autocomplete: "family-name",
+                class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Email</label>
+          <%= f.email_field :email, required: true, autocomplete: "email",
+                pattern: '[^@\s]+@[^@\s]+\.[^@\s.]{2,}',
+                title: "Veuillez saisir une adresse email complète (ex. nom@domaine.fr).",
+                class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+        </div>
+        <div>
+          <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Téléphone</label>
+          <%= f.telephone_field :phone, autocomplete: "tel",
+                class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Adresse (optionnel)</label>
+        <%= f.text_area :address, rows: 2, autocomplete: "street-address",
+              class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition resize-none" %>
+      </div>
+
+      <div>
+        <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Message (optionnel)</label>
+        <%= f.text_area :message, rows: 3,
+              class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition resize-none" %>
+      </div>
+
+      <div class="flex items-center gap-3 pt-2">
+        <%= f.submit "Créer la réservation", disabled: true, data: { calendar_target: "submit" },
+              class: "bg-stone-900 text-white px-6 py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed" %>
+        <%= link_to "Annuler", admin_bookings_path, class: "text-sm text-stone-500 hover:text-stone-900" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Sélecteur de dates (overlay modal) -->
+  <div data-calendar-target="picker"
+       class="hidden fixed inset-0 z-[70] opacity-0 transition-opacity duration-300"
+       data-action="click->calendar#backdropClosePicker">
+    <div data-calendar-target="pickerBackdrop"
+         class="absolute inset-0 bg-stone-900/70 backdrop-blur-sm"></div>
+
+    <div class="relative h-full w-full flex items-center justify-center p-4 pointer-events-none">
+      <div data-calendar-target="pickerPanel"
+           class="pointer-events-auto bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[92vh] overflow-y-auto opacity-0 translate-y-4 scale-95 transition-all duration-300">
+        <div class="px-6 pt-6 pb-4 border-b border-stone-100 flex items-start justify-between gap-4">
+          <div>
+            <p class="text-[10px] text-stone-400 uppercase tracking-[0.25em] mb-1">Vos dates</p>
+            <h3 class="text-lg font-serif text-stone-900">Choisissez une semaine</h3>
+            <p class="text-xs text-stone-400 mt-1">Arrivée et départ le <strong>samedi</strong>.</p>
+          </div>
+          <button type="button" data-action="click->calendar#closePicker" aria-label="Fermer"
+                  class="w-9 h-9 rounded-full text-stone-500 hover:text-stone-900 hover:bg-stone-100 transition flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="p-4 sm:p-6">
+          <%= render "bookings/calendar", max_height: "55vh" %>
+
+          <p data-calendar-target="message" class="hidden mt-4 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3"></p>
+          <p data-calendar-target="pickerInfo" class="hidden mt-4 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg p-3"></p>
+
+          <button type="button" data-calendar-target="confirm" data-action="click->calendar#closePicker" disabled
+                  class="mt-5 w-full bg-stone-900 text-white py-3 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition disabled:opacity-40 disabled:cursor-not-allowed">
+            Valider ces dates
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,34 @@
+<% start_day = month.beginning_of_month.beginning_of_week(:monday) %>
+<% last_day  = month.end_of_month.end_of_week(:monday) %>
+<% blocked   = Booking.blocked_dates_between(start_day, last_day) %>
+
+<div>
+  <p class="font-serif text-lg text-stone-900 capitalize text-center mb-3"><%= fr_month_year(month) %></p>
+
+  <div class="grid grid-cols-7 gap-1">
+    <% (start_day..last_day).each do |day| %>
+      <% in_month  = day.month == month.month %>
+      <% nightly   = Pricing.nightly_cents_for(day) %>
+      <% past      = day < Date.current %>
+      <% taken     = blocked.include?(day) %>
+      <% clickable = in_month && !past && !taken %>
+      <% tooltip = if taken && in_month
+                     "Semaine déjà réservée"
+                   elsif clickable && !day.saturday?
+                     "Sélectionne le samedi de la semaine"
+                   end %>
+      <div class="aspect-square rounded-lg p-1 flex flex-col items-center justify-center text-center select-none border
+                  <%= in_month ? 'border-stone-100' : 'border-transparent opacity-30' %>
+                  <%= 'cursor-pointer hover:border-stone-400' if clickable %>
+                  <%= 'bg-stone-100' if taken && in_month %>"
+           <% if in_month %>data-calendar-target="day" data-date="<%= day.iso8601 %>"<% end %>
+           <% if clickable %>data-action="click->calendar#pick"<% end %>
+           <% if tooltip %>title="<%= tooltip %>"<% end %>>
+        <span class="text-xs <%= taken && in_month ? 'line-through decoration-2 decoration-stone-500 text-stone-400' : (past ? 'text-stone-300 line-through' : 'text-stone-700') %>"><%= day.day %></span>
+        <% if nightly && in_month && !taken && !past %>
+          <span class="text-[9px] text-stone-400 leading-none mt-0.5"><%= money(nightly) %></span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

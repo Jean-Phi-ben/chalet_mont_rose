@@ -70,4 +70,10 @@ group :test do
 end
 gem "tailwindcss-rails"
 gem "propshaft"
- gem "font-awesome-sass"
+gem "font-awesome-sass"
+
+# Réservation : génération de factures PDF, signature électronique, API caution
+gem "prawn"
+gem "prawn-table"
+gem "dropbox-sign"
+gem "faraday"

@@ -1,0 +1,39 @@
+<% content_for :title, "Éditeur de tarifs en lot — Admin" %>
+
+<div class="mb-8">
+  <%= link_to admin_weekly_rates_path, class: "text-xs text-stone-400 hover:text-stone-700" do %>
+    <i class="fa-solid fa-arrow-left mr-1"></i> Retour aux tarifs
+  <% end %>
+  <h1 class="text-2xl font-serif text-stone-900 tracking-wide mt-2" style="font-family: 'Playfair Display', serif;">Éditeur en lot</h1>
+  <p class="text-sm text-stone-500 mt-1">Applique un prix à toutes les semaines (samedis) comprises dans la plage choisie.</p>
+</div>
+
+<div class="bg-white border border-stone-200 rounded-2xl p-6 max-w-xl">
+  <% if flash.now[:alert] %>
+    <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm mb-5"><%= flash.now[:alert] %></div>
+  <% end %>
+
+  <%= form_with url: bulk_update_admin_weekly_rates_path, method: :post, class: "space-y-5" do |f| %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <%= f.label :from, "Du", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+        <%= f.date_field :from, value: params[:from], class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+      </div>
+      <div>
+        <%= f.label :to, "Au", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+        <%= f.date_field :to, value: params[:to], class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+      </div>
+    </div>
+
+    <div>
+      <%= f.label :price_euros, "Prix par semaine (€)", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+      <%= f.number_field :price_euros, step: 1, min: 0, value: params[:price_euros],
+            class: "w-full sm:w-72 border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+    </div>
+
+    <div class="flex items-center gap-3 pt-2">
+      <%= f.submit "Appliquer", class: "bg-stone-900 text-white px-6 py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition cursor-pointer" %>
+      <%= link_to "Annuler", admin_weekly_rates_path, class: "text-sm text-stone-500 hover:text-stone-900" %>
+    </div>
+  <% end %>
+</div>

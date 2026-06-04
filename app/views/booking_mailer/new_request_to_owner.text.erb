@@ -1,0 +1,19 @@
+Nouvelle demande de réservation
+================================
+
+Client    : <%= @booking.full_name %>
+Email     : <%= @booking.email %>
+Téléphone : <%= @booking.phone.presence || "—" %>
+Voyageurs : <%= @booking.guests_count || "—" %>
+Arrivée   : <%= fr_date_full(@booking.check_in) %>
+Départ    : <%= fr_date_full(@booking.check_out) %>
+Durée     : <%= @booking.weeks %> semaine(s) — <%= @booking.nights %> nuits
+Total     : <%= money(@booking.total_price_cents) %>
+Arrhes    : <%= money(@booking.deposit_cents) %>
+
+<% if @booking.message.present? -%>
+Message du client :
+<%= @booking.message %>
+<% end -%>
+
+Suivi : <%= reservation_url(@booking.token) %>

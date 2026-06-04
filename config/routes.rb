@@ -1,7 +1,44 @@
 Rails.application.routes.draw do
   root to: "pages#home"
+
+  # Calendrier public + devis (sélection samedi → samedi)
+  get "calendrier",       to: "bookings#calendar", as: :calendar
+  get "calendrier/quote", to: "bookings#quote",    as: :calendar_quote
+
+  # Demande de réservation + suivi client (accès par token, sans login)
+  resources :reservations, only: %i[create show], param: :token
+
   namespace :admin do
     root to: "dashboard#index"
+    resources :weekly_rates do
+      collection do
+        get  :bulk_edit,   path: "bulk"
+        post :bulk_update, path: "bulk"
+      end
+    end
+    resources :bookings, only: %i[index show new create edit update destroy] do
+      collection do
+        get :archived
+      end
+      member do
+        patch :confirm
+        patch :reject
+        patch :cancel
+      end
+    end
+    resources :invoices, only: %i[index show update] do
+      collection do
+        get :archived
+      end
+      member do
+        patch :mark_received
+        patch :mark_awaiting
+        patch :archive
+      end
+    end
+    resource :booking_setting, only: %i[show update]
+    resource :tourist_tax_periods, only: :update
+    resources :clients, only: %i[show edit update]
   end
   resource :session
   resources :passwords, param: :token

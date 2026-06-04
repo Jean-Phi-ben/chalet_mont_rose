@@ -12,3 +12,14 @@
     html { scroll-padding-top: 6rem; }
   }
 }
+
+@layer components {
+  .cal-selected {
+    background-color: var(--color-stone-900);
+    color: #fff;
+    border-color: var(--color-stone-900) !important;
+  }
+  .cal-range {
+    background-color: var(--color-stone-200);
+  }
+}

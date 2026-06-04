@@ -1,0 +1,12 @@
+<% content_for :title, "Nouveau tarif — Admin" %>
+
+<div class="mb-8">
+  <%= link_to admin_weekly_rates_path, class: "text-xs text-stone-400 hover:text-stone-700" do %>
+    <i class="fa-solid fa-arrow-left mr-1"></i> Retour aux tarifs
+  <% end %>
+  <h1 class="text-2xl font-serif text-stone-900 tracking-wide mt-2" style="font-family: 'Playfair Display', serif;">Nouveau tarif</h1>
+</div>
+
+<div class="bg-white border border-stone-200 rounded-2xl p-6 max-w-xl">
+  <%= render "form", weekly_rate: @weekly_rate %>
+</div>

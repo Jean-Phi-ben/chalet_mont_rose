@@ -1,0 +1,68 @@
+<% content_for :title, "Suivi de votre demande — Chalet Mont Rose" %>
+
+<% status = {
+     "pending"   => { label: "En attente de validation", cls: "bg-amber-50 text-amber-700 border-amber-200",
+                      msg: "Votre demande a bien été enregistrée. Le propriétaire la validera prochainement et vous recevrez un email de confirmation." },
+     "confirmed" => { label: "Confirmée", cls: "bg-emerald-50 text-emerald-700 border-emerald-200",
+                      msg: "Votre réservation est confirmée. Consultez l'email de confirmation pour la facture des arrhes, le contrat et la caution." },
+     "rejected"  => { label: "Refusée", cls: "bg-rose-50 text-rose-700 border-rose-200",
+                      msg: "Cette demande n'a pas pu être retenue. N'hésitez pas à proposer d'autres dates." },
+     "cancelled" => { label: "Annulée", cls: "bg-stone-100 text-stone-600 border-stone-200",
+                      msg: "Cette réservation a été annulée." }
+   }[@booking.status] %>
+
+<div class="max-w-xl mx-auto">
+  <p class="text-[10px] text-stone-400 uppercase tracking-[0.25em] mb-1">Chalet Mont Rose</p>
+  <h1 class="text-2xl sm:text-3xl font-serif text-stone-900 tracking-wide mb-6">Suivi de votre demande</h1>
+
+  <div class="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 space-y-6">
+    <div class="flex items-center justify-between gap-4">
+      <span>Bonjour <strong><%= @booking.first_name %></strong></span>
+      <span class="text-xs uppercase tracking-widest px-3 py-1 rounded-full border <%= status[:cls] %>">
+        <%= status[:label] %>
+      </span>
+    </div>
+
+    <p class="text-sm text-stone-600"><%= status[:msg] %></p>
+
+    <dl class="border-t border-stone-100 pt-5 space-y-3 text-sm">
+      <div class="flex justify-between">
+        <dt class="text-stone-500">Arrivée</dt>
+        <dd class="text-stone-900"><%= fr_date_full(@booking.check_in) %></dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-stone-500">Départ</dt>
+        <dd class="text-stone-900"><%= fr_date_full(@booking.check_out) %></dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-stone-500">Durée</dt>
+        <dd class="text-stone-900"><%= @booking.weeks %> semaine(s) — <%= @booking.nights %> nuits</dd>
+      </div>
+      <% if @booking.guests_count.present? %>
+        <div class="flex justify-between">
+          <dt class="text-stone-500">Voyageurs</dt>
+          <dd class="text-stone-900"><%= @booking.guests_count %></dd>
+        </div>
+      <% end %>
+      <div class="flex justify-between border-t border-stone-100 pt-3">
+        <dt class="text-stone-500">Total</dt>
+        <dd class="font-medium text-stone-900"><%= money(@booking.total_price_cents) %></dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-stone-500">Arrhes (30 %)</dt>
+        <dd class="text-stone-900"><%= money(@booking.deposit_cents) %></dd>
+      </div>
+    </dl>
+  </div>
+
+  <p class="text-xs text-stone-400 mt-4 text-center">
+    Conservez ce lien : il vous permet de suivre votre demande à tout moment.
+  </p>
+
+  <div class="mt-6 flex justify-center">
+    <%= link_to root_path,
+          class: "inline-flex items-center gap-2 border border-stone-300 text-stone-700 px-5 py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-100 transition" do %>
+      <i class="fa-solid fa-arrow-left text-xs"></i> Retour à l'accueil
+    <% end %>
+  </div>
+</div>

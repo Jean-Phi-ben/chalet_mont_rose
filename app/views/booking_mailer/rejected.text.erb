@@ -1,0 +1,14 @@
+Bonjour <%= @booking.first_name %>,
+
+Nous vous remercions pour l'intérêt que vous portez au Chalet Mont Rose.
+Nous sommes au regret de ne pas pouvoir donner suite à votre demande pour
+la période suivante :
+
+Arrivée : <%= fr_date_full(@booking.check_in) %>
+Départ  : <%= fr_date_full(@booking.check_out) %>
+
+N'hésitez pas à proposer d'autres dates — nous serons heureux de vous
+accueillir.
+
+Bien cordialement,
+Chalet Mont Rose

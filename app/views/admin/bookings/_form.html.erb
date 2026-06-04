@@ -1,0 +1,102 @@
+<% cancel_url = booking.persisted? ? admin_booking_path(booking) : admin_bookings_path %>
+
+<%= form_with model: [:admin, booking], class: "space-y-5" do |f| %>
+  <% if booking.errors.any? %>
+    <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm">
+      <p class="font-medium mb-1"><%= pluralize(booking.errors.count, "erreur") %> :</p>
+      <ul class="list-disc list-inside">
+        <% booking.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :check_in, "Arrivée (samedi)", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+      <%= f.date_field :check_in, required: true, class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+    </div>
+    <div>
+      <%= f.label :check_out, "Départ (samedi)", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+      <%= f.date_field :check_out, required: true, class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :guests_count, "Voyageurs", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+    <%= f.number_field :guests_count, min: 1, class: "w-full sm:w-48 border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+  </div>
+
+  <div class="border-t border-stone-100 pt-5 grid grid-cols-1 sm:grid-cols-3 gap-4"
+       data-controller="deposit-percent"
+       data-deposit-percent-accommodation-cents-value="<%= booking.accommodation_cents.to_i %>">
+    <div>
+      <%= f.label :accommodation_euros, "Prix d'hébergement (€)", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+      <%= f.number_field :accommodation_euros, step: 1, min: 0, value: nil,
+            placeholder: booking.persisted? && booking.accommodation_euros ? "Auto : #{booking.accommodation_euros.round}" : "Auto (tarifs hebdo.)",
+            data: { action: "input->deposit-percent#accommodationChanged", deposit_percent_target: "accommodation" },
+            class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+    </div>
+    <div>
+      <%= f.label :cleaning_fee_euros, "Frais de ménage (€)", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+      <%= f.number_field :cleaning_fee_euros, step: 1, min: 0, value: nil,
+            placeholder: booking.persisted? && booking.cleaning_fee_euros ? "Auto : #{booking.cleaning_fee_euros.round}" : "Auto (paramètres)",
+            class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+    </div>
+    <div>
+      <%= f.label :deposit_euros, "Arrhes (€)", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+      <%= f.number_field :deposit_euros, step: 1, min: 0, value: nil,
+            placeholder: booking.persisted? && booking.deposit_euros ? "Auto : #{booking.deposit_euros.round}" : "Auto (30 %)",
+            data: { action: "input->deposit-percent#depositChanged", deposit_percent_target: "deposit" },
+            class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+      <p class="text-xs text-stone-400 mt-1">
+        <span data-deposit-percent-target="hint">
+          <% if booking.persisted? %>
+            Actuellement <strong><%= booking.deposit_percent_of_accommodation %> %</strong> de l'hébergement
+          <% else %>
+            Défaut : 30 % de l'hébergement
+          <% end %>
+        </span>
+      </p>
+    </div>
+  </div>
+  <p class="text-xs text-stone-400">Laissez les trois vides pour recalculer automatiquement à partir des tarifs hebdomadaires, des <%= link_to "paramètres en cours", admin_booking_setting_path, class: "underline hover:text-stone-700" %> et de la part d'arrhes (30 %). La taxe de séjour reste calculée automatiquement.</p>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-stone-100 pt-5">
+    <div>
+      <%= f.label :first_name, "Prénom", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+      <%= f.text_field :first_name, required: true, class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+    </div>
+    <div>
+      <%= f.label :last_name, "Nom", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+      <%= f.text_field :last_name, required: true, class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div>
+      <%= f.label :email, class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+      <%= f.email_field :email, required: true, class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+    </div>
+    <div>
+      <%= f.label :phone, "Téléphone", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+      <%= f.telephone_field :phone, class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :address, "Adresse (optionnel)", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+    <%= f.text_area :address, rows: 2, value: booking.client&.address, autocomplete: "street-address",
+          class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition resize-none" %>
+  </div>
+
+  <div>
+    <%= f.label :message, "Message", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+    <%= f.text_area :message, rows: 3, class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition resize-none" %>
+  </div>
+
+  <div class="flex items-center gap-3 pt-2">
+    <%= f.submit (booking.persisted? ? "Enregistrer" : "Créer la réservation"),
+          class: "bg-stone-900 text-white px-6 py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition cursor-pointer" %>
+    <%= link_to "Annuler", cancel_url, class: "text-sm text-stone-500 hover:text-stone-900" %>
+  </div>
+<% end %>

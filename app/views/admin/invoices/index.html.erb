@@ -1,0 +1,84 @@
+<% content_for :title, (@archived_mode ? "Archives factures" : "Factures") + " — Admin" %>
+
+<div class="flex items-start justify-between gap-4 mb-8">
+  <div>
+    <h1 class="text-2xl font-serif text-stone-900 tracking-wide" style="font-family: 'Playfair Display', serif;">
+      <%= @archived_mode ? "Archives factures" : "Factures" %>
+    </h1>
+    <p class="text-sm text-stone-500 mt-1">
+      <% if @archived_mode %>
+        Factures des séjours dont la date de départ est passée.
+      <% else %>
+        Suivi des arrhes et du solde sur les réservations confirmées, triées par date de séjour.
+      <% end %>
+    </p>
+  </div>
+  <% if @archived_mode %>
+    <%= link_to admin_invoices_path, class: "text-xs text-stone-500 hover:text-stone-900 uppercase tracking-widest shrink-0" do %>
+      <i class="fa-solid fa-arrow-left mr-1"></i> Actives
+    <% end %>
+  <% else %>
+    <%= link_to archived_admin_invoices_path, class: "text-xs text-stone-500 hover:text-stone-900 uppercase tracking-widest shrink-0" do %>
+      Archives <i class="fa-solid fa-arrow-right ml-1"></i>
+    <% end %>
+  <% end %>
+</div>
+
+<% if @bookings.any? %>
+  <div class="bg-white border border-stone-200 rounded-2xl overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm min-w-[920px]">
+        <thead class="bg-stone-50 text-stone-400 uppercase text-[11px] tracking-widest">
+          <tr>
+            <th class="text-left  font-medium px-5 py-3">N° arrhes</th>
+            <th class="text-left  font-medium px-5 py-3">N° solde</th>
+            <th class="text-left  font-medium px-5 py-3">Client</th>
+            <th class="text-left  font-medium px-5 py-3">Séjour</th>
+            <th class="text-left  font-medium px-5 py-3">Arrhes</th>
+            <th class="text-left  font-medium px-5 py-3">Solde</th>
+            <th class="text-right font-medium px-5 py-3">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-stone-100">
+          <% @bookings.each do |booking| %>
+            <% deposit = booking.deposit_invoice %>
+            <% balance = booking.balance_invoice %>
+            <% locked = booking.invoicing_archived? %>
+            <tr class="hover:bg-stone-50/60">
+              <td class="px-5 py-3 text-stone-800 font-medium">
+                <span class="inline-flex items-center gap-1.5">
+                  <% if locked %><i class="fa-solid fa-lock text-stone-400 text-[11px]" title="Facture archivée — verrouillée"></i><% end %>
+                  <%= deposit&.number || "—" %>
+                </span>
+              </td>
+              <td class="px-5 py-3 text-stone-800 font-medium"><%= balance&.number || "—" %></td>
+              <td class="px-5 py-3">
+                <div class="text-stone-800"><%= booking.full_name %></div>
+                <div class="text-xs text-stone-400"><%= booking.email %></div>
+              </td>
+              <td class="px-5 py-3 text-stone-700"><%= fr_date(booking.check_in) %> <span class="text-stone-400">→</span> <%= fr_date(booking.check_out) %></td>
+              <td class="px-5 py-3"><%= payment_status_chip(deposit&.payment_received?, deposit&.payment_received? ? "Reçues" : money(deposit&.amount_cents)) %></td>
+              <td class="px-5 py-3"><%= payment_status_chip(balance&.payment_received?, balance&.payment_received? ? "Reçu"   : money(balance&.amount_cents)) %></td>
+              <td class="px-5 py-3 text-right">
+                <% target = deposit || balance %>
+                <% if target %>
+                  <%= link_to "Voir", admin_invoice_path(target), class: "text-stone-700 hover:text-stone-900 text-xs uppercase tracking-widest" %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% else %>
+  <div class="bg-white border border-dashed border-stone-300 rounded-2xl p-12 text-center">
+    <i class="fa-regular fa-file-lines text-3xl text-stone-300 mb-3"></i>
+    <p class="text-stone-500">
+      <%= @archived_mode ? "Aucune facture archivée pour le moment." : "Aucune facture pour le moment." %>
+    </p>
+    <% unless @archived_mode %>
+      <p class="text-xs text-stone-400 mt-1">Deux factures sont émises automatiquement à chaque confirmation : arrhes + solde.</p>
+    <% end %>
+  </div>
+<% end %>

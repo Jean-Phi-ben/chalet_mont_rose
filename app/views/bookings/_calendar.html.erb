@@ -1,0 +1,17 @@
+<% max_height ||= "60vh" %>
+
+<div class="bg-white border border-stone-200 rounded-2xl overflow-hidden">
+  <div class="overflow-y-auto" style="max-height: <%= max_height %>;">
+    <div class="sticky top-0 bg-white border-b border-stone-100 px-4 sm:px-6 py-3 z-10">
+      <div class="grid grid-cols-7 gap-1 text-center text-[11px] uppercase tracking-widest text-stone-400">
+        <% %w[L M M J V S D].each do |d| %><div><%= d %></div><% end %>
+      </div>
+    </div>
+
+    <div class="px-4 sm:px-6 py-4 space-y-8">
+      <% calendar_months.each do |m| %>
+        <%= render "bookings/month", month: m %>
+      <% end %>
+    </div>
+  </div>
+</div>

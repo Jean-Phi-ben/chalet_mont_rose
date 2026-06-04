@@ -12,6 +12,11 @@ class ApplicationController < ActionController::Base
 
   private
 
+  # Pundit appelle `current_user` par défaut ; on utilise l'auth Rails 8 (Current.user).
+  def pundit_user
+    Current.user
+  end
+
   def user_not_authorized
     flash[:alert] = "Vous n'avez pas l'autorisation d'accéder à cette page."
     redirect_back_or_to root_path

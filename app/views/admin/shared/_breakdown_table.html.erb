@@ -1,0 +1,78 @@
+<%# Décompte d'une réservation : 5 colonnes (Désignation / HT / Quantité / TVA / TTC).
+    Total TVA puis Total séjour, puis lignes de paiement selon le mode :
+      :consolidated (défaut) — montre arrhes (réglées ou non) + solde
+      :deposit                — facture d'arrhes (ligne « Arrhes à régler »)
+      :balance                — facture de solde (ligne « Arrhes réglées » toujours + solde)
+%>
+<% mode    = local_assigns[:mode] || :consolidated %>
+<% deposit = booking.deposit_invoice %>
+<% balance = booking.balance_invoice %>
+
+<table class="w-full text-sm">
+  <thead>
+    <tr class="text-[10px] text-stone-400 uppercase tracking-widest border-b border-stone-100">
+      <th class="text-left  pb-2 font-medium">Désignation</th>
+      <th class="text-right pb-2 font-medium">Montant HT</th>
+      <th class="text-right pb-2 font-medium">Quantité</th>
+      <th class="text-right pb-2 font-medium">TVA</th>
+      <th class="text-right pb-2 font-medium">Montant TTC</th>
+    </tr>
+  </thead>
+  <tbody class="divide-y divide-stone-100">
+    <tr>
+      <td class="py-2 text-stone-500">Hébergement</td>
+      <td class="py-2 text-right text-stone-700"><%= money(booking.accommodation_per_night_ht_cents) %></td>
+      <td class="py-2 text-right text-stone-500"><%= booking.nights %> nuits</td>
+      <td class="py-2 text-right text-stone-500"><%= booking.vat_rate_for(:accommodation).to_i %> %</td>
+      <td class="py-2 text-right text-stone-700"><%= money(booking.accommodation_cents) %></td>
+    </tr>
+    <tr>
+      <td class="py-2 text-stone-500">Frais de ménage</td>
+      <td class="py-2 text-right text-stone-700"><%= money(booking.cleaning_per_week_ht_cents) %></td>
+      <td class="py-2 text-right text-stone-500"><%= booking.weeks %> sem.</td>
+      <td class="py-2 text-right text-stone-500"><%= booking.vat_rate_for(:cleaning).to_i %> %</td>
+      <td class="py-2 text-right text-stone-700"><%= money(booking.cleaning_fee_cents) %></td>
+    </tr>
+    <tr>
+      <td class="py-2 text-stone-500">Taxe de séjour</td>
+      <td class="py-2 text-right text-stone-700"><%= money(booking.tax_per_person_per_night_ht_cents) %></td>
+      <td class="py-2 text-right text-stone-500"><%= booking.nuitees %> nuitées</td>
+      <td class="py-2 text-right text-stone-500"><%= booking.vat_rate_for(:tourist_tax).to_i %> %</td>
+      <td class="py-2 text-right text-stone-700"><%= money(booking.tourist_tax_cents) %></td>
+    </tr>
+
+    <tr>
+      <td class="py-2 text-stone-500">TVA <span class="text-xs text-stone-400">(hébergement + ménage)</span></td>
+      <td colspan="3"></td>
+      <td class="py-2 text-right text-stone-700"><%= money(booking.vat_cents) %></td>
+    </tr>
+    <tr class="border-t border-stone-200">
+      <td class="pt-3 text-stone-900 font-medium">Total séjour</td>
+      <td colspan="3"></td>
+      <td class="pt-3 text-right text-stone-900 font-medium"><%= money(booking.total_price_cents) %></td>
+    </tr>
+
+    <% if mode == :deposit && deposit %>
+      <tr class="border-t border-stone-200">
+        <td class="pt-3 text-stone-900 font-medium">Arrhes à régler à la confirmation <span class="text-xs text-stone-400">(<%= booking.deposit_percent_label %>)</span></td>
+        <td colspan="3"></td>
+        <td class="pt-3 text-right text-stone-900 font-medium"><%= money(deposit.amount_cents) %></td>
+      </tr>
+    <% elsif (mode == :balance || mode == :consolidated) && balance %>
+      <% paid = deposit&.payment_received? %>
+      <% arrhes_label = paid ? "Arrhes réglées le #{fr_date(deposit.received_on)}" : "Arrhes réglées" %>
+      <% arrhes_amount = paid ? "−#{money(deposit.amount_cents)}" : money(0) %>
+      <% amount_color = paid ? "text-rose-700" : "text-stone-500" %>
+      <tr>
+        <td class="py-2 text-stone-500"><%= arrhes_label %></td>
+        <td colspan="3"></td>
+        <td class="py-2 text-right <%= amount_color %>"><%= arrhes_amount %></td>
+      </tr>
+      <tr class="border-t border-stone-200">
+        <td class="pt-3 text-stone-900 font-medium">Solde à régler à J-10</td>
+        <td colspan="3"></td>
+        <td class="pt-3 text-right text-stone-900 font-medium"><%= money(balance.amount_cents) %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

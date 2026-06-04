@@ -1,0 +1,100 @@
+<% content_for :title, "Facturation — #{@booking.full_name}" %>
+
+<% deposit = @booking.deposit_invoice %>
+<% balance = @booking.balance_invoice %>
+<% archived = @booking.invoicing_archived? %>
+
+<div class="mb-6">
+  <%= link_to admin_invoices_path, class: "text-xs text-stone-400 hover:text-stone-700" do %>
+    <i class="fa-solid fa-arrow-left mr-1"></i> Toutes les factures
+  <% end %>
+</div>
+
+<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
+  <div>
+    <h1 class="text-2xl font-serif text-stone-900 tracking-wide" style="font-family: 'Playfair Display', serif;">Facturation</h1>
+    <p class="text-sm text-stone-500 mt-1">
+      <%= link_to @booking.full_name, admin_booking_path(@booking), class: "text-stone-700 hover:text-stone-900 underline" %>
+      · Séjour du <%= fr_date(@booking.check_in) %> au <%= fr_date(@booking.check_out) %>
+    </p>
+  </div>
+  <% if archived %>
+    <span class="self-start text-[11px] uppercase tracking-widest px-3 py-1 rounded-full border bg-stone-100 text-stone-600 border-stone-200">
+      <i class="fa-solid fa-lock mr-1"></i> Archivée le <%= fr_date(@booking.invoicing_archived_at.to_date) %>
+    </span>
+  <% end %>
+</div>
+
+<div class="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 mb-6">
+  <%= render "admin/shared/breakdown_table", booking: @booking %>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <% [ deposit, balance ].each do |invoice| %>
+    <% next unless invoice %>
+    <div class="bg-white border border-stone-200 rounded-2xl p-6 space-y-4">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-[10px] text-stone-400 uppercase tracking-widest"><%= invoice.label %></p>
+          <p class="text-xs text-stone-500"><%= invoice.number %></p>
+        </div>
+        <% chip_label = if invoice.payment_received?
+                         invoice.kind_deposit? ? "Reçues" : "Reçu"
+                       else
+                         invoice.kind_deposit? ? "En attente" : "À J-10"
+                       end %>
+        <%= payment_status_chip(invoice.payment_received?, chip_label) %>
+      </div>
+
+      <div class="text-2xl font-serif text-stone-900"><%= money(invoice.amount_cents) %></div>
+
+      <% if invoice.pdf.attached? %>
+        <%= link_to rails_blob_path(invoice.pdf, disposition: "attachment"),
+              class: "block w-full text-center border border-stone-300 text-stone-700 py-2 rounded-xl text-xs uppercase tracking-widest hover:bg-stone-50 transition" do %>
+          <i class="fa-solid fa-file-arrow-down mr-1"></i> Télécharger le PDF
+        <% end %>
+      <% end %>
+
+      <% if invoice.payment_received? %>
+        <% unless archived %>
+          <%= form_with model: invoice, url: admin_invoice_path(invoice), method: :patch,
+                data: { controller: "autosubmit" }, class: "space-y-2" do |f| %>
+            <label class="block text-[10px] text-stone-400 uppercase tracking-widest">Date de réception</label>
+            <%= f.date_field :received_on, data: { action: "change->autosubmit#submit" },
+                  class: "w-full border border-stone-200 rounded-lg px-3 py-2 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+          <% end %>
+          <%= button_to mark_awaiting_admin_invoice_path(invoice), method: :patch,
+                form: { data: { turbo_confirm: "Annuler la réception de cette facture ?" } },
+                class: "block w-full text-center text-xs text-stone-500 hover:text-rose-700 uppercase tracking-widest py-1 transition cursor-pointer" do %>
+            <i class="fa-solid fa-rotate-left mr-1"></i> Annuler le paiement
+          <% end %>
+        <% else %>
+          <p class="text-xs text-stone-500">Reçue le <%= fr_date(invoice.received_on) %></p>
+        <% end %>
+      <% elsif !archived %>
+        <%= button_to mark_received_admin_invoice_path(invoice), method: :patch,
+              form: { data: { turbo_confirm: "Marquer #{invoice.label.downcase} comme reçu·es ?" } },
+              class: "block w-full text-center bg-stone-900 text-white py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition cursor-pointer" do %>
+          <i class="fa-solid fa-check mr-1"></i> <%= invoice.label %> reçues
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<% if !archived && @booking.fully_paid? %>
+  <div class="mt-10 flex justify-center">
+    <%= button_to archive_admin_invoice_path(deposit || balance), method: :patch,
+          form: { data: { turbo_confirm: "Archiver définitivement la facturation ? Plus aucune modification ne sera possible." } },
+          class: "inline-flex items-center gap-2 bg-stone-900 text-white px-6 py-3 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition cursor-pointer" do %>
+      <i class="fa-solid fa-box-archive mr-1"></i> Archiver la facturation
+    <% end %>
+  </div>
+<% end %>
+
+<div class="mt-16 flex justify-center">
+  <%= link_to admin_booking_path(@booking),
+        class: "inline-flex items-center gap-2 border border-stone-300 text-stone-700 px-5 py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-50 transition" do %>
+    <i class="fa-solid fa-arrow-left text-xs"></i> Retour à la réservation
+  <% end %>
+</div>

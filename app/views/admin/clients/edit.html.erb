@@ -1,0 +1,58 @@
+<% content_for :title, "Modifier #{@client.full_name} — Admin" %>
+
+<div class="mb-6">
+  <%= link_to admin_client_path(@client), class: "text-xs text-stone-400 hover:text-stone-700" do %>
+    <i class="fa-solid fa-arrow-left mr-1"></i> Retour à la fiche
+  <% end %>
+  <h1 class="text-2xl font-serif text-stone-900 tracking-wide mt-2" style="font-family: 'Playfair Display', serif;">Modifier le client</h1>
+  <p class="text-sm text-stone-500 mt-1">L'email est la clé d'identification du client : il n'est pas modifiable.</p>
+</div>
+
+<div class="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 max-w-2xl">
+  <%= form_with model: [:admin, @client], class: "space-y-5" do |f| %>
+    <% if @client.errors.any? %>
+      <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm">
+        <p class="font-medium mb-1"><%= pluralize(@client.errors.count, "erreur") %> :</p>
+        <ul class="list-disc list-inside">
+          <% @client.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <%= f.label :first_name, "Prénom", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+        <%= f.text_field :first_name, required: true, autocomplete: "given-name",
+              class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+      </div>
+      <div>
+        <%= f.label :last_name, "Nom", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+        <%= f.text_field :last_name, required: true, autocomplete: "family-name",
+              class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+      </div>
+    </div>
+
+    <div>
+      <label class="block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5">Email <span class="text-stone-300 normal-case tracking-normal">(non modifiable)</span></label>
+      <input type="email" value="<%= @client.email %>" readonly disabled
+             class="w-full border border-stone-200 bg-stone-50 rounded-lg px-3 py-2.5 text-sm text-stone-500 cursor-not-allowed" />
+    </div>
+
+    <div>
+      <%= f.label :phone, "Téléphone", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+      <%= f.telephone_field :phone, autocomplete: "tel",
+            class: "w-full sm:w-72 border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+    </div>
+
+    <div>
+      <%= f.label :address, "Adresse", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+      <%= f.text_area :address, rows: 3, autocomplete: "street-address",
+            class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition resize-none" %>
+    </div>
+
+    <div class="flex items-center gap-3 pt-2">
+      <%= f.submit "Enregistrer", class: "bg-stone-900 text-white px-6 py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition cursor-pointer" %>
+      <%= link_to "Annuler", admin_client_path(@client), class: "text-sm text-stone-500 hover:text-stone-900" %>
+    </div>
+  <% end %>
+</div>

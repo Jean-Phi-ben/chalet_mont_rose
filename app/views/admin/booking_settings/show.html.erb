@@ -1,0 +1,86 @@
+<% content_for :title, "Paramètres tarifaires — Admin" %>
+
+<div class="mb-8">
+  <h1 class="text-2xl font-serif text-stone-900 tracking-wide" style="font-family: 'Playfair Display', serif;">Paramètres tarifaires</h1>
+  <p class="text-sm text-stone-500 mt-1">Frais appliqués aux nouvelles réservations. Les réservations existantes gardent les montants enregistrés à leur création.</p>
+</div>
+
+<div class="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 max-w-2xl">
+  <%= form_with model: @setting, url: admin_booking_setting_path, method: :patch, class: "space-y-5" do |f| %>
+    <% if @setting.errors.any? %>
+      <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm">
+        <ul class="list-disc list-inside">
+          <% @setting.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div>
+      <%= f.label :cleaning_fee_euros, "Frais de ménage (€ par semaine)", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+      <%= f.number_field :cleaning_fee_euros, step: 1, min: 0, value: @setting.cleaning_fee_euros,
+            class: "w-full sm:w-72 border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+      <p class="text-xs text-stone-400 mt-1">Appliqué tel quel pour chaque semaine de la réservation.</p>
+    </div>
+
+    <div>
+      <%= f.label :tourist_tax_per_person_per_night_euros, "Taxe de séjour (€ par voyageur, par nuit)", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+      <%= f.number_field :tourist_tax_per_person_per_night_euros, step: 0.10, min: 0,
+            value: @setting.tourist_tax_per_person_per_night_euros,
+            class: "w-full sm:w-72 border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+      <p class="text-xs text-stone-400 mt-1">Total = montant × nombre de voyageurs × nombre de nuits.</p>
+    </div>
+
+    <div class="text-xs text-stone-400 bg-stone-50 border border-stone-100 rounded-lg p-3">
+      <strong>TVA</strong> : appliquée par catégorie de ligne sur les factures<br>
+      Hébergement <strong>10 %</strong> · Frais de ménage <strong>20 %</strong> · Taxe de séjour <strong>0 %</strong>
+    </div>
+
+    <div class="pt-2">
+      <%= f.submit "Enregistrer", class: "bg-stone-900 text-white px-6 py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition cursor-pointer" %>
+    </div>
+  <% end %>
+</div>
+
+<div class="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 max-w-2xl mt-6">
+  <h2 class="text-lg font-serif text-stone-900 mb-1">Taxe de séjour à reverser</h2>
+  <p class="text-sm text-stone-500 mb-5">
+    Cumul par période close, basé sur les réservations confirmées dont les arrhes et le solde sont marqués reçus.
+  </p>
+
+  <% if @tax_periods.any? %>
+    <ul class="divide-y divide-stone-100">
+      <% @tax_periods.each do |period| %>
+        <li class="py-3 flex items-center justify-between gap-4">
+          <div class="flex-1 min-w-0">
+            <p class="text-sm text-stone-800"><%= period.label %></p>
+            <p class="text-xs text-stone-500 mt-0.5">
+              <span class="text-stone-700"><%= money(period.tax_total_cents) %></span>
+              <% if period.paid? && period.paid_on %>
+                <span class="text-emerald-700">· Reversée le <%= fr_date(period.paid_on) %></span>
+              <% end %>
+            </p>
+          </div>
+
+          <%= form_with url: admin_tourist_tax_periods_path, method: :patch,
+                data: { controller: "autosubmit" }, class: "flex items-center gap-2 shrink-0" do %>
+            <%= hidden_field_tag :season, period.season %>
+            <%= hidden_field_tag :year,   period.year %>
+            <label class="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-stone-600 cursor-pointer">
+              <%= check_box_tag :paid, "1", period.paid?,
+                    data: { action: "change->autosubmit#submit" },
+                    class: "w-4 h-4 accent-stone-900 cursor-pointer" %>
+              Reversée
+            </label>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="text-sm text-stone-400">Aucune période achevée pour le moment. La liste se remplira automatiquement à la fin de chaque saison.</p>
+  <% end %>
+
+  <p class="text-xs text-stone-400 mt-5 border-t border-stone-100 pt-4">
+    <i class="fa-regular fa-bell mr-1"></i>
+    Échéances de déclaration : <strong>1 → 15 mai</strong> (période d'hiver close) et <strong>1 → 15 octobre</strong> (période d'été close).
+  </p>
+</div>

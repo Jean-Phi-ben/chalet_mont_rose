@@ -1,0 +1,148 @@
+<% content_for :title, (@archived_mode ? "Archives" : "Réservations") + " — Admin" %>
+
+<% status_styles = {
+  "pending"   => { label: "En attente", cls: "bg-amber-50 text-amber-700 border-amber-200" },
+  "confirmed" => { label: "Confirmée",  cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  "rejected"  => { label: "Refusée",    cls: "bg-rose-50 text-rose-700 border-rose-200" },
+  "cancelled" => { label: "Annulée",    cls: "bg-stone-100 text-stone-600 border-stone-200" }
+} %>
+
+<% current_list = ->(opts = {}) {
+     @archived_mode ? archived_admin_bookings_path(opts) : admin_bookings_path(opts)
+   } %>
+
+<div class="flex items-start justify-between gap-4 mb-6">
+  <div>
+    <h1 class="text-2xl font-serif text-stone-900 tracking-wide" style="font-family: 'Playfair Display', serif;">
+      <%= @archived_mode ? "Archives" : "Réservations" %>
+    </h1>
+    <p class="text-sm text-stone-500 mt-1">
+      <% if @archived_mode %>
+        Séjours dont la date de départ est passée.
+      <% else %>
+        Demandes reçues — validation, refus et suivi.
+      <% end %>
+    </p>
+  </div>
+  <div class="flex items-center gap-3 shrink-0">
+    <% unless @archived_mode %>
+      <%= link_to new_admin_booking_path,
+            class: "inline-flex items-center gap-2 bg-stone-900 text-white px-4 py-2 rounded-xl text-xs uppercase tracking-widest hover:bg-stone-800 transition" do %>
+        <i class="fa-solid fa-plus"></i> Nouvelle réservation
+      <% end %>
+    <% end %>
+    <% if @archived_mode %>
+      <%= link_to admin_bookings_path, class: "text-xs text-stone-500 hover:text-stone-900 uppercase tracking-widest" do %>
+        <i class="fa-solid fa-arrow-left mr-1"></i> Actives
+      <% end %>
+    <% else %>
+      <%= link_to archived_admin_bookings_path, class: "text-xs text-stone-500 hover:text-stone-900 uppercase tracking-widest" do %>
+        Archives <i class="fa-solid fa-arrow-right ml-1"></i>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<% sort = params[:sort].presence || "check_in" %>
+<% dir  = params[:dir].presence || (sort == "check_in" ? "asc" : "desc") %>
+<% next_dir = ->(col) { (sort == col && dir == "desc") ? "asc" : "desc" } %>
+<% sort_icon = ->(col) {
+     return "fa-sort text-stone-300" unless sort == col
+     dir == "asc" ? "fa-arrow-up-short-wide" : "fa-arrow-down-wide-short"
+   } %>
+
+<% status_chips = [
+  ["Toutes",     nil,         @status_counts.values.sum,        "bg-stone-100 text-stone-700 border-stone-200"],
+  ["En attente", "pending",   @status_counts["pending"]   || 0, "bg-amber-50 text-amber-700 border-amber-200"],
+  ["Confirmées", "confirmed", @status_counts["confirmed"] || 0, "bg-emerald-50 text-emerald-700 border-emerald-200"],
+  ["Refusées",   "rejected",  @status_counts["rejected"]  || 0, "bg-rose-50 text-rose-700 border-rose-200"],
+  ["Annulées",   "cancelled", @status_counts["cancelled"] || 0, "bg-stone-100 text-stone-600 border-stone-200"]
+] %>
+
+<div class="flex flex-wrap gap-2 mb-5">
+  <% status_chips.each do |label, code, count, base_cls| %>
+    <% active = (params[:status].presence == code) %>
+    <%= link_to current_list.(request.query_parameters.merge(status: code).compact_blank),
+          class: "inline-flex items-center gap-2 text-[11px] uppercase tracking-widest px-3 py-1.5 rounded-full border transition #{base_cls} #{active ? 'ring-2 ring-stone-900/30' : 'opacity-60 hover:opacity-100'}" do %>
+      <%= label %>
+      <span class="text-[10px] opacity-70"><%= count %></span>
+    <% end %>
+  <% end %>
+</div>
+
+<% if @bookings.any? %>
+  <div class="bg-white border border-stone-200 rounded-2xl overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm min-w-[760px]">
+        <thead class="bg-stone-50 text-stone-400 uppercase text-[11px] tracking-widest">
+          <tr>
+            <th class="text-left font-medium px-5 py-3">
+              <%= link_to current_list.(request.query_parameters.merge(sort: "requested", dir: next_dir.("requested"))),
+                    class: "inline-flex items-center gap-1.5 hover:text-stone-700 transition" do %>
+                Demande
+                <i class="fa-solid <%= sort_icon.("requested") %> text-[10px]"></i>
+              <% end %>
+            </th>
+            <th class="text-left font-medium px-5 py-3">Client</th>
+            <th class="text-left font-medium px-5 py-3">
+              <%= link_to current_list.(request.query_parameters.merge(sort: "check_in", dir: next_dir.("check_in"))),
+                    class: "inline-flex items-center gap-1.5 hover:text-stone-700 transition" do %>
+                Période
+                <i class="fa-solid <%= sort_icon.("check_in") %> text-[10px]"></i>
+              <% end %>
+            </th>
+            <th class="text-left font-medium px-5 py-3">Total</th>
+            <th class="text-left font-medium px-5 py-3">Statut</th>
+            <th class="text-right font-medium px-5 py-3">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-stone-100">
+          <% @bookings.each do |booking| %>
+            <% s = status_styles.fetch(booking.status, status_styles["pending"]) %>
+            <tr class="hover:bg-stone-50/60">
+              <td class="px-5 py-3 text-stone-500"><%= l(booking.created_at.to_date, format: :long) rescue fr_date(booking.created_at.to_date) %></td>
+              <td class="px-5 py-3">
+                <% if booking.client %>
+                  <%= link_to booking.full_name, admin_client_path(booking.client), class: "text-stone-800 hover:underline" %>
+                <% else %>
+                  <div class="text-stone-800"><%= booking.full_name %></div>
+                <% end %>
+                <div class="text-xs text-stone-400"><%= booking.email %></div>
+              </td>
+              <td class="px-5 py-3 text-stone-700">
+                <%= fr_date(booking.check_in) %> <span class="text-stone-400">→</span> <%= fr_date(booking.check_out) %>
+                <div class="text-xs text-stone-400"><%= booking.weeks %> sem. · <%= booking.nights %> nuits</div>
+              </td>
+              <td class="px-5 py-3 font-medium text-stone-800"><%= money(booking.total_price_cents) %></td>
+              <td class="px-5 py-3">
+                <span class="text-[11px] uppercase tracking-widest px-2.5 py-1 rounded-full border <%= s[:cls] %>"><%= s[:label] %></span>
+              </td>
+              <td class="px-5 py-3">
+                <div class="flex items-center justify-end gap-3">
+                  <%= link_to "Voir", admin_booking_path(booking),
+                        class: "text-stone-700 hover:text-stone-900 text-xs uppercase tracking-widest" %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% else %>
+  <div class="bg-white border border-dashed border-stone-300 rounded-2xl p-12 text-center">
+    <i class="fa-regular fa-calendar text-3xl text-stone-300 mb-3"></i>
+    <p class="text-stone-500">
+      <% if request.query_string.present? %>
+        Aucun résultat ne correspond à ces filtres.
+      <% elsif @archived_mode %>
+        Aucune réservation archivée pour le moment.
+      <% else %>
+        Aucune demande de réservation pour le moment.
+      <% end %>
+    </p>
+    <% if request.query_string.present? %>
+      <%= link_to "Réinitialiser les filtres", current_list.(), class: "inline-block mt-3 text-sm text-stone-900 underline" %>
+    <% end %>
+  </div>
+<% end %>

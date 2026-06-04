@@ -1,0 +1,169 @@
+<% content_for :title, "Réservation #{@booking.full_name} — Admin" %>
+
+<% status_styles = {
+  "pending"   => { label: "En attente de validation", cls: "bg-amber-50 text-amber-700 border-amber-200" },
+  "confirmed" => { label: "Confirmée",                 cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  "rejected"  => { label: "Refusée",                   cls: "bg-rose-50 text-rose-700 border-rose-200" },
+  "cancelled" => { label: "Annulée",                   cls: "bg-stone-100 text-stone-600 border-stone-200" }
+} %>
+<% s = status_styles.fetch(@booking.status, status_styles["pending"]) %>
+
+<div class="mb-6">
+  <%= link_to admin_bookings_path, class: "text-xs text-stone-400 hover:text-stone-700" do %>
+    <i class="fa-solid fa-arrow-left mr-1"></i> Toutes les réservations
+  <% end %>
+</div>
+
+<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
+  <div>
+    <h1 class="text-2xl font-serif text-stone-900 tracking-wide" style="font-family: 'Playfair Display', serif;">
+      <%= @booking.full_name %>
+    </h1>
+    <p class="text-sm text-stone-500 mt-1"><%= @booking.email %><% if @booking.phone.present? %> · <%= @booking.phone %><% end %></p>
+  </div>
+  <span class="self-start text-[11px] uppercase tracking-widest px-3 py-1 rounded-full border <%= s[:cls] %>"><%= s[:label] %></span>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div class="lg:col-span-2 space-y-6">
+    <% if @conflicts.any? %>
+      <% has_confirmed = @conflicts.any?(&:confirmed?) %>
+      <% panel_cls = has_confirmed ? "bg-rose-50 border-rose-200" : "bg-amber-50 border-amber-200" %>
+      <% text_cls  = has_confirmed ? "text-rose-700"             : "text-amber-700" %>
+      <div class="<%= panel_cls %> border rounded-2xl p-5">
+        <p class="font-medium <%= text_cls %> flex items-center gap-2">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <% if has_confirmed %>
+            Conflit avec une réservation confirmée
+          <% else %>
+            Autres demandes sur la même période
+          <% end %>
+        </p>
+        <p class="text-xs <%= text_cls %> mt-1 opacity-80">
+          <% if has_confirmed %>
+            Cette réservation ne peut pas être confirmée tant qu'une autre réservation confirmée chevauche ses dates.
+          <% else %>
+            D'autres demandes <em>en attente</em> chevauchent cette période. Confirmer celle-ci bloquera les semaines ; pense à refuser les autres.
+          <% end %>
+        </p>
+        <ul class="mt-4 divide-y divide-stone-200/60">
+          <% @conflicts.each do |c| %>
+            <li class="py-2 flex items-center justify-between gap-3">
+              <div class="text-sm">
+                <%= link_to admin_booking_path(c), class: "text-stone-800 hover:underline" do %>
+                  <strong><%= c.full_name %></strong>
+                <% end %>
+                <span class="text-stone-400">·</span>
+                <span class="text-stone-600"><%= fr_date(c.check_in) %> → <%= fr_date(c.check_out) %></span>
+              </div>
+              <span class="text-[11px] uppercase tracking-widest px-2.5 py-0.5 rounded-full border <%= c.confirmed? ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200" %>">
+                <%= c.confirmed? ? "Confirmée" : "En attente" %>
+              </span>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 space-y-5">
+    <div>
+      <p class="text-[10px] text-stone-400 uppercase tracking-widest mb-1">Période</p>
+      <p class="text-stone-800"><%= fr_date_full(@booking.check_in) %> <span class="text-stone-400">→</span> <%= fr_date_full(@booking.check_out) %></p>
+      <p class="text-xs text-stone-400 mt-1"><%= @booking.weeks %> semaine(s) · <%= @booking.nights %> nuits<% if @booking.guests_count %> · <%= @booking.guests_count %> voyageur<%= "s" if @booking.guests_count.to_i > 1 %><% end %></p>
+    </div>
+
+    <div class="border-t border-stone-100 pt-5">
+      <%= render "admin/shared/breakdown_table", booking: @booking %>
+      <div class="flex justify-between text-sm border-t border-stone-100 pt-3 mt-3">
+        <span class="text-stone-500">Arrhes (<%= @booking.deposit_percent_label %>)</span>
+        <span class="text-stone-700"><%= money(@booking.deposit_cents) %></span>
+      </div>
+    </div>
+
+    <% if @booking.message.present? %>
+      <div class="border-t border-stone-100 pt-5">
+        <p class="text-[10px] text-stone-400 uppercase tracking-widest mb-2">Message du client</p>
+        <p class="text-sm text-stone-700 whitespace-pre-line"><%= @booking.message %></p>
+      </div>
+    <% end %>
+
+    <div class="border-t border-stone-100 pt-5 text-xs text-stone-400">
+      <p>Reçue le <%= l(@booking.created_at, format: :short) rescue @booking.created_at.to_s %> · Suivi client : <%= link_to reservation_path(@booking.token), reservation_path(@booking.token), class: "text-stone-600 hover:text-stone-900 underline", target: "_blank" %></p>
+    </div>
+    </div>
+  </div>
+
+  <div class="lg:col-span-1 space-y-3">
+    <div class="bg-white border border-stone-200 rounded-2xl p-6 space-y-3">
+      <p class="text-[10px] text-stone-400 uppercase tracking-widest">Actions</p>
+
+      <% if policy(@booking).edit? %>
+        <%= link_to edit_admin_booking_path(@booking),
+              class: "block w-full text-center border border-stone-300 text-stone-700 py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-50 transition" do %>
+          <i class="fa-solid fa-pen mr-1"></i> Modifier
+        <% end %>
+      <% else %>
+        <% lock_reason = if @booking.invoicing_archived?
+                          "Facturation archivée"
+                        elsif @booking.past_stay?
+                          "Séjour passé"
+                        else
+                          "Solde reçu"
+                        end %>
+        <div class="block w-full text-center text-[11px] text-stone-400 italic py-2.5">
+          <i class="fa-solid fa-lock mr-1"></i> <%= lock_reason %> — montants verrouillés
+        </div>
+      <% end %>
+
+      <% if @booking.invoices.any? %>
+        <%= link_to admin_invoice_path(@booking.deposit_invoice || @booking.invoices.first),
+              class: "block w-full text-center border border-stone-300 text-stone-700 py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-50 transition" do %>
+          <i class="fa-regular fa-file-lines mr-1"></i> Facturation (arrhes + solde)
+        <% end %>
+      <% end %>
+
+      <% blocked_by_confirmed = @conflicts.any?(&:confirmed?) %>
+      <% if policy(@booking).confirm? && !blocked_by_confirmed %>
+        <%= button_to confirm_admin_booking_path(@booking), method: :patch,
+              form: { data: { turbo_confirm: "Confirmer cette réservation ? Les semaines seront bloquées." } },
+              class: "block w-full text-center bg-emerald-700 text-white py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-emerald-800 transition cursor-pointer" do %>
+          <i class="fa-solid fa-check mr-1"></i> Confirmer
+        <% end %>
+      <% elsif policy(@booking).confirm? && blocked_by_confirmed %>
+        <div class="text-center text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-3">
+          <i class="fa-solid fa-lock mr-1"></i> Veuillez libérer la confirmation en cours
+        </div>
+      <% end %>
+
+      <% if policy(@booking).reject? %>
+        <%= button_to reject_admin_booking_path(@booking), method: :patch,
+              form: { data: { turbo_confirm: "Refuser cette demande ? Le client sera notifié par email." } },
+              class: "block w-full text-center bg-rose-50 text-rose-700 border border-rose-200 py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-rose-100 transition cursor-pointer" do %>
+          <i class="fa-solid fa-xmark mr-1"></i> Refuser
+        <% end %>
+      <% elsif policy(@booking).cancel? %>
+        <%= button_to cancel_admin_booking_path(@booking), method: :patch,
+              form: { data: { turbo_confirm: "Annuler cette réservation confirmée ? Les semaines seront libérées." } },
+              class: "block w-full text-center bg-rose-50 text-rose-700 border border-rose-200 py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-rose-100 transition cursor-pointer" do %>
+          <i class="fa-solid fa-ban mr-1"></i> Annuler
+        <% end %>
+      <% end %>
+    </div>
+
+    <% if policy(@booking).destroy? %>
+      <% destroy_confirm = if @booking.invoices.any?
+                            "Supprimer définitivement cette demande ainsi que ses #{@booking.invoices.size} facture(s) ?"
+                          else
+                            "Supprimer définitivement cette demande de réservation ?"
+                          end %>
+      <div class="bg-white border border-stone-200 rounded-2xl p-6">
+        <p class="text-[10px] text-stone-400 uppercase tracking-widest mb-2">Zone sensible</p>
+        <%= button_to admin_booking_path(@booking), method: :delete,
+              form: { data: { turbo_confirm: destroy_confirm } },
+              class: "block w-full text-center text-stone-500 hover:text-red-700 text-xs uppercase tracking-widest py-2 transition cursor-pointer" do %>
+          <i class="fa-solid fa-trash mr-1"></i> Supprimer la demande
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

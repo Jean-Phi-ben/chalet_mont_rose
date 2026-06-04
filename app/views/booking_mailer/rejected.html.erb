@@ -1,0 +1,20 @@
+<h2 style="font-family: Georgia, serif; color:#1c1917;">Votre demande de réservation</h2>
+
+<p>Bonjour <%= @booking.first_name %>,</p>
+
+<p>
+  Nous vous remercions pour l'intérêt que vous portez au Chalet Mont Rose.
+  Nous sommes au regret de ne pas pouvoir donner suite à votre demande pour
+  la période suivante :
+</p>
+
+<table cellpadding="6" style="border-collapse: collapse; font-family: Arial, sans-serif; color:#1c1917;">
+  <tr><td><strong>Arrivée</strong></td><td><%= fr_date_full(@booking.check_in) %></td></tr>
+  <tr><td><strong>Départ</strong></td><td><%= fr_date_full(@booking.check_out) %></td></tr>
+</table>
+
+<p style="margin-top:20px;">
+  N'hésitez pas à proposer d'autres dates — nous serons heureux de vous accueillir.
+</p>
+
+<p>Bien cordialement,<br>Chalet Mont Rose</p>

@@ -1,0 +1,64 @@
+<% content_for :title, "Tarifs hebdomadaires — Admin" %>
+
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+  <div>
+    <h1 class="text-2xl font-serif text-stone-900 tracking-wide" style="font-family: 'Playfair Display', serif;">Tarifs hebdomadaires</h1>
+    <p class="text-sm text-stone-500 mt-1">Prix par semaine, du samedi au samedi. Cliquez un prix pour le modifier.</p>
+  </div>
+  <div class="flex items-center gap-3">
+    <%= link_to bulk_edit_admin_weekly_rates_path, class: "inline-flex items-center gap-2 border border-stone-300 text-stone-700 px-4 py-2 rounded-xl text-sm hover:bg-stone-50 transition" do %>
+      <i class="fa-solid fa-layer-group"></i> Éditeur en lot
+    <% end %>
+    <%= link_to new_admin_weekly_rate_path, class: "inline-flex items-center gap-2 bg-stone-900 text-white px-4 py-2 rounded-xl text-sm hover:bg-stone-800 transition" do %>
+      <i class="fa-solid fa-plus"></i> Nouveau tarif
+    <% end %>
+  </div>
+</div>
+
+<% if @weekly_rates.any? %>
+  <div data-controller="modal note-editor">
+    <div class="flex flex-wrap items-center gap-x-5 gap-y-2 mb-4 text-xs text-stone-500">
+      <span class="uppercase tracking-widest text-[10px] text-stone-400">Vacances scolaires</span>
+      <span class="inline-flex items-center gap-1.5">
+        <span class="w-3.5 h-3.5 rounded" style="background-color: rgba(37, 99, 235, 0.18);"></span>
+        France (zones A·B·C)
+      </span>
+      <span class="inline-flex items-center gap-1.5">
+        <span class="w-3.5 h-3.5 rounded" style="background-color: rgba(220, 38, 38, 0.18);"></span>
+        Suisse (Genève)
+      </span>
+      <span class="inline-flex items-center gap-1.5">
+        <span class="w-3.5 h-3.5 rounded" style="background-image: linear-gradient(135deg, rgba(37, 99, 235, 0.18) 0 50%, rgba(220, 38, 38, 0.18) 50% 100%);"></span>
+        Les deux
+      </span>
+    </div>
+
+    <div class="bg-white border border-stone-200 rounded-2xl overflow-hidden">
+      <div class="overflow-x-auto">
+      <table class="w-full text-sm min-w-[680px]">
+        <thead class="bg-stone-50 text-stone-400 uppercase text-[11px] tracking-widest">
+          <tr>
+            <th class="text-left font-medium px-5 py-3">Sem. n°</th>
+            <th class="text-left font-medium px-5 py-3">Semaine (samedi)</th>
+            <th class="text-left font-medium px-5 py-3">Prix / semaine</th>
+            <th class="text-left font-medium px-5 py-3">Prix / nuit</th>
+            <th class="text-left font-medium px-5 py-3">Note</th>
+            <th class="text-right font-medium px-5 py-3">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-stone-100">
+          <%= render partial: "rate", collection: @weekly_rates, as: :rate %>
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <%= render "note_modal" %>
+  </div>
+<% else %>
+  <div class="bg-white border border-dashed border-stone-300 rounded-2xl p-12 text-center">
+    <i class="fa-solid fa-calendar-day text-3xl text-stone-300 mb-3"></i>
+    <p class="text-stone-500">Aucun tarif renseigné pour le moment.</p>
+    <%= link_to "Définir des tarifs en lot", bulk_edit_admin_weekly_rates_path, class: "inline-block mt-4 text-sm text-stone-900 underline" %>
+  </div>
+<% end %>

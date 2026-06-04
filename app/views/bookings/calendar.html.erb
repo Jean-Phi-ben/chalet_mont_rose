@@ -1,0 +1,40 @@
+<% content_for :title, "Calendrier & tarifs — Chalet Mont Rose" %>
+
+<div data-controller="calendar" data-calendar-quote-url-value="<%= calendar_quote_path %>">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="lg:col-span-2">
+    <h1 class="text-2xl sm:text-3xl font-serif text-stone-900 tracking-wide mb-2">Disponibilités &amp; tarifs</h1>
+    <p class="text-sm text-stone-500 mb-6">Cliquez n'importe quel jour : l'arrivée et le départ se calent automatiquement sur le <strong>samedi</strong>.</p>
+
+      <%= render "calendar", max_height: "70vh" %>
+    </div>
+
+    <aside class="lg:col-span-1">
+    <div class="bg-white border border-stone-200 rounded-2xl p-6 lg:sticky lg:top-28">
+      <p class="text-sm text-stone-400 uppercase tracking-wider mb-4">Votre séjour</p>
+
+      <div data-calendar-target="summary" class="hidden space-y-3">
+        <div class="flex justify-between text-sm text-stone-600">
+          <span><span data-calendar-target="nights"></span> nuits</span>
+          <span class="font-medium text-stone-900" data-calendar-target="total"></span>
+        </div>
+        <div class="flex justify-between text-sm text-stone-500 border-t border-stone-100 pt-3">
+          <span>Arrhes (30 %)</span>
+          <span data-calendar-target="deposit"></span>
+        </div>
+      </div>
+
+      <p data-calendar-target="message" class="hidden text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3"></p>
+
+      <p class="text-xs text-stone-400 mt-4">Le prix affiché par jour est indicatif (prix de la semaine ÷ 7).</p>
+
+      <button data-calendar-target="reserve" data-action="click->modal#open" aria-controls="reservation-modal"
+              class="hidden mt-6 w-full bg-stone-900 text-white py-3 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition">
+        Demander une réservation
+      </button>
+      </div>
+    </aside>
+  </div>
+
+  <%= render "reservation_modal" %>
+</div>

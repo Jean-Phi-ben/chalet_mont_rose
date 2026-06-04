@@ -1,0 +1,24 @@
+<h2 style="font-family: Georgia, serif; color:#1c1917;">Nouvelle demande de réservation</h2>
+
+<p>Une nouvelle demande vient d'être déposée sur le site.</p>
+
+<table cellpadding="6" style="border-collapse: collapse; font-family: Arial, sans-serif; color:#1c1917;">
+  <tr><td><strong>Client</strong></td><td><%= @booking.full_name %></td></tr>
+  <tr><td><strong>Email</strong></td><td><%= @booking.email %></td></tr>
+  <tr><td><strong>Téléphone</strong></td><td><%= @booking.phone.presence || "—" %></td></tr>
+  <tr><td><strong>Voyageurs</strong></td><td><%= @booking.guests_count || "—" %></td></tr>
+  <tr><td><strong>Arrivée</strong></td><td><%= fr_date_full(@booking.check_in) %></td></tr>
+  <tr><td><strong>Départ</strong></td><td><%= fr_date_full(@booking.check_out) %></td></tr>
+  <tr><td><strong>Durée</strong></td><td><%= @booking.weeks %> semaine(s) — <%= @booking.nights %> nuits</td></tr>
+  <tr><td><strong>Total</strong></td><td><%= money(@booking.total_price_cents) %></td></tr>
+  <tr><td><strong>Arrhes (30 %)</strong></td><td><%= money(@booking.deposit_cents) %></td></tr>
+</table>
+
+<% if @booking.message.present? %>
+  <p><strong>Message du client :</strong></p>
+  <p style="white-space: pre-wrap;"><%= @booking.message %></p>
+<% end %>
+
+<p style="margin-top:24px;">
+  <a href="<%= reservation_url(@booking.token) %>">Voir le suivi de la demande</a>
+</p>

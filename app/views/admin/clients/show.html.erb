@@ -1,0 +1,85 @@
+<% content_for :title, "#{@client.full_name} — Admin" %>
+
+<% status_styles = {
+  "pending"   => "bg-amber-50 text-amber-700 border-amber-200",
+  "confirmed" => "bg-emerald-50 text-emerald-700 border-emerald-200",
+  "rejected"  => "bg-rose-50 text-rose-700 border-rose-200",
+  "cancelled" => "bg-stone-100 text-stone-600 border-stone-200"
+} %>
+
+<div class="mb-6">
+  <%= link_to admin_bookings_path, class: "text-xs text-stone-400 hover:text-stone-700" do %>
+    <i class="fa-solid fa-arrow-left mr-1"></i> Toutes les réservations
+  <% end %>
+</div>
+
+<div class="flex items-start justify-between gap-4 mb-8">
+  <div>
+    <h1 class="text-2xl font-serif text-stone-900 tracking-wide" style="font-family: 'Playfair Display', serif;">
+      <%= @client.full_name %>
+    </h1>
+    <p class="text-sm text-stone-500 mt-1">
+      Fiche client · <%= pluralize(@bookings.size, "réservation") %>
+    </p>
+  </div>
+  <% if policy(@client).edit? %>
+    <%= link_to edit_admin_client_path(@client),
+          class: "shrink-0 inline-flex items-center gap-2 border border-stone-300 text-stone-700 px-4 py-2 rounded-xl text-xs uppercase tracking-widest hover:bg-stone-50 transition" do %>
+      <i class="fa-solid fa-pen"></i> Modifier
+    <% end %>
+  <% end %>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div class="lg:col-span-1 bg-white border border-stone-200 rounded-2xl p-6 space-y-4">
+    <div>
+      <p class="text-[10px] text-stone-400 uppercase tracking-widest mb-1">Email</p>
+      <p class="text-sm text-stone-800 break-all"><%= mail_to @client.email, @client.email, class: "hover:underline" %></p>
+    </div>
+    <div>
+      <p class="text-[10px] text-stone-400 uppercase tracking-widest mb-1">Téléphone</p>
+      <p class="text-sm text-stone-800"><%= @client.phone.presence || "—" %></p>
+    </div>
+    <div>
+      <p class="text-[10px] text-stone-400 uppercase tracking-widest mb-1">Adresse</p>
+      <p class="text-sm text-stone-700 whitespace-pre-line"><%= @client.address.presence || "—" %></p>
+    </div>
+    <div class="text-xs text-stone-400 border-t border-stone-100 pt-3">
+      Créé le <%= fr_date(@client.created_at.to_date) %>
+    </div>
+  </div>
+
+  <div class="lg:col-span-2">
+    <h2 class="text-sm uppercase tracking-widest text-stone-500 mb-3">Réservations</h2>
+    <% if @bookings.any? %>
+      <div class="bg-white border border-stone-200 rounded-2xl overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-stone-50 text-stone-400 uppercase text-[11px] tracking-widest">
+            <tr>
+              <th class="text-left font-medium px-5 py-3">Période</th>
+              <th class="text-left font-medium px-5 py-3">Total</th>
+              <th class="text-left font-medium px-5 py-3">Statut</th>
+              <th class="text-right font-medium px-5 py-3"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-stone-100">
+            <% @bookings.each do |b| %>
+              <tr class="hover:bg-stone-50/60">
+                <td class="px-5 py-3 text-stone-700"><%= fr_date(b.check_in) %> <span class="text-stone-400">→</span> <%= fr_date(b.check_out) %></td>
+                <td class="px-5 py-3 text-stone-800 font-medium"><%= money(b.total_price_cents) %></td>
+                <td class="px-5 py-3">
+                  <span class="text-[11px] uppercase tracking-widest px-2.5 py-0.5 rounded-full border <%= status_styles[b.status] %>"><%= b.status %></span>
+                </td>
+                <td class="px-5 py-3 text-right">
+                  <%= link_to "Voir", admin_booking_path(b), class: "text-xs text-stone-700 hover:text-stone-900 uppercase tracking-widest" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p class="text-sm text-stone-400">Aucune réservation enregistrée pour ce client.</p>
+    <% end %>
+  </div>
+</div>

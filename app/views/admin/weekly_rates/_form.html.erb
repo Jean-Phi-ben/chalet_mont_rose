@@ -1,0 +1,34 @@
+<%= form_with model: [:admin, weekly_rate], class: "space-y-5" do |f| %>
+  <% if weekly_rate.errors.any? %>
+    <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm">
+      <p class="font-medium mb-1"><%= pluralize(weekly_rate.errors.count, "erreur") %> :</p>
+      <ul class="list-disc list-inside">
+        <% weekly_rate.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :week_start, "Samedi de début", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+    <%= f.date_field :week_start, class: "w-full sm:w-72 border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+    <p class="text-xs text-stone-400 mt-1">Doit être un samedi.</p>
+  </div>
+
+  <div>
+    <%= f.label :price_euros, "Prix de la semaine (€)", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+    <%= f.number_field :price_euros, step: 1, min: 0, value: weekly_rate.price_euros,
+          class: "w-full sm:w-72 border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+  </div>
+
+  <div>
+    <%= f.label :note, "Note (optionnel)", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+    <%= f.text_field :note, class: "w-full sm:w-72 border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+  </div>
+
+  <div class="flex items-center gap-3 pt-2">
+    <%= f.submit "Enregistrer", class: "bg-stone-900 text-white px-6 py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition cursor-pointer" %>
+    <%= link_to "Annuler", admin_weekly_rates_path, class: "text-sm text-stone-500 hover:text-stone-900" %>
+  </div>
+<% end %>

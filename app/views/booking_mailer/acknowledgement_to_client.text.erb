@@ -1,0 +1,19 @@
+Merci pour votre demande
+========================
+
+Bonjour <%= @booking.first_name %>,
+
+Nous avons bien reçu votre demande de réservation pour le Chalet Mont Rose.
+Elle est en attente de validation ; nous reviendrons vers vous très
+rapidement pour la confirmer.
+
+Arrivée      : <%= fr_date_full(@booking.check_in) %>
+Départ       : <%= fr_date_full(@booking.check_out) %>
+Durée        : <%= @booking.weeks %> semaine(s)
+Total estimé : <%= money(@booking.total_price_cents) %>
+
+Suivez votre demande ici :
+<%= reservation_url(@booking.token) %>
+
+À très bientôt,
+Chalet Mont Rose
