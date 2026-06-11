@@ -33,6 +33,27 @@ class BookingMailerTest < ActionMailer::TestCase
     assert_match "Jean", mail.body.encoded
   end
 
+  test "confirmation attaches the deposit invoice PDF and includes the contract signing link only" do
+    GenerateInvoiceJob.perform_now(@booking)
+    SendContractJob.perform_now(@booking)
+
+    mail = BookingMailer.confirmation(@booking)
+    assert_equal ["client@example.com"], mail.to
+    assert_match "confirmée", mail.subject
+    html = mail.html_part.body.decoded
+    text = mail.text_part.body.decoded
+    assert_match "Signer le contrat", html
+    assert_match "/reservations/#{@booking.token}/contract", html
+    # La caution n'est PAS dans le mail de confirmation — elle est différée au rappel J-10.
+    assert_no_match "Déposer la caution", html
+    assert_no_match "Déposer la caution", text
+
+    assert_equal 1, mail.attachments.size
+    attachment = mail.attachments.first
+    assert_match(/facture-arrhes-CMR-\d{4}-\d{4}\.pdf/, attachment.filename)
+    assert_equal "application/pdf", attachment.mime_type
+  end
+
   private
 
   def with_env(key, value)

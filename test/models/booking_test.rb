@@ -106,4 +106,44 @@ class BookingTest < ActiveSupport::TestCase
     other = Booking.new(valid_attributes(email: "b@example.com", status: :pending))
     assert other.valid?
   end
+
+  # --- blocked / transition dates ----------------------------------------------
+
+  test "blocked_dates_between excludes check_in and check_out (transition days)" do
+    Booking.create!(valid_attributes(
+      check_in: Date.new(2026, 1, 10), check_out: Date.new(2026, 1, 17),
+      status: :confirmed
+    ))
+    blocked = Booking.blocked_dates_between(Date.new(2026, 1, 1), Date.new(2026, 1, 31))
+
+    # Nuits intermédiaires bloquées (Sun à Fri).
+    (Date.new(2026, 1, 11)..Date.new(2026, 1, 16)).each do |d|
+      assert blocked.include?(d), "#{d} devrait être bloqué (nuit intermédiaire)"
+    end
+
+    # Samedis de check_in / check_out NON bloqués — ils sont des jours de transition.
+    refute blocked.include?(Date.new(2026, 1, 10)), "Sat check_in doit rester cliquable"
+    refute blocked.include?(Date.new(2026, 1, 17)), "Sat check_out doit rester cliquable"
+  end
+
+  test "transition_dates_between returns the Saturdays of check_in and check_out" do
+    Booking.create!(valid_attributes(
+      check_in: Date.new(2026, 1, 10), check_out: Date.new(2026, 1, 17),
+      status: :confirmed
+    ))
+    transitions = Booking.transition_dates_between(Date.new(2026, 1, 1), Date.new(2026, 1, 31))
+    assert_includes transitions, Date.new(2026, 1, 10), "check_in inclus"
+    assert_includes transitions, Date.new(2026, 1, 17), "check_out inclus"
+  end
+
+  test "can book the week BEFORE an existing booking (turnover on check_in Saturday)" do
+    # Booking existant : Sat 10 → Sat 17
+    Booking.create!(valid_attributes(
+      check_in: Date.new(2026, 1, 10), check_out: Date.new(2026, 1, 17),
+      status: :confirmed
+    ))
+    # Nouvelle résa qui FINIT le Sat 10 (check_in de l'autre) → doit passer
+    refute Booking.confirmed_overlap?(Date.new(2026, 1, 3), Date.new(2026, 1, 10)),
+           "Réserver [Sat 3 → Sat 10) doit être possible même si Sat 10 = check_in d'une autre résa"
+  end
 end

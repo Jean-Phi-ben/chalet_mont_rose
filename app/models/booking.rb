@@ -9,6 +9,10 @@ class Booking < ApplicationRecord
   belongs_to :user, optional: true
   belongs_to :client, optional: true
   has_many :invoices, dependent: :destroy
+  has_one  :contract, dependent: :destroy
+  has_one  :caution,  dependent: :destroy
+  # La suppression d'une résa efface aussi son journal d'emails.
+  has_many :email_logs, dependent: :destroy
   has_secure_token
 
   # Champ virtuel : l'adresse vit sur le Client (synchronisée à la sauvegarde).
@@ -29,13 +33,28 @@ class Booking < ApplicationRecord
 
   validate :no_overlap_with_other_confirmed, if: -> { confirmed? && check_in && check_out }
 
-  # Renvoie l'ensemble des dates (inclus) bloquées par les réservations confirmées
-  # qui chevauchent la fenêtre [from, to]. Le check_out n'est pas bloqué
-  # (départ matin = chalet libre, autorise les enchaînements samedi→samedi).
+  # Jours entièrement bloqués (nuits intermédiaires d'une réservation existante).
+  # On exclut :
+  #   - le check_in : le chalet est libre le matin (utilisable comme check_out d'une autre résa)
+  #   - le check_out : le chalet est libre l'après-midi (utilisable comme check_in d'une autre résa)
+  # Ces deux jours-là sont des "jours de transition" — voir transition_dates_between.
   def self.blocked_dates_between(from, to)
     confirmed
       .where("check_in < ? AND check_out > ?", to + 1, from)
-      .each_with_object(Set.new) { |b, set| (b.check_in...b.check_out).each { |d| set << d } }
+      .each_with_object(Set.new) { |b, set| ((b.check_in + 1)...b.check_out).each { |d| set << d } }
+  end
+
+  # Samedis qui sont des "jours de transition" sur la fenêtre [from, to] :
+  # check_in ou check_out d'une réservation confirmée. Ils restent sélectionnables
+  # par le client (un samedi peut être à la fois la fin d'un séjour et le début
+  # d'un autre — turnover classique en location saisonnière).
+  def self.transition_dates_between(from, to)
+    confirmed
+      .where("check_in <= ? AND check_out >= ?", to, from)
+      .each_with_object(Set.new) do |b, set|
+        set << b.check_in  if b.check_in.between?(from, to)
+        set << b.check_out if b.check_out.between?(from, to)
+      end
   end
 
   # Existe-t-il une réservation confirmée qui chevauche [check_in, check_out) ?

@@ -1,0 +1,153 @@
+<% content_for :title, "Signature du contrat — Chalet Mont Rose" %>
+
+<div class="max-w-3xl mx-auto py-8 px-4">
+  <%# Bandeau d'état (signé ou non) %>
+  <div class="mb-6 text-center">
+    <h1 class="text-2xl sm:text-3xl font-serif text-stone-900 tracking-wide" style="font-family: 'Playfair Display', serif;">
+      Contrat de location
+    </h1>
+    <p class="text-sm text-stone-500 mt-1">
+      Séjour du <%= fr_date_full(@booking.check_in) %> au <%= fr_date_full(@booking.check_out) %>
+    </p>
+  </div>
+
+  <% if @contract.status_signed? %>
+    <%# === État final : contrat signé === %>
+    <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl p-6 text-center">
+      <i class="fa-solid fa-circle-check text-3xl mb-2"></i>
+      <p class="font-medium">Contrat signé le <%= I18n.l(@contract.signed_at, format: :long) rescue @contract.signed_at %></p>
+      <p class="text-sm mt-1">Une copie signée vous a été envoyée par email — vous pouvez aussi la télécharger ci-dessous.</p>
+      <% if @contract.signed_pdf.attached? %>
+        <%= link_to signed_contract_pdf_reservation_path(@booking.token),
+              class: "inline-flex items-center gap-2 mt-4 bg-stone-900 text-white px-5 py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition" do %>
+          <i class="fa-solid fa-file-arrow-down"></i> Télécharger le PDF signé
+        <% end %>
+      <% else %>
+        <p class="text-xs text-stone-400 mt-3">Le PDF est en cours de génération, recharge la page dans un instant.</p>
+      <% end %>
+    </div>
+
+    <%# Dossier de preuves visible côté client aussi %>
+    <div class="mt-6 bg-white border border-stone-200 rounded-2xl p-6 text-xs text-stone-500 leading-relaxed">
+      <p class="text-[10px] text-stone-400 uppercase tracking-widest mb-2">Dossier de preuve</p>
+      <p>Signé par <strong class="text-stone-700"><%= @contract.signer_full_name %></strong> le <%= I18n.l(@contract.signed_at, format: :long) rescue @contract.signed_at %>.</p>
+      <p>Validé par double authentification email (code OTP à 6 chiffres, à usage unique).</p>
+      <p>IP du signataire : <code><%= @contract.signed_ip %></code></p>
+      <p class="break-all">Empreinte SHA-256 : <code class="text-[10px]"><%= @contract.document_hash %></code></p>
+    </div>
+
+  <% else %>
+    <%# === Workflow de signature === %>
+    <div data-controller="contract-signing"
+         data-contract-signing-otp-sent-value="<%= @contract.otp_sent_at.present? && !@contract.otp_expired? %>"
+         class="space-y-6">
+
+      <%# Bloc contrat scrollable %>
+      <div class="bg-white border border-stone-200 rounded-2xl p-6 sm:p-10">
+        <div data-contract-signing-target="document"
+             data-action="scroll->contract-signing#onScroll"
+             class="max-h-[60vh] overflow-y-auto pr-3 text-stone-700"
+             tabindex="0">
+          <%= render "contract_text", booking: @booking, contract: @contract %>
+        </div>
+        <div class="mt-4 text-xs text-stone-400">
+          <span data-contract-signing-target="scrollHint">
+            <i class="fa-solid fa-arrow-down mr-1"></i> Faites défiler jusqu'en bas pour activer la signature.
+          </span>
+          <span data-contract-signing-target="scrollOk" class="hidden text-emerald-700">
+            <i class="fa-solid fa-check mr-1"></i> Contrat lu — vous pouvez signer.
+          </span>
+        </div>
+      </div>
+
+      <%# Bloc signature — désactivé tant que pas scrollé %>
+      <div data-contract-signing-target="signBlock"
+           class="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 opacity-40 pointer-events-none transition">
+
+        <h2 class="text-lg font-serif text-stone-900 mb-1" style="font-family: 'Playfair Display', serif;">Votre signature</h2>
+        <p class="text-sm text-stone-500 mb-5">
+          Dessinez votre signature dans le cadre ci-dessous, demandez votre code à 6 chiffres,
+          puis saisissez-le pour valider.
+        </p>
+
+        <%# Identité figée %>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 text-sm">
+          <% { "Prénom" => @contract.signer_first_name, "Nom" => @contract.signer_last_name,
+               "Email" => @contract.signer_email, "Téléphone" => @contract.signer_phone,
+               "Adresse" => @contract.signer_address }.each do |label, value| %>
+            <div>
+              <p class="text-[10px] text-stone-400 uppercase tracking-widest mb-1"><%= label %></p>
+              <p class="text-stone-700 bg-stone-50 border border-stone-200 rounded-lg px-3 py-2"><%= value.presence || "—" %></p>
+            </div>
+          <% end %>
+        </div>
+
+        <%# Zone de tracé %>
+        <div class="mb-4">
+          <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Tracé de la signature</label>
+          <div class="relative border-2 border-dashed border-stone-300 rounded-xl bg-stone-50 overflow-hidden" style="height: 180px;">
+            <canvas data-contract-signing-target="canvas" class="w-full h-full cursor-crosshair touch-none"></canvas>
+            <button type="button"
+                    data-action="click->contract-signing#clearCanvas"
+                    class="absolute top-2 right-2 text-[10px] uppercase tracking-widest text-stone-500 hover:text-stone-900 bg-white border border-stone-200 rounded-md px-2 py-1">
+              <i class="fa-solid fa-rotate-left mr-1"></i> Effacer
+            </button>
+          </div>
+        </div>
+
+        <%# OTP %>
+        <div class="mb-4">
+          <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Code à 6 chiffres reçu par email</label>
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="text" inputmode="numeric" pattern="\d{6}" maxlength="6"
+                   data-contract-signing-target="otp"
+                   data-action="input->contract-signing#refresh"
+                   placeholder="000000" autocomplete="one-time-code"
+                   class="font-mono tracking-[0.4em] text-lg w-48 border border-stone-300 rounded-lg px-3 py-2 focus:outline-none focus:border-stone-900">
+            <%= button_to "Renvoyer le code", request_otp_reservation_path(@booking.token), method: :post,
+                  data: { "contract-signing-target": "requestOtpBtn" },
+                  form: { class: "inline-block" },
+                  class: "text-xs uppercase tracking-widest border border-stone-300 text-stone-700 px-4 py-2 rounded-lg hover:bg-stone-50 transition cursor-pointer" %>
+          </div>
+          <p class="text-[11px] text-stone-400 mt-1">Code envoyé automatiquement à l'email indiqué. Valable <%= Contract::OTP_TTL.in_minutes.to_i %> minutes, à usage unique.</p>
+        </div>
+
+        <%# Engagement %>
+        <label class="flex items-start gap-3 mb-5 cursor-pointer">
+          <input type="checkbox"
+                 data-contract-signing-target="accepted"
+                 data-action="change->contract-signing#refresh"
+                 autocomplete="off"
+                 class="mt-1 h-4 w-4 rounded border-stone-300 text-stone-900 focus:ring-stone-900">
+          <span class="text-sm text-stone-700 leading-relaxed">
+            Je déclare avoir lu, compris et accepté l'intégralité du contrat de location ci-dessus, et reconnais que ma signature
+            électronique a la même valeur juridique qu'une signature manuscrite, conformément à l'esprit du règlement eIDAS (UE 910/2014).
+          </span>
+        </label>
+
+        <%# Formulaire d'envoi final %>
+        <%= form_with url: sign_contract_reservation_path(@booking.token), method: :post,
+              data: { "contract-signing-target": "form" }, local: true, class: "flex flex-wrap items-center gap-3" do %>
+          <input type="hidden" name="otp_code"        data-contract-signing-target="otpHidden">
+          <input type="hidden" name="signature_image" data-contract-signing-target="signatureHidden">
+          <input type="hidden" name="accepted"        data-contract-signing-target="acceptedHidden" value="0">
+          <button type="submit"
+                  data-contract-signing-target="submitBtn"
+                  disabled
+                  class="bg-stone-900 text-white px-6 py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition cursor-pointer disabled:bg-stone-300 disabled:cursor-not-allowed">
+            <i class="fa-solid fa-signature mr-1"></i> Signer le contrat
+          </button>
+          <span data-contract-signing-target="hint" class="text-xs text-stone-400"></span>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="mt-8 text-center">
+    <%= link_to reservation_path(@booking.token), class: "text-xs text-stone-400 hover:text-stone-700 uppercase tracking-widest" do %>
+      <i class="fa-solid fa-arrow-left mr-1"></i> Retour au suivi
+    <% end %>
+  </div>
+</div>
+
+<%= javascript_include_tag "https://cdn.jsdelivr.net/npm/signature_pad@5/dist/signature_pad.umd.min.js", nonce: true %>

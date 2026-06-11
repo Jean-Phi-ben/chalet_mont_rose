@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_04_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_09_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -79,6 +79,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_04_110000) do
     t.index ["user_id"], name: "index_bookings_on_user_id"
   end
 
+  create_table "cautions", force: :cascade do |t|
+    t.datetime "accepted_at"
+    t.integer "amount_cents", default: 0, null: false
+    t.bigint "booking_id", null: false
+    t.datetime "captured_at"
+    t.datetime "created_at", null: false
+    t.string "decline_reason"
+    t.string "deposit_url"
+    t.string "provider_request_id"
+    t.datetime "released_at"
+    t.datetime "requested_at"
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["booking_id"], name: "index_cautions_on_booking_id", unique: true
+  end
+
   create_table "clients", force: :cascade do |t|
     t.text "address"
     t.datetime "created_at", null: false
@@ -88,6 +104,55 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_04_110000) do
     t.string "phone"
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_clients_on_email", unique: true
+  end
+
+  create_table "contracts", force: :cascade do |t|
+    t.bigint "booking_id", null: false
+    t.datetime "created_at", null: false
+    t.string "document_hash"
+    t.integer "otp_attempts", default: 0, null: false
+    t.string "otp_digest"
+    t.datetime "otp_sent_at"
+    t.datetime "sent_at"
+    t.text "signature_image"
+    t.datetime "signed_at"
+    t.string "signed_ip"
+    t.text "signed_user_agent"
+    t.string "signer_address"
+    t.string "signer_email"
+    t.string "signer_first_name"
+    t.string "signer_last_name"
+    t.string "signer_phone"
+    t.integer "status", default: 0, null: false
+    t.string "token", default: "", null: false
+    t.datetime "updated_at", null: false
+    t.index ["booking_id"], name: "index_contracts_on_booking_id", unique: true
+    t.index ["token"], name: "index_contracts_on_token", unique: true
+  end
+
+  create_table "documents", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "kind", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["kind"], name: "index_documents_on_kind", unique: true
+  end
+
+  create_table "email_logs", force: :cascade do |t|
+    t.string "action", null: false
+    t.string "bcc_addresses"
+    t.bigint "booking_id"
+    t.string "cc_addresses"
+    t.datetime "created_at", null: false
+    t.string "from_address"
+    t.string "mailer", null: false
+    t.string "message_id"
+    t.datetime "sent_at", null: false
+    t.string "subject"
+    t.string "to_addresses", null: false
+    t.datetime "updated_at", null: false
+    t.index ["booking_id"], name: "index_email_logs_on_booking_id"
+    t.index ["sent_at"], name: "index_email_logs_on_sent_at"
   end
 
   create_table "invoices", force: :cascade do |t|
@@ -105,6 +170,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_04_110000) do
     t.index ["booking_id", "kind"], name: "index_invoices_on_booking_id_and_kind", unique: true
     t.index ["booking_id"], name: "index_invoices_on_booking_id"
     t.index ["number"], name: "index_invoices_on_number", unique: true
+  end
+
+  create_table "notes", force: :cascade do |t|
+    t.datetime "archived_at"
+    t.text "body"
+    t.datetime "created_at", null: false
+    t.date "deadline"
+    t.boolean "done", default: false, null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["archived_at"], name: "index_notes_on_archived_at"
+    t.index ["deadline"], name: "index_notes_on_deadline"
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -149,6 +226,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_04_110000) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "bookings", "clients"
   add_foreign_key "bookings", "users"
+  add_foreign_key "cautions", "bookings"
+  add_foreign_key "contracts", "bookings"
+  add_foreign_key "email_logs", "bookings"
   add_foreign_key "invoices", "bookings"
   add_foreign_key "sessions", "users"
 end

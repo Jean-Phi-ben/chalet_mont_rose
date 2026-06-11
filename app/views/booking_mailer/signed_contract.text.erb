@@ -1,0 +1,17 @@
+Votre contrat signé
+
+Bonjour <%= @booking.first_name %>,
+
+Merci d'avoir signé votre contrat de location pour le Chalet Mont Rose.
+Vous trouverez en pièce jointe le PDF officiel, comprenant votre signature et le dossier de preuve juridique.
+
+Arrivée : <%= fr_date_full(@booking.check_in) %>
+Départ  : <%= fr_date_full(@booking.check_out) %>
+Signé le: <%= l(@signed_at, format: :long) rescue @signed_at %>
+
+Référence d'intégrité (SHA-256) : <%= @hash %>
+
+Suivi : <%= reservation_url(@booking.token) %>
+
+À très bientôt,
+Chalet Mont Rose

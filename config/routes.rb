@@ -5,8 +5,19 @@ Rails.application.routes.draw do
   get "calendrier",       to: "bookings#calendar", as: :calendar
   get "calendrier/quote", to: "bookings#quote",    as: :calendar_quote
 
-  # Demande de réservation + suivi client (accès par token, sans login)
-  resources :reservations, only: %i[create show], param: :token
+  # Demande de réservation + suivi client (accès par token, sans login).
+  # La page de signature et ses actions sont exposées sous /reservations/:token/contract.
+  resources :reservations, only: %i[create show], param: :token do
+    member do
+      get  :contract
+      post :request_otp,    path: "contract/otp"
+      post :sign_contract,  path: "contract/sign"
+      get  :signed_contract_pdf, path: "contract/pdf"
+    end
+  end
+
+  # Webhooks fournisseurs (CSRF désactivé sur le contrôleur)
+  post "webhooks/swikly", to: "webhooks/swikly#create"
 
   namespace :admin do
     root to: "dashboard#index"
@@ -24,6 +35,8 @@ Rails.application.routes.draw do
         patch :confirm
         patch :reject
         patch :cancel
+        post  :send_balance_reminder
+        post  :resend_email
       end
     end
     resources :invoices, only: %i[index show update] do
@@ -39,6 +52,18 @@ Rails.application.routes.draw do
     resource :booking_setting, only: %i[show update]
     resource :tourist_tax_periods, only: :update
     resources :clients, only: %i[show edit update]
+    resources :documents
+    resources :email_logs, only: %i[index show]
+    resources :notes, only: %i[create update destroy] do
+      collection do
+        get :archived
+      end
+      member do
+        patch :toggle
+        patch :archive
+        patch :unarchive
+      end
+    end
   end
   resource :session
   resources :passwords, param: :token

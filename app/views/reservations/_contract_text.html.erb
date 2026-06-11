@@ -1,0 +1,127 @@
+<%# Texte du contrat — rendu HTML pour la page de signature.
+    DOIT correspondre au texte canonique de ContractTemplate.canonical_text :
+    toute divergence change le hash SHA-256 calculé à la signature.
+    La structure suit les 9 sections numérotées. %>
+<% company  = ContractTemplate::COMPANY %>
+<% property = ContractTemplate::PROPERTY %>
+
+<header class="mb-6">
+  <h2 class="text-xl font-serif text-stone-900" style="font-family: 'Playfair Display', serif;">
+    Contrat de location saisonnière — <%= company[:name] %>
+  </h2>
+  <p class="text-[11px] text-stone-400 uppercase tracking-widest mt-1">Version <%= ContractTemplate::VERSION %></p>
+</header>
+
+<section class="mb-5">
+  <h3 class="font-semibold text-stone-900 mb-2">1. Parties</h3>
+  <p class="text-sm leading-relaxed">
+    <strong>Bailleur :</strong> <%= company[:name] %> — <%= company[:address] %> — SIRET <%= company[:siret] %> (« le Bailleur »).<br>
+    <strong>Locataire :</strong> <%= contract.signer_first_name %> <%= contract.signer_last_name %>,
+    demeurant <%= contract.signer_address.presence || "à compléter" %>,
+    email <%= contract.signer_email %>,
+    téléphone <%= contract.signer_phone.presence || "n.c." %> (« le Locataire »).
+  </p>
+</section>
+
+<section class="mb-5">
+  <h3 class="font-semibold text-stone-900 mb-2">2. Objet</h3>
+  <p class="text-sm leading-relaxed">
+    Le présent contrat a pour objet la location, à usage exclusivement saisonnier et d'habitation,
+    du logement meublé désigné à l'article 3 ci-après (« le Logement »).
+    Toute sous-location, cession ou usage commercial est strictement interdit.
+  </p>
+</section>
+
+<section class="mb-5">
+  <h3 class="font-semibold text-stone-900 mb-2">3. Désignation et consistance du logement</h3>
+
+  <dl class="text-sm grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 mb-3">
+    <div><dt class="inline text-stone-500">Nom :</dt> <dd class="inline"><%= property[:name] %></dd></div>
+    <div><dt class="inline text-stone-500">Adresse :</dt> <dd class="inline"><%= property[:address] %></dd></div>
+    <div><dt class="inline text-stone-500">Code postal :</dt> <dd class="inline"><%= property[:postal_code] %></dd></div>
+    <div><dt class="inline text-stone-500">Ville :</dt> <dd class="inline"><%= property[:city] %></dd></div>
+    <div><dt class="inline text-stone-500">Code porte :</dt> <dd class="inline"><%= property[:door_code] %></dd></div>
+    <div><dt class="inline text-stone-500">Étages :</dt> <dd class="inline"><%= property[:floors] %></dd></div>
+    <div class="sm:col-span-2"><dt class="inline text-stone-500">Parking :</dt> <dd class="inline"><%= property[:parking] %></dd></div>
+  </dl>
+
+  <dl class="text-sm grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 mb-3 border-t border-stone-100 pt-3">
+    <div><dt class="inline text-stone-500">Type d'habitat :</dt> <dd class="inline"><%= property[:habitat_type] %></dd></div>
+    <div><dt class="inline text-stone-500">Régime juridique :</dt> <dd class="inline"><%= property[:legal_regime] %></dd></div>
+    <div><dt class="inline text-stone-500">Période de construction :</dt> <dd class="inline"><%= property[:construction_period] %></dd></div>
+    <div><dt class="inline text-stone-500">Surface habitable :</dt> <dd class="inline"><%= property[:living_area_sqm] %> m²</dd></div>
+    <div><dt class="inline text-stone-500">Nombre de pièces :</dt> <dd class="inline"><%= property[:rooms_count] %></dd></div>
+    <div><dt class="inline text-stone-500">Capacité maximale :</dt> <dd class="inline"><strong><%= property[:max_occupants] %> personnes</strong></dd></div>
+  </dl>
+
+  <p class="text-sm mt-3 mb-1">Description du bien loué — chalet de montagne comprenant :</p>
+  <ul class="text-sm list-disc list-inside space-y-0.5">
+    <% property[:description].each do |item| %>
+      <li><%= item %></li>
+    <% end %>
+  </ul>
+</section>
+
+<section class="mb-5">
+  <h3 class="font-semibold text-stone-900 mb-2">4. Durée &amp; occupation</h3>
+  <p class="text-sm leading-relaxed">
+    Arrivée : <strong><%= I18n.l(booking.check_in, format: :long) rescue booking.check_in %></strong>.<br>
+    Départ&nbsp;: <strong><%= I18n.l(booking.check_out, format: :long) rescue booking.check_out %></strong>.<br>
+    Durée&nbsp;: <%= booking.weeks %> semaine(s), soit <%= booking.nights %> nuit(s).<br>
+    Nombre de voyageurs pour le présent séjour&nbsp;: <%= booking.guests_count || "à préciser" %> personne(s),
+    dans la limite de la capacité maximale du Logement (<%= property[:max_occupants] %>).<br>
+    Toute arrivée s'effectue le samedi à partir de 16 h, départ le samedi suivant avant 10 h, sauf accord écrit du Bailleur.
+  </p>
+</section>
+
+<section class="mb-5">
+  <h3 class="font-semibold text-stone-900 mb-2">5. Prix &amp; paiement</h3>
+  <p class="text-sm leading-relaxed">
+    Montant total du séjour&nbsp;: <strong><%= money(booking.total_price_cents) %></strong> TTC, taxe de séjour incluse.<br>
+    Acompte (arrhes)&nbsp;: <%= money(booking.deposit_cents) %>, à verser dans les 7 jours suivant la signature.<br>
+    Solde&nbsp;: <%= money(booking.total_price_cents - booking.deposit_cents) %> à régler au plus tard 10 jours avant l'arrivée.<br>
+    Le paiement s'effectue par virement bancaire sur le compte indiqué sur la facture.
+  </p>
+</section>
+
+<section class="mb-5">
+  <h3 class="font-semibold text-stone-900 mb-2">6. Caution (empreinte bancaire)</h3>
+  <p class="text-sm leading-relaxed">
+    Une caution est demandée par empreinte bancaire dématérialisée via le prestataire <strong>Swikly</strong>.
+    Aucun montant n'est prélevé&nbsp;: il s'agit d'une pré-autorisation, libérée à la fin du séjour si aucun dégât
+    ni manquement n'est constaté. Le lien Swikly sera transmis avec le rappel du solde, 10 jours avant l'arrivée.
+  </p>
+</section>
+
+<section class="mb-5">
+  <h3 class="font-semibold text-stone-900 mb-2">7. Obligations du Locataire</h3>
+  <p class="text-sm leading-relaxed">
+    Le Locataire s'engage à occuper le Logement en « bon père de famille », à respecter la capacité maximale
+    de <%= property[:max_occupants] %> personnes, à ne pas fumer à l'intérieur, à respecter le voisinage, et à laisser les lieux propres au départ.
+    Le ménage de sortie est inclus dans le forfait ménage facturé, sauf détérioration manifeste.
+    Le Locataire déclare disposer d'une assurance villégiature couvrant les risques locatifs durant son séjour.
+  </p>
+</section>
+
+<section class="mb-5">
+  <h3 class="font-semibold text-stone-900 mb-2">8. Annulation</h3>
+  <p class="text-sm leading-relaxed">En cas d'annulation par le Locataire&nbsp;:</p>
+  <ul class="text-sm list-disc list-inside mt-1 space-y-1">
+    <li>jusqu'à 30 jours avant l'arrivée&nbsp;: les arrhes sont conservées par le Bailleur (article 1590 du Code civil)&nbsp;;</li>
+    <li>moins de 30 jours avant l'arrivée&nbsp;: la totalité du séjour reste due.</li>
+  </ul>
+  <p class="text-sm leading-relaxed mt-2">
+    En cas d'annulation par le Bailleur&nbsp;: restitution intégrale des sommes versées, le cas échéant doublement des arrhes
+    selon les conditions de l'article 1590 du Code civil.
+    En cas de force majeure dûment justifiée, les parties s'efforceront de reporter le séjour sans pénalité.
+  </p>
+</section>
+
+<section class="mb-2">
+  <h3 class="font-semibold text-stone-900 mb-2">9. Litiges &amp; droit applicable</h3>
+  <p class="text-sm leading-relaxed">
+    Le présent contrat est régi par le droit français.
+    Avant toute action judiciaire, les parties s'engagent à rechercher une solution amiable.
+    À défaut, tout litige relève de la juridiction des tribunaux du ressort du lieu de situation du Logement.
+  </p>
+</section>

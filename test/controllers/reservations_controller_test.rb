@@ -34,7 +34,7 @@ class ReservationsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create notifies the owner and acknowledges the client" do
-    assert_enqueued_emails 2 do
+    assert_emails 2 do
       post reservations_url, params: { booking: booking_params }
     end
   end

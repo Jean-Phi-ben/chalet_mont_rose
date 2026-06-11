@@ -1,0 +1,85 @@
+<div class="hidden fixed inset-0 z-[60]"
+     role="dialog" aria-modal="true" aria-labelledby="note-modal-title"
+     data-modal-target="root"
+     data-action="click->modal#backdropClose">
+  <div data-modal-target="backdrop"
+       class="absolute inset-0 bg-stone-900/60 backdrop-blur-sm opacity-0 transition-opacity duration-300"></div>
+
+  <div class="relative h-full w-full flex items-center justify-center p-4 pointer-events-none">
+    <div data-modal-target="dialog"
+         class="pointer-events-auto bg-white rounded-2xl shadow-2xl w-full max-w-md opacity-0 translate-y-4 scale-95 transition-all duration-300">
+      <div class="px-6 pt-6 pb-4 border-b border-stone-100 flex items-start justify-between gap-4">
+        <div>
+          <p class="text-[10px] text-stone-400 uppercase tracking-[0.25em] mb-1">Note</p>
+          <h3 id="note-modal-title" class="text-lg font-serif text-stone-900">Modifier la note</h3>
+        </div>
+        <button type="button" data-action="click->modal#close" aria-label="Fermer"
+                class="w-9 h-9 rounded-full text-stone-500 hover:text-stone-900 hover:bg-stone-100 transition flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <%= form_with url: "#", method: :patch, scope: :note,
+                    data: { notes_target: "form", action: "turbo:submit-end->modal#close" },
+                    class: "px-6 py-6 space-y-5" do |f| %>
+        <div>
+          <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Titre</label>
+          <%= f.text_field :title, required: true, data: { notes_target: "title" },
+                class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+        </div>
+
+        <div>
+          <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Détails</label>
+          <%= f.text_area :body, rows: 4, data: { notes_target: "body" },
+                placeholder: "Notes détaillées…",
+                class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition resize-none" %>
+        </div>
+
+        <!-- Échéance + calendrier simplifié -->
+        <div>
+          <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Échéance</label>
+          <button type="button" data-action="notes#toggleCalendar"
+                  class="w-full flex items-center justify-between gap-3 border border-stone-200 rounded-lg px-3 py-2.5 text-sm hover:border-stone-900 transition text-left">
+            <span class="inline-flex items-center gap-2">
+              <i class="fa-regular fa-calendar text-stone-400"></i>
+              <span data-notes-target="deadlineLabel" class="text-stone-400">Aucune échéance</span>
+            </span>
+            <i class="fa-solid fa-chevron-down text-stone-300 text-xs"></i>
+          </button>
+          <%= f.hidden_field :deadline, data: { notes_target: "deadlineField" } %>
+
+          <div data-notes-target="calendar" class="hidden mt-2 border border-stone-200 rounded-xl p-3">
+            <div class="flex items-center justify-between mb-2">
+              <button type="button" data-action="notes#prevMonth"
+                      class="w-7 h-7 rounded-lg text-stone-500 hover:bg-stone-100 transition flex items-center justify-center">
+                <i class="fa-solid fa-chevron-left text-xs"></i>
+              </button>
+              <span data-notes-target="monthLabel" class="text-sm font-medium text-stone-700"></span>
+              <button type="button" data-action="notes#nextMonth"
+                      class="w-7 h-7 rounded-lg text-stone-500 hover:bg-stone-100 transition flex items-center justify-center">
+                <i class="fa-solid fa-chevron-right text-xs"></i>
+              </button>
+            </div>
+            <div class="grid grid-cols-7 gap-1 text-center text-[10px] uppercase tracking-widest text-stone-400 mb-1">
+              <% %w[L M M J V S D].each do |d| %><div><%= d %></div><% end %>
+            </div>
+            <div data-notes-target="grid" class="grid grid-cols-7 gap-1"></div>
+            <button type="button" data-action="notes#clearDeadline"
+                    class="mt-2 w-full text-xs text-stone-400 hover:text-stone-700 transition">
+              Retirer l'échéance
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-1">
+          <button type="button" data-action="click->modal#close"
+                  class="text-sm text-stone-500 hover:text-stone-900 uppercase tracking-widest py-2 px-4 transition">
+            Annuler
+          </button>
+          <%= f.submit "Enregistrer",
+                class: "bg-stone-900 text-white py-2.5 px-6 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition cursor-pointer" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

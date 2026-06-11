@@ -1,0 +1,53 @@
+<h2 style="font-family: Georgia, serif; color:#1c1917;">Préparation de votre séjour</h2>
+
+<p>Bonjour <%= @booking.first_name %>,</p>
+
+<p>
+  Votre séjour au <strong>Chalet Mont Rose</strong> approche
+  (arrivée le <strong><%= fr_date_full(@booking.check_in) %></strong>).
+</p>
+
+<h3 style="font-family: Georgia, serif; color:#1c1917; margin-top: 24px;">1. Règlement du solde</h3>
+<p>
+  Il vous reste à régler le <strong>solde de <%= money(@balance_amount) %></strong>
+  par virement bancaire, <strong>au plus tard le <%= fr_date_full(@due_date) %></strong>.
+  La facture de solde est jointe à cet email — les coordonnées bancaires y figurent.
+</p>
+
+<% if @caution_url %>
+  <h3 style="font-family: Georgia, serif; color:#1c1917; margin-top: 28px;">2. Dépôt de la caution</h3>
+  <p>
+    Une caution de <strong><%= money(@caution.amount_cents) %></strong> est demandée.
+    Aucun montant n'est prélevé : il s'agit d'une <strong>empreinte bancaire</strong> via notre prestataire Swikly,
+    libérée à la fin du séjour si tout s'est bien passé.
+  </p>
+  <p style="margin: 16px 0;">
+    <a href="<%= @caution_url %>"
+       style="display:inline-block; background:#1c1917; color:#ffffff; padding:12px 22px; border-radius:10px; text-decoration:none; font-family: Arial, sans-serif; letter-spacing:0.05em; font-size:13px;">
+      Déposer la caution
+    </a>
+  </p>
+  <p style="font-size: 13px; color:#78716c;">
+    Lien direct :<br>
+    <a href="<%= @caution_url %>"><%= @caution_url %></a>
+  </p>
+<% end %>
+
+<h3 style="font-family: Georgia, serif; color:#1c1917; margin-top: 28px;">3. Documents joints</h3>
+<ul style="font-family: Arial, sans-serif; color:#1c1917;">
+  <li>Facture de solde (PDF)</li>
+  <% if @booking.contract&.signed_pdf&.attached? %>
+    <li>Contrat de location signé (PDF)</li>
+  <% end %>
+  <li>Conditions générales (CGU)</li>
+  <li>Livret du chalet (informations pratiques pour votre arrivée)</li>
+</ul>
+
+<p>Nous restons à votre disposition pour toute question.</p>
+
+<p>
+  Suivi de votre réservation :<br>
+  <a href="<%= @reservation_url %>"><%= @reservation_url %></a>
+</p>
+
+<p style="margin-top: 24px;">À très bientôt,<br>Chalet Mont Rose</p>

@@ -1,5 +1,11 @@
 class Admin::BookingsController < Admin::BaseController
-  before_action :set_booking, only: %i[show edit update confirm reject cancel destroy]
+  before_action :set_booking, only: %i[show edit update confirm reject cancel destroy send_balance_reminder resend_email]
+
+  # Emails transactionnels renvoyables depuis la fiche réservation :
+  #   - confirmation     : facture arrhes + lien contrat + lien caution
+  #   - signed_contract  : PDF du contrat signé
+  #   - balance_reminder : rappel J-10 + facture solde + contrat signé + CGU/livret
+  RESENDABLE_MAILER_ACTIONS = %w[confirmation signed_contract balance_reminder].freeze
 
   def index
     @archived_mode = false
@@ -14,7 +20,9 @@ class Admin::BookingsController < Admin::BaseController
 
   def show
     authorize @booking
-    @conflicts = @booking.conflicting_bookings
+    @conflicts   = @booking.conflicting_bookings
+    @email_logs  = EmailLog.where(booking_id: @booking.id).recent
+    @planned_emails = BookingEmailPlanner.for(@booking)
   end
 
   def new
@@ -58,19 +66,35 @@ class Admin::BookingsController < Admin::BaseController
 
   def confirm
     authorize @booking
-    if @booking.update(status: :confirmed)
-      GenerateInvoiceJob.perform_later(@booking)
-      # Phase 5 : contrat, caution + email groupé.
-      redirect_to admin_booking_path(@booking), notice: "Réservation confirmée et facture en cours d'émission."
+    unless @booking.update(status: :confirmed)
+      redirect_to admin_booking_path(@booking), alert: @booking.errors.full_messages.to_sentence and return
+    end
+
+    # À la confirmation : facture des arrhes + contrat à signer.
+    # La caution Swikly est créée plus tard, en même temps que le rappel solde J-10.
+    warnings = []
+    GenerateInvoiceJob.perform_now(@booking)
+    begin
+      SendContractJob.perform_now(@booking)
+    rescue StandardError => e
+      warnings << "contrat : #{e.message}"
+    end
+
+    BookingMailer.dispatch(:confirmation, @booking)
+
+    if warnings.empty?
+      redirect_to admin_booking_path(@booking),
+                  notice: "Réservation confirmée — email envoyé (facture arrhes + lien signature)."
     else
-      redirect_to admin_booking_path(@booking), alert: @booking.errors.full_messages.to_sentence
+      redirect_to admin_booking_path(@booking),
+                  alert: "Confirmée et email envoyé. Étapes en échec : #{warnings.join(' · ')}"
     end
   end
 
   def reject
     authorize @booking
     if @booking.update(status: :rejected)
-      BookingMailer.rejected(@booking).deliver_later
+      BookingMailer.dispatch(:rejected, @booking)
       redirect_to admin_booking_path(@booking), notice: "Demande refusée — le client a été notifié."
     else
       redirect_to admin_booking_path(@booking), alert: @booking.errors.full_messages.to_sentence
@@ -84,6 +108,40 @@ class Admin::BookingsController < Admin::BaseController
     else
       redirect_to admin_booking_path(@booking), alert: @booking.errors.full_messages.to_sentence
     end
+  end
+
+  # Envoi manuel du rappel solde (utile quand le job récurrent n'a pas tourné
+  # ou que la date J-10 est dépassée pour ce booking).
+  def send_balance_reminder
+    authorize @booking, :send_balance_reminder?
+    # La caution Swikly est créée à ce moment-là (avant le rappel) pour que
+    # le lien de dépôt soit inclus dans l'email.
+    begin
+      CreateCautionJob.perform_now(@booking)
+    rescue SwiklyProvider::Error => e
+      Rails.logger.warn "[send_balance_reminder] caution : #{e.message}"
+    end
+    BookingMailer.dispatch(:balance_reminder, @booking)
+    @booking.balance_invoice&.update!(balance_reminder_sent_at: Time.current)
+    redirect_to admin_booking_path(@booking), notice: "Rappel solde envoyé (facture solde + caution + livret)."
+  rescue StandardError => e
+    redirect_to admin_booking_path(@booking),
+                alert: "Échec de l'envoi du rappel : #{e.message}"
+  end
+
+  # Renvoie un email déjà émis (avec attachments régénérés depuis l'état
+  # courant de la résa). Limité à un set blanc d'actions du BookingMailer.
+  def resend_email
+    authorize @booking, :send_balance_reminder?
+    action = params[:mailer_action].to_s
+    unless RESENDABLE_MAILER_ACTIONS.include?(action)
+      redirect_to admin_booking_path(@booking), alert: "Action email inconnue." and return
+    end
+
+    BookingMailer.dispatch(action.to_sym, @booking)
+    redirect_to admin_booking_path(@booking), notice: "Email « #{action.humanize} » renvoyé."
+  rescue StandardError => e
+    redirect_to admin_booking_path(@booking), alert: "Échec du renvoi : #{e.message}"
   end
 
   def destroy
@@ -121,13 +179,25 @@ class Admin::BookingsController < Admin::BaseController
     booking.apply_breakdown!(cleaning_override_cents: cleaning_cents, deposit_override_cents: deposit_cents)
   end
 
-  # Charge la liste (active ou archivée) en appliquant chips de statut + tri.
+  # Charge la liste (active ou archivée) en appliquant chips de statut + tri +
+  # filtre par période (params :from / :to au format YYYY-MM-DD).
   def list_bookings(base_scope)
     authorize Booking, :index?
     scope = policy_scope(Booking).merge(base_scope)
     scope = scope.where(status: params[:status]) if Booking.statuses.key?(params[:status].to_s)
+    @from = parse_date(params[:from])
+    @to   = parse_date(params[:to])
+    scope = scope.where("check_out >= ?", @from) if @from
+    scope = scope.where("check_in <= ?", @to)   if @to
     @status_counts = policy_scope(Booking).merge(base_scope).group(:status).count
-    @bookings = scope.order(sort_clause)
+    # Eager loading pour éviter N+1 sur les pastilles paiements / docs.
+    @bookings = scope.includes(:contract, :caution, invoices: { pdf_attachment: :blob }).order(sort_clause)
+  end
+
+  def parse_date(value)
+    Date.parse(value.to_s)
+  rescue StandardError
+    nil
   end
 
   # Tri demandé via les en-têtes cliquables (Demande / Période).

@@ -375,21 +375,21 @@ DEXT_INBOX_EMAIL=...@dext.cc
 - [x] `GenerateInvoiceJob` + `InvoicePdf` (Prawn, RIB + arrhes).
 - [x] Admin : `mark_deposit_received` / `mark_balance_received`.
 
-### Phase 5 — Contrat (embarqué) + caution + email groupé
-- [ ] Template de contrat dans Dropbox Sign + API App (embarqué).
-- [ ] Migration + modèle `Contract` ; page `/reservations/:token/contract` (iframe).
-- [ ] `SendContractJob` (embarqué) + `Webhooks::DropboxSignController` + `DownloadSignedContractJob`.
-- [ ] Migration + modèle `Caution` ; `CreateCautionJob` (Swikly) + `Webhooks::SwiklyController`.
-- [ ] `BookingMailer.confirmation` = **email unique** : facture arrhes + lien signature + lien caution.
+### Phase 5 — Contrat (embarqué) + caution + email groupé ✅
+- [x] Template de contrat dans Dropbox Sign + API App (embarqué).
+- [x] Migration + modèle `Contract` ; page `/reservations/:token/contract` (iframe + fallback stub).
+- [x] `SendContractJob` (embarqué) + `Webhooks::DropboxSignController` + `DownloadSignedContractJob`.
+- [x] Migration + modèle `Caution` ; `CreateCautionJob` (Swikly stub) + `Webhooks::SwiklyController`.
+- [x] `BookingMailer.confirmation` = **email unique** : facture arrhes + lien signature + lien caution Swikly.
 
-### Phase 6 — Rappel du solde (J-10) + journal des emails
-- [ ] `Document` (CGU + livret) gérés en admin (upload).
-- [ ] `BalanceReminderJob` récurrent (`config/recurring.yml`) : solde + CGU + livret, **CC admin**, PJ facture + contrat.
-- [ ] `EmailLog` + delivery observer ActionMailer ; admin `email_logs` (liste + pièces jointes).
+### Phase 6 — Rappel du solde (J-10) + journal des emails ✅
+- [x] `Document` (CGU + livret) gérés en admin (upload).
+- [x] `BalanceReminderJob` récurrent (`config/recurring.yml`) : solde + CGU + livret, **CC admin**, PJ facture + contrat.
+- [x] `EmailLog` + delivery observer ActionMailer ; admin `email_logs` (liste + pièces jointes).
 
-### Phase 7 — Vue d'ensemble admin
-- [ ] Tableau réservations : statut arrhes/solde/caution + liens facture, contrat signé, caution.
-- [ ] Filtres (statut, période).
+### Phase 7 — Vue d'ensemble admin ✅
+- [x] Tableau réservations : statut arrhes/solde/caution + liens facture, contrat signé, caution.
+- [x] Filtres (statut, période).
 
 ### Phase 8 — Export comptable Dext *(plus tard)*
 - [ ] `ForwardInvoiceToDextJob` → `AccountingMailer.forward_invoice` vers `DEXT_INBOX_EMAIL`.

@@ -1,0 +1,59 @@
+<% content_for :title, "Documents — Admin" %>
+
+<div class="flex items-start justify-between gap-4 mb-8">
+  <div>
+    <h1 class="text-2xl font-serif text-stone-900 tracking-wide" style="font-family: 'Playfair Display', serif;">Documents</h1>
+    <p class="text-sm text-stone-500 mt-1">
+      CGU et livret du chalet, joints automatiquement à l'email de rappel du solde (J-10).
+    </p>
+  </div>
+  <%= link_to new_admin_document_path,
+        class: "inline-flex items-center gap-2 bg-stone-900 text-white px-4 py-2 rounded-xl text-xs uppercase tracking-widest hover:bg-stone-800 transition" do %>
+    <i class="fa-solid fa-plus"></i> Nouveau document
+  <% end %>
+</div>
+
+<% if @documents.any? %>
+  <div class="bg-white border border-stone-200 rounded-2xl overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-stone-50 text-stone-400 uppercase text-[11px] tracking-widest">
+        <tr>
+          <th class="text-left  font-medium px-5 py-3">Catégorie</th>
+          <th class="text-left  font-medium px-5 py-3">Titre</th>
+          <th class="text-left  font-medium px-5 py-3">Fichier</th>
+          <th class="text-right font-medium px-5 py-3">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-stone-100">
+        <% @documents.each do |doc| %>
+          <tr class="hover:bg-stone-50/60">
+            <td class="px-5 py-3 text-stone-700"><%= doc.kind_label %></td>
+            <td class="px-5 py-3 text-stone-800 font-medium"><%= doc.title %></td>
+            <td class="px-5 py-3">
+              <% if doc.file.attached? %>
+                <%= link_to doc.file.filename.to_s, rails_blob_path(doc.file, disposition: "attachment"),
+                      class: "text-stone-700 hover:text-stone-900 underline text-xs" %>
+              <% else %>
+                <span class="text-rose-500 text-xs">Aucun fichier</span>
+              <% end %>
+            </td>
+            <td class="px-5 py-3 text-right">
+              <div class="inline-flex gap-3 text-xs uppercase tracking-widest">
+                <%= link_to "Modifier", edit_admin_document_path(doc), class: "text-stone-700 hover:text-stone-900" %>
+                <%= button_to "Supprimer", admin_document_path(doc), method: :delete,
+                      form: { data: { turbo_confirm: "Supprimer ce document ?" } },
+                      class: "text-rose-600 hover:text-rose-800 cursor-pointer bg-transparent border-0 p-0" %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <div class="bg-white border border-dashed border-stone-300 rounded-2xl p-12 text-center">
+    <i class="fa-regular fa-file-lines text-3xl text-stone-300 mb-3"></i>
+    <p class="text-stone-500">Aucun document pour le moment.</p>
+    <p class="text-xs text-stone-400 mt-1">Ajoutez les <strong>conditions générales</strong> et le <strong>livret du chalet</strong> pour qu'ils soient joints au rappel J-10.</p>
+  </div>
+<% end %>

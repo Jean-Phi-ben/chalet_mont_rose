@@ -1,0 +1,65 @@
+<% content_for :title, "Archives notes — Admin" %>
+
+<div class="flex items-start justify-between gap-4 mb-8">
+  <div>
+    <h1 class="text-2xl font-serif text-stone-900 tracking-wide" style="font-family: 'Playfair Display', serif;">
+      Archives notes
+    </h1>
+    <p class="text-sm text-stone-500 mt-1">Notes et tâches archivées.</p>
+  </div>
+  <%= link_to admin_root_path, class: "text-xs text-stone-500 hover:text-stone-900 uppercase tracking-widest shrink-0" do %>
+    <i class="fa-solid fa-arrow-left mr-1"></i> Tableau de bord
+  <% end %>
+</div>
+
+<% if @notes.any? %>
+  <div class="bg-white border border-stone-200 rounded-2xl overflow-hidden max-w-3xl">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm min-w-[640px]">
+        <thead class="bg-stone-50 text-stone-400 uppercase text-[11px] tracking-widest">
+          <tr>
+            <th class="text-left  font-medium px-4 py-2.5">Note</th>
+            <th class="text-left  font-medium px-4 py-2.5">Création</th>
+            <th class="text-left  font-medium px-4 py-2.5">Échéance</th>
+            <th class="text-right font-medium px-4 py-2.5">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-stone-100">
+          <% @notes.each do |note| %>
+            <tr class="hover:bg-stone-50/60 transition">
+              <td class="px-4 py-3 text-stone-700">
+                <span class="<%= "line-through text-stone-400" if note.done? %>"><%= note.title %></span>
+                <% if note.body.present? %>
+                  <p class="text-xs text-stone-400 mt-0.5 truncate max-w-xs"><%= note.body %></p>
+                <% end %>
+              </td>
+              <td class="px-4 py-3 text-stone-500 text-xs whitespace-nowrap"><%= fr_date(note.created_at.to_date) %></td>
+              <td class="px-4 py-3 text-stone-500 text-xs whitespace-nowrap"><%= note.deadline ? fr_date(note.deadline) : "—" %></td>
+              <td class="px-4 py-3">
+                <div class="flex items-center justify-end gap-3">
+                  <%= button_to unarchive_admin_note_path(note), method: :patch,
+                        form: { class: "inline-flex" },
+                        class: "text-stone-500 hover:text-stone-900 text-xs uppercase tracking-widest" do %>
+                    <i class="fa-solid fa-rotate-left mr-1"></i> Rétablir
+                  <% end %>
+                  <%= button_to admin_note_path(note), method: :delete,
+                        form: { class: "inline-flex" },
+                        class: "text-rose-500 hover:text-rose-700 transition",
+                        aria: { label: "Supprimer" },
+                        data: { turbo_confirm: "Supprimer définitivement cette note ?" } do %>
+                    <i class="fa-solid fa-trash text-sm"></i>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% else %>
+  <div class="bg-white border border-dashed border-stone-300 rounded-2xl p-12 text-center max-w-3xl">
+    <i class="fa-solid fa-box-archive text-3xl text-stone-300 mb-3"></i>
+    <p class="text-stone-500">Aucune note archivée pour le moment.</p>
+  </div>
+<% end %>

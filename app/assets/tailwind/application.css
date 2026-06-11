@@ -16,10 +16,18 @@
 @layer components {
   .cal-selected {
     background-color: var(--color-stone-900);
-    color: #fff;
     border-color: var(--color-stone-900) !important;
   }
   .cal-range {
     background-color: var(--color-stone-200);
   }
+}
+
+/* Hors @layer pour battre toute classe utility Tailwind (text-stone-700,
+   text-stone-400…) qui aurait la priorité de l'ordre du cascade en V4.
+   Sélecteur sur l'élément div + spans imbriqués avec !important. */
+div.cal-selected,
+div.cal-selected > span,
+div.cal-selected span {
+  color: #fff !important;
 }

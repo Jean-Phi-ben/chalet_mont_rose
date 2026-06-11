@@ -1,0 +1,50 @@
+<% content_for :title, "Journal des emails — Admin" %>
+
+<div class="mb-8">
+  <h1 class="text-2xl font-serif text-stone-900 tracking-wide" style="font-family: 'Playfair Display', serif;">Journal des emails</h1>
+  <p class="text-sm text-stone-500 mt-1">
+    Tous les emails envoyés par le site, avec leurs pièces jointes. Les 200 derniers.
+  </p>
+</div>
+
+<% if @email_logs.any? %>
+  <div class="bg-white border border-stone-200 rounded-2xl overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm min-w-[820px]">
+        <thead class="bg-stone-50 text-stone-400 uppercase text-[11px] tracking-widest">
+          <tr>
+            <th class="text-left  font-medium px-5 py-3">Envoyé le</th>
+            <th class="text-left  font-medium px-5 py-3">Type</th>
+            <th class="text-left  font-medium px-5 py-3">Destinataire</th>
+            <th class="text-left  font-medium px-5 py-3">Sujet</th>
+            <th class="text-center font-medium px-5 py-3">PJ</th>
+            <th class="text-right font-medium px-5 py-3">Action</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-stone-100">
+          <% @email_logs.each do |log| %>
+            <tr class="hover:bg-stone-50/60">
+              <td class="px-5 py-3 text-stone-500 text-xs whitespace-nowrap"><%= l(log.sent_at, format: :short) rescue log.sent_at.strftime("%d/%m %H:%M") %></td>
+              <td class="px-5 py-3 text-stone-700"><%= log.label %></td>
+              <td class="px-5 py-3 text-stone-700 text-xs"><%= log.to_addresses %></td>
+              <td class="px-5 py-3 text-stone-800"><%= log.subject %></td>
+              <td class="px-5 py-3 text-center">
+                <% if log.attachments.attached? %>
+                  <span class="inline-flex items-center gap-1 text-xs text-stone-500"><i class="fa-solid fa-paperclip"></i> <%= log.attachments.size %></span>
+                <% end %>
+              </td>
+              <td class="px-5 py-3 text-right">
+                <%= link_to "Voir", admin_email_log_path(log), class: "text-stone-700 hover:text-stone-900 text-xs uppercase tracking-widest" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% else %>
+  <div class="bg-white border border-dashed border-stone-300 rounded-2xl p-12 text-center">
+    <i class="fa-regular fa-envelope text-3xl text-stone-300 mb-3"></i>
+    <p class="text-stone-500">Aucun email envoyé pour le moment.</p>
+  </div>
+<% end %>

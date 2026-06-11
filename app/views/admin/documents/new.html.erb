@@ -1,0 +1,10 @@
+<% content_for :title, "Nouveau document — Admin" %>
+
+<div class="mb-6">
+  <%= link_to admin_documents_path, class: "text-xs text-stone-400 hover:text-stone-700" do %>
+    <i class="fa-solid fa-arrow-left mr-1"></i> Retour
+  <% end %>
+  <h1 class="text-2xl font-serif text-stone-900 tracking-wide mt-2" style="font-family: 'Playfair Display', serif;">Nouveau document</h1>
+</div>
+
+<%= render "form" %>

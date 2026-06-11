@@ -91,6 +91,96 @@
       <p>Reçue le <%= l(@booking.created_at, format: :short) rescue @booking.created_at.to_s %> · Suivi client : <%= link_to reservation_path(@booking.token), reservation_path(@booking.token), class: "text-stone-600 hover:text-stone-900 underline", target: "_blank" %></p>
     </div>
     </div>
+
+    <%# Journal des emails liés à cette réservation %>
+    <div class="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-sm uppercase tracking-widest text-stone-500">Emails</h2>
+        <%= link_to admin_email_logs_path, class: "text-[11px] text-stone-400 hover:text-stone-700 uppercase tracking-widest" do %>
+          Tout le journal <i class="fa-solid fa-arrow-right ml-1"></i>
+        <% end %>
+      </div>
+
+      <% if @email_logs.any? || @planned_emails.any? %>
+        <ul class="divide-y divide-stone-100">
+          <% @email_logs.each do |log| %>
+            <% resendable = Admin::BookingsController::RESENDABLE_MAILER_ACTIONS.include?(log.action) %>
+            <li class="py-3 flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <p class="text-sm text-stone-800 font-medium truncate">
+                  <i class="fa-solid fa-paper-plane text-emerald-500 text-[11px] mr-1.5"></i>
+                  <%= log.label %>
+                </p>
+                <p class="text-xs text-stone-500 mt-0.5">
+                  <%= log.subject %>
+                  <% if log.attachments.attached? %>
+                    · <i class="fa-solid fa-paperclip mr-0.5"></i><%= log.attachments.size %>
+                  <% end %>
+                </p>
+                <p class="text-[11px] text-stone-400 mt-0.5">
+                  <%= log.to_addresses %><% if log.cc_addresses.present? %> · Cc <%= log.cc_addresses %><% end %>
+                </p>
+                <% if resendable && policy(@booking).send_balance_reminder? %>
+                  <%= button_to resend_email_admin_booking_path(@booking, mailer_action: log.action), method: :post,
+                        form: { data: { turbo_confirm: "Renvoyer cet email au client (avec les pièces jointes régénérées) ?" } },
+                        class: "mt-2 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-widest border border-stone-300 text-stone-700 px-3 py-1.5 rounded-lg hover:bg-stone-50 transition cursor-pointer" do %>
+                    <i class="fa-solid fa-rotate-right"></i> Renvoyer
+                  <% end %>
+                <% end %>
+              </div>
+              <div class="shrink-0 text-right">
+                <p class="text-[11px] text-stone-400 whitespace-nowrap">
+                  <%= l(log.sent_at, format: :short) rescue log.sent_at.strftime("%d/%m %H:%M") %>
+                </p>
+                <%= link_to "Voir", admin_email_log_path(log), class: "text-[11px] uppercase tracking-widest text-stone-700 hover:text-stone-900" %>
+              </div>
+            </li>
+          <% end %>
+
+          <% @planned_emails.each do |planned| %>
+            <li class="py-3 flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <p class="text-sm text-stone-700 font-medium">
+                  <% if planned.overdue %>
+                    <i class="fa-solid fa-triangle-exclamation text-rose-500 text-[11px] mr-1.5"></i>
+                  <% else %>
+                    <i class="fa-regular fa-clock text-amber-500 text-[11px] mr-1.5"></i>
+                  <% end %>
+                  <%= planned.label %>
+                  <% if planned.overdue %>
+                    <span class="ml-1 text-[10px] uppercase tracking-widest text-rose-700 bg-rose-50 border border-rose-200 rounded-full px-2 py-0.5">En retard</span>
+                  <% else %>
+                    <span class="ml-1 text-[10px] uppercase tracking-widest text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">Planifié</span>
+                  <% end %>
+                </p>
+                <p class="text-xs text-stone-500 mt-0.5"><%= planned.description %></p>
+                <% if policy(@booking).send_balance_reminder? %>
+                  <% if planned.overdue %>
+                    <% btn_classes = "bg-stone-900 text-white hover:bg-stone-800" %>
+                    <% btn_label   = "Renvoyer" %>
+                    <% btn_icon    = "fa-rotate-right" %>
+                  <% else %>
+                    <% btn_classes = "border border-stone-300 text-stone-700 hover:bg-stone-50" %>
+                    <% btn_label   = "Envoyer le mail" %>
+                    <% btn_icon    = "fa-paper-plane" %>
+                  <% end %>
+                  <%= button_to send_balance_reminder_admin_booking_path(@booking), method: :post,
+                        form: { data: { turbo_confirm: "Envoyer le rappel solde au client maintenant ?" } },
+                        class: "mt-2 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-widest px-3 py-1.5 rounded-lg transition cursor-pointer #{btn_classes}" do %>
+                    <i class="fa-solid <%= btn_icon %>"></i> <%= btn_label %>
+                  <% end %>
+                <% end %>
+              </div>
+              <div class="shrink-0 text-right">
+                <p class="text-[11px] text-stone-400 whitespace-nowrap"><%= I18n.l(planned.scheduled_for, format: :short) rescue planned.scheduled_for.to_s %></p>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="text-sm text-stone-400 italic">Aucun email pour cette réservation.</p>
+      <% end %>
+    </div>
   </div>
 
   <div class="lg:col-span-1 space-y-3">

@@ -1,0 +1,48 @@
+<div data-controller="modal notes" class="bg-white border border-stone-200 rounded-2xl overflow-hidden max-w-3xl">
+  <!-- En-tête -->
+  <div class="flex items-center justify-between gap-4 px-5 py-4 border-b border-stone-100">
+    <div class="flex items-center gap-2.5">
+      <i class="fa-regular fa-note-sticky text-stone-400"></i>
+      <h2 class="text-base font-serif text-stone-900" style="font-family: 'Playfair Display', serif;">Notes &amp; tâches</h2>
+    </div>
+    <%= link_to archived_admin_notes_path, class: "text-[11px] text-stone-500 hover:text-stone-900 uppercase tracking-widest shrink-0" do %>
+      Archives <i class="fa-solid fa-arrow-right ml-1"></i>
+    <% end %>
+  </div>
+
+  <!-- Ajout rapide -->
+  <%= form_with model: [:admin, note], class: "flex items-center gap-2 px-5 py-3 border-b border-stone-100 bg-stone-50/60" do |f| %>
+    <i class="fa-solid fa-plus text-stone-300 text-xs"></i>
+    <%= f.text_field :title, required: true, placeholder: "Ajouter une note ou une tâche…",
+          class: "flex-1 bg-transparent border-0 text-sm text-stone-700 placeholder:text-stone-400 focus:outline-none focus:ring-0" %>
+    <%= f.submit "Ajouter",
+          class: "bg-stone-900 text-white px-4 py-1.5 rounded-lg text-[11px] uppercase tracking-widest hover:bg-stone-800 transition cursor-pointer shrink-0" %>
+  <% end %>
+
+  <!-- Liste -->
+  <% if notes.any? %>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm min-w-[640px]">
+        <thead class="bg-stone-50 text-stone-400 uppercase text-[11px] tracking-widest">
+          <tr>
+            <th class="w-10 px-4 py-2.5"></th>
+            <th class="text-left  font-medium px-4 py-2.5">Note</th>
+            <th class="text-left  font-medium px-4 py-2.5">Création</th>
+            <th class="text-left  font-medium px-4 py-2.5">Échéance</th>
+            <th class="text-right font-medium px-4 py-2.5">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-stone-100">
+          <%= render partial: "admin/notes/note", collection: notes, as: :note %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="px-5 py-10 text-center">
+      <i class="fa-regular fa-note-sticky text-2xl text-stone-300 mb-2"></i>
+      <p class="text-sm text-stone-500">Aucune note pour le moment.</p>
+    </div>
+  <% end %>
+
+  <%= render "admin/notes/modal" %>
+</div>

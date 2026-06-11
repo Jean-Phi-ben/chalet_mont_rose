@@ -1,0 +1,30 @@
+Votre réservation est confirmée
+
+Bonjour <%= @booking.first_name %>,
+
+Votre séjour au Chalet Mont Rose est confirmé.
+
+Arrivée : <%= fr_date_full(@booking.check_in) %>
+Départ  : <%= fr_date_full(@booking.check_out) %>
+Durée   : <%= @booking.weeks %> semaine(s), <%= @booking.nights %> nuits
+Total   : <%= money(@booking.total_price_cents) %>
+Arrhes  : <%= money(@booking.deposit_cents) %>
+
+1. Règlement des arrhes
+La facture des arrhes (<%= money(@booking.deposit_cents) %>) est jointe à cet email.
+Merci de procéder au virement bancaire avec les coordonnées indiquées sur la facture, sous 7 jours.
+
+<% if @contract_url %>
+2. Signature du contrat
+Signez électroniquement le contrat de location :
+<%= @contract_url %>
+<% end %>
+
+Le solde et la caution vous seront demandés 10 jours avant votre arrivée
+dans un email séparé contenant la facture de solde, le livret du chalet et
+le lien pour déposer la caution.
+
+Suivi de votre réservation : <%= reservation_url(@booking.token) %>
+
+À très bientôt,
+Chalet Mont Rose

@@ -8,6 +8,7 @@ class BookingPolicy < ApplicationPolicy
   def confirm?           = admin? && record.is_a?(Booking) && !record.confirmed?
   def reject?            = admin? && record.is_a?(Booking) && record.pending?
   def cancel?            = admin? && record.is_a?(Booking) && record.confirmed?
+  def send_balance_reminder? = admin? && record.is_a?(Booking) && record.confirmed?
   def destroy?           = admin?
   def archive_invoicing? = admin? && record.is_a?(Booking) && !record.invoicing_archived? && record.balance_invoice&.payment_received?
 

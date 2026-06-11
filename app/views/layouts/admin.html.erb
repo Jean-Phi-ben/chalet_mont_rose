@@ -20,24 +20,28 @@
 
   <body class="bg-stone-100 min-h-screen" style="font-family: 'Lato', sans-serif;">
     <!-- Barre admin -->
-    <header class="bg-white border-b border-stone-200 sticky top-0 z-40">
+    <header class="bg-white border-b border-stone-200 sticky top-0 z-40" data-controller="navbar">
       <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
-        <%= link_to admin_root_path, class: "flex items-center gap-2" do %>
-          <span class="text-lg tracking-[0.15em] uppercase text-stone-800 font-light" style="font-family: 'Playfair Display', serif;">
+        <%= link_to admin_root_path, class: "flex items-center gap-2 shrink-0" do %>
+          <span class="text-base sm:text-lg tracking-[0.15em] uppercase text-stone-800 font-light" style="font-family: 'Playfair Display', serif;">
             Chalet Mont Rose
           </span>
           <span class="text-[10px] uppercase tracking-widest bg-stone-900 text-white px-2 py-0.5 rounded-full">Admin</span>
         <% end %>
 
-        <nav class="hidden sm:flex items-center gap-6 text-xs tracking-widest uppercase text-stone-500">
+        <%# Navigation horizontale — visible à partir de lg %>
+        <nav class="hidden lg:flex items-center gap-6 text-xs tracking-widest uppercase text-stone-500">
           <%= link_to "Tableau de bord", admin_root_path, class: "hover:text-stone-900 transition" %>
           <%= link_to "Réservations", admin_bookings_path, class: "hover:text-stone-900 transition" %>
           <%= link_to "Factures", admin_invoices_path, class: "hover:text-stone-900 transition" %>
           <%= link_to "Tarifs", admin_weekly_rates_path, class: "hover:text-stone-900 transition" %>
+          <%= link_to "Documents", admin_documents_path, class: "hover:text-stone-900 transition" %>
+          <%= link_to "Emails", admin_email_logs_path, class: "hover:text-stone-900 transition" %>
           <%= link_to "Paramètres", admin_booking_setting_path, class: "hover:text-stone-900 transition" %>
         </nav>
 
-        <div class="flex items-center gap-4">
+        <%# Actions de droite — visibles à partir de lg %>
+        <div class="hidden lg:flex items-center gap-4 shrink-0">
           <%= link_to root_path, class: "text-xs text-stone-400 hover:text-stone-700 transition" do %>
             <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Voir le site
           <% end %>
@@ -47,6 +51,45 @@
             <% end %>
           <% end %>
         </div>
+
+        <%# Burger — visible en dessous de lg %>
+        <button type="button"
+                data-navbar-target="toggle"
+                data-action="click->navbar#toggle"
+                aria-controls="admin-mobile-menu"
+                aria-expanded="false"
+                aria-label="Ouvrir le menu"
+                class="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg text-stone-700 hover:bg-stone-100 transition">
+          <i data-navbar-target="iconOpen"  class="fa-solid fa-bars text-lg"></i>
+          <i data-navbar-target="iconClose" class="fa-solid fa-xmark text-lg hidden"></i>
+        </button>
+      </div>
+
+      <%# Menu mobile (volet déroulant) — caché par défaut, ouvert via Stimulus %>
+      <div id="admin-mobile-menu"
+           data-navbar-target="menu"
+           class="hidden lg:hidden border-t border-stone-200 bg-white">
+        <nav class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex flex-col gap-1 text-sm">
+          <% mobile_link_class = "block py-2.5 px-3 rounded-lg text-stone-700 hover:bg-stone-100 transition" %>
+          <%= link_to "Tableau de bord", admin_root_path,           class: mobile_link_class %>
+          <%= link_to "Réservations",    admin_bookings_path,       class: mobile_link_class %>
+          <%= link_to "Factures",        admin_invoices_path,       class: mobile_link_class %>
+          <%= link_to "Tarifs",          admin_weekly_rates_path,   class: mobile_link_class %>
+          <%= link_to "Documents",       admin_documents_path,      class: mobile_link_class %>
+          <%= link_to "Emails",          admin_email_logs_path,     class: mobile_link_class %>
+          <%= link_to "Paramètres",      admin_booking_setting_path, class: mobile_link_class %>
+
+          <div class="border-t border-stone-200 mt-2 pt-3 flex items-center justify-between gap-3">
+            <%= link_to root_path, class: "text-xs text-stone-500 hover:text-stone-900 transition" do %>
+              <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Voir le site
+            <% end %>
+            <% if authenticated? %>
+              <%= button_to session_path, method: :delete, class: "text-xs text-red-600 hover:text-red-700 transition" do %>
+                <i class="fa-solid fa-arrow-right-from-bracket mr-1"></i> Déconnexion
+              <% end %>
+            <% end %>
+          </div>
+        </nav>
       </div>
     </header>
 

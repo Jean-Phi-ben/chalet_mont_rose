@@ -1,0 +1,40 @@
+<div class="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 max-w-2xl">
+  <%= form_with model: [:admin, @document], class: "space-y-5" do |f| %>
+    <% if @document.errors.any? %>
+      <div class="bg-red-50 border border-red-200 text-red-700 rounded-xl p-4 text-sm">
+        <p class="font-medium mb-1"><%= pluralize(@document.errors.count, "erreur") %> :</p>
+        <ul class="list-disc list-inside">
+          <% @document.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div>
+      <%= f.label :kind, "Catégorie", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+      <%= f.select :kind, Document.kinds.map { |k, _| [Document::KIND_LABELS[k], k] }, { prompt: "Choisir…" },
+            class: "w-full sm:w-72 border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+      <p class="text-xs text-stone-400 mt-1">Une seule entrée par catégorie.</p>
+    </div>
+
+    <div>
+      <%= f.label :title, "Titre", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+      <%= f.text_field :title, required: true, placeholder: "Ex : Conditions générales 2026",
+            class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+    </div>
+
+    <div>
+      <%= f.label :file, "Fichier (PDF recommandé)", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+      <%= f.file_field :file, accept: "application/pdf,.pdf,image/*",
+            class: "block w-full text-sm text-stone-700 file:mr-3 file:px-4 file:py-2 file:rounded-lg file:border-0 file:bg-stone-900 file:text-white file:cursor-pointer hover:file:bg-stone-800" %>
+      <% if @document.persisted? && @document.file.attached? %>
+        <p class="text-xs text-stone-500 mt-2">Fichier actuel : <%= @document.file.filename %></p>
+      <% end %>
+    </div>
+
+    <div class="flex items-center gap-3 pt-2">
+      <%= f.submit (@document.persisted? ? "Enregistrer" : "Créer"),
+            class: "bg-stone-900 text-white px-6 py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition cursor-pointer" %>
+      <%= link_to "Annuler", admin_documents_path, class: "text-sm text-stone-500 hover:text-stone-900" %>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,20 @@
+<h2 style="font-family: Georgia, serif; color:#1c1917;">Votre code de signature</h2>
+
+<p>Bonjour <%= @booking.first_name %>,</p>
+
+<p>
+  Voici votre code à 6 chiffres pour signer électroniquement le contrat de location :
+</p>
+
+<p style="text-align: center; margin: 28px 0;">
+  <span style="display:inline-block; font-family: 'Courier New', monospace; font-size: 32px; letter-spacing: 0.5em; padding: 16px 26px; border: 2px solid #1c1917; border-radius: 12px; background: #fafaf9; color:#1c1917;">
+    <%= @otp_code %>
+  </span>
+</p>
+
+<p style="font-size: 13px; color:#78716c;">
+  Ce code est <strong>valable <%= @ttl_mins %> minutes</strong>, à usage unique.<br>
+  Si vous n'avez pas demandé ce code, ignorez simplement cet email.
+</p>
+
+<p style="margin-top: 24px;">Chalet Mont Rose</p>

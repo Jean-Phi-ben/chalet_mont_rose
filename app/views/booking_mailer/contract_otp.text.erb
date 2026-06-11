@@ -1,0 +1,12 @@
+Votre code de signature
+
+Bonjour <%= @booking.first_name %>,
+
+Voici votre code à 6 chiffres pour signer électroniquement le contrat :
+
+    <%= @otp_code %>
+
+Ce code est valable <%= @ttl_mins %> minutes, à usage unique.
+Si vous n'avez pas demandé ce code, ignorez cet email.
+
+Chalet Mont Rose

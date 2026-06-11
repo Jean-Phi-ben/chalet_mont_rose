@@ -1,0 +1,52 @@
+<h2 style="font-family: Georgia, serif; color:#1c1917;">Votre réservation est confirmée</h2>
+
+<p>Bonjour <%= @booking.first_name %>,</p>
+
+<p>
+  Votre séjour au <strong>Chalet Mont Rose</strong> est confirmé. Voici la marche à suivre pour finaliser votre réservation.
+</p>
+
+<table cellpadding="6" style="border-collapse: collapse; font-family: Arial, sans-serif; color:#1c1917; margin: 16px 0;">
+  <tr><td><strong>Arrivée</strong></td><td><%= fr_date_full(@booking.check_in) %></td></tr>
+  <tr><td><strong>Départ</strong></td><td><%= fr_date_full(@booking.check_out) %></td></tr>
+  <tr><td><strong>Durée</strong></td><td><%= @booking.weeks %> semaine(s) · <%= @booking.nights %> nuits</td></tr>
+  <tr><td><strong>Total séjour</strong></td><td><%= money(@booking.total_price_cents) %></td></tr>
+  <tr><td><strong>Arrhes à régler</strong></td><td><%= money(@booking.deposit_cents) %></td></tr>
+</table>
+
+<h3 style="font-family: Georgia, serif; color:#1c1917; margin-top: 28px;">1. Règlement des arrhes</h3>
+<p>
+  La facture des arrhes (<strong><%= money(@booking.deposit_cents) %></strong>) est jointe à cet email.
+  Merci de procéder au virement bancaire en utilisant les coordonnées indiquées sur la facture, dans un délai de 7 jours.
+</p>
+
+<% if @contract_url %>
+  <h3 style="font-family: Georgia, serif; color:#1c1917; margin-top: 28px;">2. Signature du contrat de location</h3>
+  <p>
+    Merci de signer électroniquement le contrat de location :
+  </p>
+  <p style="margin: 16px 0;">
+    <a href="<%= @contract_url %>"
+       style="display:inline-block; background:#1c1917; color:#ffffff; padding:12px 22px; border-radius:10px; text-decoration:none; font-family: Arial, sans-serif; letter-spacing:0.05em; font-size:13px;">
+      Signer le contrat
+    </a>
+  </p>
+  <p style="font-size: 13px; color:#78716c;">
+    Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br>
+    <a href="<%= @contract_url %>"><%= @contract_url %></a>
+  </p>
+<% end %>
+
+<p style="font-size: 13px; color:#78716c; margin-top: 32px;">
+  Le <strong>solde</strong> et la <strong>caution</strong> vous seront demandés
+  <strong>10 jours avant votre arrivée</strong> dans un email séparé contenant la facture de solde, le livret du chalet
+  et le lien pour déposer la caution.
+</p>
+
+<h3 style="font-family: Georgia, serif; color:#1c1917; margin-top: 28px;">Suivi</h3>
+<p>
+  Vous pouvez consulter le suivi de votre réservation à tout moment :<br>
+  <a href="<%= reservation_url(@booking.token) %>"><%= reservation_url(@booking.token) %></a>
+</p>
+
+<p style="margin-top: 28px;">À très bientôt,<br>Chalet Mont Rose</p>

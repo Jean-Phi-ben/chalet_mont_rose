@@ -59,7 +59,7 @@
   ["Annulées",   "cancelled", @status_counts["cancelled"] || 0, "bg-stone-100 text-stone-600 border-stone-200"]
 ] %>
 
-<div class="flex flex-wrap gap-2 mb-5">
+<div class="flex flex-wrap gap-2 mb-3">
   <% status_chips.each do |label, code, count, base_cls| %>
     <% active = (params[:status].presence == code) %>
     <%= link_to current_list.(request.query_parameters.merge(status: code).compact_blank),
@@ -70,38 +70,65 @@
   <% end %>
 </div>
 
+<%# Filtre par période (date d'arrivée / départ) %>
+<%= form_with url: current_list.(), method: :get, local: true,
+      class: "flex flex-wrap items-end gap-3 mb-5 bg-white border border-stone-200 rounded-2xl px-4 py-3" do |f| %>
+  <% %i[status sort dir].each do |key| %>
+    <% if params[key].present? %><%= hidden_field_tag key, params[key] %><% end %>
+  <% end %>
+  <div>
+    <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1">Du</label>
+    <%= date_field_tag :from, @from, class: "border border-stone-200 rounded-lg px-2 py-1.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900" %>
+  </div>
+  <div>
+    <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1">Au</label>
+    <%= date_field_tag :to, @to, class: "border border-stone-200 rounded-lg px-2 py-1.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900" %>
+  </div>
+  <%= submit_tag "Filtrer", class: "bg-stone-900 text-white px-4 py-1.5 rounded-lg text-xs uppercase tracking-widest hover:bg-stone-800 transition cursor-pointer" %>
+  <% if @from || @to %>
+    <%= link_to "Réinitialiser", current_list.(request.query_parameters.except(:from, :to)),
+          class: "text-xs text-stone-500 hover:text-stone-900 underline" %>
+  <% end %>
+<% end %>
+
 <% if @bookings.any? %>
   <div class="bg-white border border-stone-200 rounded-2xl overflow-hidden">
     <div class="overflow-x-auto">
-      <table class="w-full text-sm min-w-[760px]">
+      <table class="w-full text-sm min-w-[1000px]">
         <thead class="bg-stone-50 text-stone-400 uppercase text-[11px] tracking-widest">
           <tr>
-            <th class="text-left font-medium px-5 py-3">
+            <th class="text-left font-medium px-4 py-3">
               <%= link_to current_list.(request.query_parameters.merge(sort: "requested", dir: next_dir.("requested"))),
                     class: "inline-flex items-center gap-1.5 hover:text-stone-700 transition" do %>
                 Demande
                 <i class="fa-solid <%= sort_icon.("requested") %> text-[10px]"></i>
               <% end %>
             </th>
-            <th class="text-left font-medium px-5 py-3">Client</th>
-            <th class="text-left font-medium px-5 py-3">
+            <th class="text-left font-medium px-4 py-3">Client</th>
+            <th class="text-left font-medium px-4 py-3">
               <%= link_to current_list.(request.query_parameters.merge(sort: "check_in", dir: next_dir.("check_in"))),
                     class: "inline-flex items-center gap-1.5 hover:text-stone-700 transition" do %>
                 Période
                 <i class="fa-solid <%= sort_icon.("check_in") %> text-[10px]"></i>
               <% end %>
             </th>
-            <th class="text-left font-medium px-5 py-3">Total</th>
-            <th class="text-left font-medium px-5 py-3">Statut</th>
-            <th class="text-right font-medium px-5 py-3">Actions</th>
+            <th class="text-left font-medium px-4 py-3">Total</th>
+            <th class="text-left font-medium px-4 py-3">Statut</th>
+            <th class="text-left font-medium px-4 py-3">Paiements</th>
+            <th class="text-left font-medium px-4 py-3">Docs</th>
+            <th class="text-right font-medium px-4 py-3">Actions</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-stone-100">
           <% @bookings.each do |booking| %>
-            <% s = status_styles.fetch(booking.status, status_styles["pending"]) %>
+            <% s        = status_styles.fetch(booking.status, status_styles["pending"]) %>
+            <% deposit  = booking.deposit_invoice %>
+            <% balance  = booking.balance_invoice %>
+            <% contract = booking.contract %>
+            <% caution  = booking.caution %>
             <tr class="hover:bg-stone-50/60">
-              <td class="px-5 py-3 text-stone-500"><%= l(booking.created_at.to_date, format: :long) rescue fr_date(booking.created_at.to_date) %></td>
-              <td class="px-5 py-3">
+              <td class="px-4 py-3 text-stone-500"><%= fr_date(booking.created_at.to_date) %></td>
+              <td class="px-4 py-3">
                 <% if booking.client %>
                   <%= link_to booking.full_name, admin_client_path(booking.client), class: "text-stone-800 hover:underline" %>
                 <% else %>
@@ -109,15 +136,60 @@
                 <% end %>
                 <div class="text-xs text-stone-400"><%= booking.email %></div>
               </td>
-              <td class="px-5 py-3 text-stone-700">
+              <td class="px-4 py-3 text-stone-700">
                 <%= fr_date(booking.check_in) %> <span class="text-stone-400">→</span> <%= fr_date(booking.check_out) %>
                 <div class="text-xs text-stone-400"><%= booking.weeks %> sem. · <%= booking.nights %> nuits</div>
               </td>
-              <td class="px-5 py-3 font-medium text-stone-800"><%= money(booking.total_price_cents) %></td>
-              <td class="px-5 py-3">
-                <span class="text-[11px] uppercase tracking-widest px-2.5 py-1 rounded-full border <%= s[:cls] %>"><%= s[:label] %></span>
+              <td class="px-4 py-3 font-medium text-stone-800"><%= money(booking.total_price_cents) %></td>
+              <td class="px-4 py-3">
+                <div class="inline-flex items-center gap-2">
+                  <span class="text-[11px] uppercase tracking-widest px-2.5 py-1 rounded-full border <%= s[:cls] %>"><%= s[:label] %></span>
+                  <% if booking.invoicing_archived? %>
+                    <i class="fa-solid fa-lock text-stone-400 text-[11px]" title="Facturation archivée — verrouillée"></i>
+                  <% end %>
+                </div>
               </td>
-              <td class="px-5 py-3">
+              <td class="px-4 py-3">
+                <div class="flex flex-col gap-1">
+                  <%= payment_pill("Arrhes",  invoice_state(deposit),
+                        title: deposit ? "Arrhes : #{deposit.payment_received? ? 'reçues' : 'en attente'}" : "Pas de facture arrhes") %>
+                  <%= payment_pill("Solde",   invoice_state(balance),
+                        title: balance ? "Solde : #{balance.payment_received? ? 'reçu' : 'en attente'}" : "Pas de facture solde") %>
+                  <%= payment_pill("Caution", caution_state(caution),
+                        title: caution ? "Caution : #{caution.status}" : "Caution non créée") %>
+                </div>
+              </td>
+              <td class="px-4 py-3">
+                <div class="flex items-center gap-2 text-stone-500">
+                  <% if deposit&.pdf&.attached? %>
+                    <%= link_to rails_blob_path(deposit.pdf, disposition: "attachment"), target: "_blank", rel: "noopener",
+                          class: "hover:text-stone-900 transition", title: "Facture arrhes (#{deposit.number})" do %>
+                      <i class="fa-regular fa-file-lines"></i>
+                    <% end %>
+                  <% end %>
+                  <% if balance&.pdf&.attached? %>
+                    <%= link_to rails_blob_path(balance.pdf, disposition: "attachment"), target: "_blank", rel: "noopener",
+                          class: "hover:text-stone-900 transition", title: "Facture solde (#{balance.number})" do %>
+                      <i class="fa-solid fa-file-invoice"></i>
+                    <% end %>
+                  <% end %>
+                  <% if contract&.signed_pdf&.attached? %>
+                    <%= link_to rails_blob_path(contract.signed_pdf, disposition: "attachment"), target: "_blank", rel: "noopener",
+                          class: "hover:text-emerald-600 transition", title: "Contrat signé" do %>
+                      <i class="fa-solid fa-file-signature"></i>
+                    <% end %>
+                  <% elsif contract&.status_sent? %>
+                    <i class="fa-regular fa-file-signature text-stone-300" title="Contrat envoyé, non signé"></i>
+                  <% end %>
+                  <% if caution&.deposit_url.present? %>
+                    <%= link_to caution.deposit_url, target: "_blank", rel: "noopener",
+                          class: "hover:text-stone-900 transition", title: "Lien caution Swikly" do %>
+                      <i class="fa-solid fa-shield-halved"></i>
+                    <% end %>
+                  <% end %>
+                </div>
+              </td>
+              <td class="px-4 py-3">
                 <div class="flex items-center justify-end gap-3">
                   <%= link_to "Voir", admin_booking_path(booking),
                         class: "text-stone-700 hover:text-stone-900 text-xs uppercase tracking-widest" %>

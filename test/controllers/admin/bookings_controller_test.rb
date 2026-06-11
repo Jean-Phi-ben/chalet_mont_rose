@@ -98,6 +98,34 @@ class Admin::BookingsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", archived_admin_bookings_path
   end
 
+  test "index filters by from/to date range (excludes periods outside)" do
+    # Le booking existant a check_in 2026-01-03 → check_out 2026-01-17.
+    # Une fenêtre 2026-02-01..2026-02-28 doit l'exclure.
+    get admin_bookings_url(from: "2026-02-01", to: "2026-02-28")
+    assert_response :success
+    assert_no_match(/Jean Dupont/, response.body)
+  end
+
+  test "index keeps bookings whose period overlaps the filter window" do
+    get admin_bookings_url(from: "2026-01-10", to: "2026-01-12")
+    assert_response :success
+    assert_match "Jean Dupont", response.body
+  end
+
+  test "index shows the date range filter form" do
+    get admin_bookings_url
+    assert_select "input[type=date][name=from]"
+    assert_select "input[type=date][name=to]"
+  end
+
+  test "index renders payment pills (Arrhes / Solde / Caution)" do
+    get admin_bookings_url
+    assert_response :success
+    assert_match "Arrhes", response.body
+    assert_match "Solde", response.body
+    assert_match "Caution", response.body
+  end
+
   test "show renders the booking" do
     get admin_booking_url(@booking)
     assert_response :success
@@ -190,16 +218,25 @@ class Admin::BookingsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?]", confirm_admin_booking_path(@booking), count: 0
   end
 
-  test "confirm flips status, blocks the weeks and enqueues invoice generation" do
-    assert_enqueued_with(job: GenerateInvoiceJob) do
+  test "confirm flips status, generates invoice + contract and emails the client (without caution)" do
+    # 1 seul email à la confirmation : confirmation client (qui contient le lien de signature).
+    assert_emails 1 do
       patch confirm_admin_booking_url(@booking)
     end
     assert_redirected_to admin_booking_path(@booking)
-    assert @booking.reload.confirmed?
+    @booking.reload
+    assert @booking.confirmed?
+    assert @booking.deposit_invoice&.pdf&.attached?, "la facture d'arrhes doit être attachée"
+    assert_not_nil @booking.contract, "un contrat doit avoir été créé"
+    assert @booking.contract.status_sent?
+    assert @booking.contract.token.present?
+    assert @booking.contract.signer_email.present?
+    # La caution n'est PAS créée à la confirmation — elle est différée au J-10.
+    assert_nil @booking.caution, "la caution doit être créée seulement avec le rappel solde"
   end
 
   test "reject flips status and notifies the client" do
-    assert_enqueued_emails 1 do
+    assert_emails 1 do
       patch reject_admin_booking_url(@booking)
     end
     assert_redirected_to admin_booking_path(@booking)

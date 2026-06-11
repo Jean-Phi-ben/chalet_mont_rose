@@ -1,0 +1,11 @@
+# Solid Queue — tâches récurrentes.
+# Format : <name>: { class: JobName, schedule: "..." }
+# Schedule = expression cron classique. Configurable par environnement.
+
+production:
+  balance_reminder:
+    class: BalanceReminderJob
+    schedule: "every day at 8am"
+
+development: {}
+test: {}

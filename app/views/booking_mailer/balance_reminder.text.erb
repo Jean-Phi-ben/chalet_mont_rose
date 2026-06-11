@@ -1,0 +1,27 @@
+Préparation de votre séjour
+
+Bonjour <%= @booking.first_name %>,
+
+Votre séjour au Chalet Mont Rose approche (arrivée le <%= fr_date_full(@booking.check_in) %>).
+
+1. Règlement du solde
+Solde à régler : <%= money(@balance_amount) %>
+À régler par virement bancaire au plus tard le <%= fr_date_full(@due_date) %>.
+La facture de solde est jointe à cet email (coordonnées bancaires incluses).
+
+<% if @caution_url %>
+2. Dépôt de la caution
+Caution demandée : <%= money(@caution.amount_cents) %> (empreinte bancaire via Swikly, aucun montant prélevé).
+Lien : <%= @caution_url %>
+<% end %>
+
+3. Documents joints
+- Facture de solde (PDF)
+<% if @booking.contract&.signed_pdf&.attached? %>- Contrat signé (PDF)
+<% end %>- Conditions générales (CGU)
+- Livret du chalet
+
+Suivi : <%= @reservation_url %>
+
+À très bientôt,
+Chalet Mont Rose

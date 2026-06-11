@@ -75,5 +75,4 @@ gem "font-awesome-sass"
 # Réservation : génération de factures PDF, signature électronique, API caution
 gem "prawn"
 gem "prawn-table"
-gem "dropbox-sign"
 gem "faraday"

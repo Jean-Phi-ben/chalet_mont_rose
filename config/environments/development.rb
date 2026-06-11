@@ -31,8 +31,8 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
-  # Don't care if the mailer can't send.
-  config.action_mailer.raise_delivery_errors = false
+  # Remonter les erreurs d'envoi en dev pour pouvoir diagnostiquer Gmail SMTP.
+  config.action_mailer.raise_delivery_errors = true
 
   # Make template changes take effect immediately.
   config.action_mailer.perform_caching = false
@@ -92,4 +92,9 @@ Rails.application.configure do
 
   # Autoriser les tunnels Cloudflare (partage temporaire du site en dev)
   config.hosts << /.*\.trycloudflare\.com/
+  # Autoriser les tunnels ngrok (webhooks Dropbox Sign / Swikly en dev)
+  config.hosts << /.*\.ngrok-free\.dev/
+  config.hosts << /.*\.ngrok-free\.app/
+  config.hosts << /.*\.ngrok\.app/
+  config.hosts << /.*\.ngrok\.io/
 end
