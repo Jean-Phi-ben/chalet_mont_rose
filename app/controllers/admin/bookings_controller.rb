@@ -80,22 +80,31 @@ class Admin::BookingsController < Admin::BaseController
       warnings << "contrat : #{e.message}"
     end
 
-    BookingMailer.dispatch(:confirmation, @booking)
+    begin
+      BookingMailer.dispatch(:confirmation, @booking)
+    rescue StandardError => e
+      warnings << "email de confirmation : #{e.message}"
+    end
 
     if warnings.empty?
       redirect_to admin_booking_path(@booking),
                   notice: "Réservation confirmée — email envoyé (facture arrhes + lien signature)."
     else
       redirect_to admin_booking_path(@booking),
-                  alert: "Confirmée et email envoyé. Étapes en échec : #{warnings.join(' · ')}"
+                  alert: "Réservation confirmée. Étapes en échec : #{warnings.join(' · ')}"
     end
   end
 
   def reject
     authorize @booking
     if @booking.update(status: :rejected)
-      BookingMailer.dispatch(:rejected, @booking)
-      redirect_to admin_booking_path(@booking), notice: "Demande refusée — le client a été notifié."
+      begin
+        BookingMailer.dispatch(:rejected, @booking)
+        redirect_to admin_booking_path(@booking), notice: "Demande refusée — le client a été notifié."
+      rescue StandardError => e
+        redirect_to admin_booking_path(@booking),
+                    alert: "Demande refusée, mais l'email n'a pas pu être envoyé : #{e.message}"
+      end
     else
       redirect_to admin_booking_path(@booking), alert: @booking.errors.full_messages.to_sentence
     end
