@@ -30,9 +30,11 @@ ENV RAILS_ENV="production" \
 # Throw-away build stage to reduce size of final image
 FROM base AS build
 
-# Install packages needed to build gems
+# Install packages needed to build gems and front-end assets.
+# nodejs/npm are required because Tailwind CSS v4 resolves the FlyonUI
+# plugin and its stylesheets from node_modules during assets:precompile.
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev pkg-config && \
+    apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev pkg-config nodejs npm && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Install application gems
@@ -47,12 +49,18 @@ RUN bundle install && \
 # Copy application code
 COPY . .
 
+# Install JS dependencies (FlyonUI) so Tailwind v4 can resolve them.
+RUN npm install && rm -rf ~/.npm
+
 # Precompile bootsnap code for faster boot times.
 # -j 1 disable parallel compilation to avoid a QEMU bug: https://github.com/rails/bootsnap/issues/495
 RUN bundle exec bootsnap precompile -j 1 app/ lib/
 
 # Precompiling assets for production without requiring secret RAILS_MASTER_KEY
 RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
+
+# Drop node_modules from the build artifact: only the compiled CSS is needed at runtime.
+RUN rm -rf node_modules
 
 
 
