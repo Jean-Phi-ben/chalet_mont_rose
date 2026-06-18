@@ -217,6 +217,21 @@ ssh jeanphi@100.73.93.75          # MagicDNS : jpserver.tail3db033.ts.net
 - **Stockage de fichiers** : volume Docker `chalet_mont_rose_storage` monté sur `/rails/storage` (Active Storage) → les PDF générés survivent aux redéploiements.
 - **Réseau** : **dual-stack IPv4 + IPv6** (IPv4 activée le 2026-06-18 via DHCP). L'image est buildée **sur le serveur** lors du déploiement (voir ci-dessous).
 
+### Staging (pré-production)
+
+Instance **isolée** de la prod, sur la **même machine**, pour valider un déploiement avant qu'il touche les vrais visiteurs :
+
+- Conteneur `chalet_mont_rose_staging`, **port 8001** (Puma interne 3001), réseau host, volume `chalet_mont_rose_staging_storage`.
+- **Bases dédiées** `chalet_mont_rose_staging*`, créées automatiquement au 1er lancement (le rôle PostgreSQL a `CREATEDB`).
+- **Accès privé via Tailscale** : `http://100.73.93.75:8001` — pas d'exposition publique, pas de Cloudflare, pas de sudo.
+- Partage les secrets de prod (`~/.chalet_env`) → ⚠️ emails (Gmail) et caution (Swikly) partent **réellement** si on les déclenche : en tenir compte lors des tests.
+
+Déploiement du staging : **`bin/deploy-staging`**. Workflow recommandé :
+
+```
+dev → bin/deploy-staging → test sur http://100.73.93.75:8001 → bin/deploy (prod)
+```
+
 ---
 
 ## Déploiement en production

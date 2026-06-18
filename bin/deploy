@@ -58,7 +58,7 @@ EOF
 say "Healthcheck ${HEALTH_URL}"
 ok=0
 for i in $(seq 1 20); do
-  code="$(ssh "$SERVER" "curl -s -o /dev/null -w '%{http_code}' --max-time 5 ${HEALTH_URL}" 2>/dev/null)"; code="${code:-000}"
+  code="$(ssh "$SERVER" "curl -s -o /dev/null -w '%{http_code}' --max-time 5 ${HEALTH_URL}" 2>/dev/null || true)"; code="${code:-000}"
   printf '  tentative %2d → HTTP %s\n' "$i" "$code"
   [ "$code" = "200" ] && { ok=1; break; }
   sleep 2

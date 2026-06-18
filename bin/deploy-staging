@@ -44,7 +44,8 @@ docker rm -f ${NAME} 2>/dev/null || true
 docker run -d --name ${NAME} --network host --restart unless-stopped \
   --env-file ${ENV_FILE} \
   -v ${NAME}_storage:/rails/storage \
-  -e HTTP_PORT=${PORT} -e RAILS_ENV=production -e PGHOST=127.0.0.1 \
+  -e HTTP_PORT=${PORT} -e TARGET_PORT=3001 -e PORT=3001 \
+  -e RAILS_ENV=production -e PGHOST=127.0.0.1 \
   -e DB_PRIMARY=${APP}_staging \
   -e DB_CACHE=${APP}_staging_cache \
   -e DB_QUEUE=${APP}_staging_queue \
@@ -56,7 +57,7 @@ EOF
 say "Healthcheck ${HEALTH_URL}"
 ok=0
 for i in $(seq 1 30); do
-  code="$(ssh "$SERVER" "curl -s -o /dev/null -w '%{http_code}' --max-time 5 ${HEALTH_URL}" 2>/dev/null)"; code="${code:-000}"
+  code="$(ssh "$SERVER" "curl -s -o /dev/null -w '%{http_code}' --max-time 5 ${HEALTH_URL}" 2>/dev/null || true)"; code="${code:-000}"
   printf '  tentative %2d → HTTP %s\n' "$i" "$code"
   [ "$code" = "200" ] && { ok=1; break; }
   sleep 2
