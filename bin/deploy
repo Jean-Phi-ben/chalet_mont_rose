@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+#
+# Déploiement de Chalet Mont Rose en production (jpserver).
+#
+# - Pousse le commit courant (HEAD) sur le serveur, en LF forcé (anti-CRLF Windows).
+# - Build l'image SUR le serveur (egress dual-stack ; --network=host par sûreté).
+# - Bascule le conteneur (réseau host, port 8000, volume storage, secrets via --env-file).
+# - Healthcheck /up avec ROLLBACK automatique si KO.
+#
+# À lancer depuis un environnement où `ssh jeanphi@100.73.93.75` fonctionne
+# (WSL ou Git Bash, Tailscale actif).  Usage : bin/deploy
+#
+set -euo pipefail
+
+SERVER="jeanphi@100.73.93.75"
+APP="chalet_mont_rose"
+PORT=8000
+ENV_FILE="/home/jeanphi/.chalet_env"
+HEALTH_URL="http://localhost:${PORT}/up"
+REMOTE_SRC="/home/jeanphi/${APP}"
+REMOTE_NEW="/home/jeanphi/${APP}_new"
+
+say() { printf '\n\033[1;36m== %s ==\033[0m\n' "$*"; }
+die() { printf '\n\033[1;31m✗ %s\033[0m\n' "$*" >&2; exit 1; }
+
+cd "$(git rev-parse --show-toplevel)"
+SHA="$(git rev-parse --short HEAD)"
+say "Déploiement du commit ${SHA}"
+
+# 1) Copie du code (HEAD) sur le serveur, en LF forcé.
+say "Copie du code sur le serveur"
+git -c core.autocrlf=false -c core.eol=lf archive --format=tar HEAD \
+  | ssh "$SERVER" "rm -rf ${REMOTE_NEW} && mkdir -p ${REMOTE_NEW} && tar x -C ${REMOTE_NEW}"
+ssh "$SERVER" "cp ${REMOTE_SRC}/config/master.key ${REMOTE_NEW}/config/master.key"
+
+# 2) Build de l'image sur le serveur.
+say "Build de l'image"
+ssh "$SERVER" "cd ${REMOTE_NEW} && docker build --network=host -t ${APP}:new ."
+
+# 3) Bascule (on garde l'ancienne image et l'ancien conteneur pour rollback).
+say "Bascule du conteneur"
+ssh "$SERVER" bash -s <<EOF
+set -e
+docker image inspect ${APP}:latest >/dev/null 2>&1 && docker tag ${APP}:latest ${APP}:rollback || true
+docker tag ${APP}:new ${APP}:latest
+docker rm -f ${APP}_prev 2>/dev/null || true
+if docker inspect ${APP} >/dev/null 2>&1; then
+  docker stop ${APP} && docker rename ${APP} ${APP}_prev
+fi
+docker run -d --name ${APP} --network host --restart unless-stopped \
+  --env-file ${ENV_FILE} \
+  -v ${APP}_storage:/rails/storage \
+  -e HTTP_PORT=${PORT} -e RAILS_ENV=production -e PGHOST=127.0.0.1 \
+  ${APP}:latest
+EOF
+
+# 4) Healthcheck (avec rollback automatique).
+say "Healthcheck ${HEALTH_URL}"
+ok=0
+for i in $(seq 1 20); do
+  code="$(ssh "$SERVER" "curl -s -o /dev/null -w '%{http_code}' --max-time 5 ${HEALTH_URL}" 2>/dev/null)"; code="${code:-000}"
+  printf '  tentative %2d → HTTP %s\n' "$i" "$code"
+  [ "$code" = "200" ] && { ok=1; break; }
+  sleep 2
+done
+
+if [ "$ok" != "1" ]; then
+  say "Healthcheck KO → ROLLBACK"
+  ssh "$SERVER" bash -s <<EOF
+set -e
+docker rm -f ${APP} 2>/dev/null || true
+if docker inspect ${APP}_prev >/dev/null 2>&1; then
+  docker rename ${APP}_prev ${APP} && docker start ${APP}
+fi
+EOF
+  die "Déploiement annulé, rollback effectué. Diagnostic : ssh ${SERVER} 'docker logs --tail 50 ${APP}'"
+fi
+
+# 5) Succès : ménage + finalisation des répertoires + marqueur git.
+say "OK (HTTP 200) — finalisation"
+ssh "$SERVER" "docker rm -f ${APP}_prev 2>/dev/null || true; \
+  rm -rf ${REMOTE_SRC}_old && mv ${REMOTE_SRC} ${REMOTE_SRC}_old && mv ${REMOTE_NEW} ${REMOTE_SRC}"
+
+git tag -f production "$SHA" >/dev/null 2>&1 || true
+
+printf '\n\033[1;32m✓ Déployé : %s → https://chaletmontrose.fr\033[0m\n' "$SHA"
+printf '  Rollback possible : ssh %s \"docker run … %s:rollback\"  (ou redémarrer %s_old)\n' "$SERVER" "$APP" "$APP"

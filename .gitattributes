@@ -7,3 +7,10 @@ db/schema.rb linguist-generated
 vendor/* linguist-vendored
 config/credentials/*.yml.enc diff=rails_credentials
 config/credentials.yml.enc diff=rails_credentials
+
+# Forcer les fins de ligne LF sur les scripts/exécutables : un checkout Windows
+# (core.autocrlf=true) convertirait sinon en CRLF et casserait les shebangs
+# dans l'image Linux (erreur "/usr/bin/env: 'ruby\r'").
+bin/* text eol=lf
+*.sh text eol=lf
+Dockerfile text eol=lf
