@@ -85,20 +85,23 @@ test:
 # for a full overview on how database connection configuration can be specified.
 #
 production:
+  # Les noms de bases sont paramétrables par variable d'environnement pour
+  # permettre un staging isolé sur la même machine (RAILS_ENV=production +
+  # DB_* différents). Sans ces variables, la prod utilise ses bases habituelles.
   primary: &primary_production
     <<: *default
-    database: chalet_mont_rose_production
+    database: <%= ENV.fetch("DB_PRIMARY", "chalet_mont_rose_production") %>
     username: chalet_mont_rose
     password: <%= ENV["CHALET_MONT_ROSE_DATABASE_PASSWORD"] %>
   cache:
     <<: *primary_production
-    database: chalet_mont_rose_production_cache
+    database: <%= ENV.fetch("DB_CACHE", "chalet_mont_rose_production_cache") %>
     migrations_paths: db/cache_migrate
   queue:
     <<: *primary_production
-    database: chalet_mont_rose_production_queue
+    database: <%= ENV.fetch("DB_QUEUE", "chalet_mont_rose_production_queue") %>
     migrations_paths: db/queue_migrate
   cable:
     <<: *primary_production
-    database: chalet_mont_rose_production_cable
+    database: <%= ENV.fetch("DB_CABLE", "chalet_mont_rose_production_cable") %>
     migrations_paths: db/cable_migrate
