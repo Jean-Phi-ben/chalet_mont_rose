@@ -12,6 +12,10 @@ class SwiklyProvider
   PRODUCTION_BASE = "https://api.swikly.com/v1".freeze
 
   def self.enabled?
+    # En staging (ENV["STAGING"]), on force le mode stub : aucune requête réelle
+    # n'est envoyée à Swikly, même si les identifiants sont présents.
+    return false if ENV["STAGING"].present?
+
     ENV["SWIKLY_API_KEY"].present? && ENV["SWIKLY_ACCOUNT_ID"].present?
   end
 

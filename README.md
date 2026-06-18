@@ -224,7 +224,7 @@ Instance **isolée** de la prod, sur la **même machine**, pour valider un dépl
 - Conteneur `chalet_mont_rose_staging`, **port 8001** (Puma interne 3001), réseau host, volume `chalet_mont_rose_staging_storage`.
 - **Bases dédiées** `chalet_mont_rose_staging*`, créées automatiquement au 1er lancement (le rôle PostgreSQL a `CREATEDB`).
 - **Accès privé via Tailscale** : `http://100.73.93.75:8001` — pas d'exposition publique, pas de Cloudflare, pas de sudo.
-- Partage les secrets de prod (`~/.chalet_env`), mais **n'envoie aucun email réel** : `STAGING=true` met le mailer en mode `:test` (les mails restent en mémoire, le flux et `EmailLog` restent intacts). ⚠️ La caution **Swikly** reste, elle, réelle si on la déclenche.
+- Partage les secrets de prod (`~/.chalet_env`), mais **aucune action externe réelle** : `STAGING=true` met le mailer en mode `:test` (emails non envoyés) **et** force le mode stub de **Swikly** (aucune caution réelle). Le flux applicatif et `EmailLog` restent intacts.
 
 Déploiement du staging : **`bin/deploy-staging`**. Workflow recommandé :
 
