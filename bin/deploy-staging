@@ -45,7 +45,7 @@ docker run -d --name ${NAME} --network host --restart unless-stopped \
   --env-file ${ENV_FILE} \
   -v ${NAME}_storage:/rails/storage \
   -e HTTP_PORT=${PORT} -e TARGET_PORT=3001 -e PORT=3001 \
-  -e RAILS_ENV=production -e PGHOST=127.0.0.1 \
+  -e RAILS_ENV=production -e STAGING=true -e PGHOST=127.0.0.1 \
   -e DB_PRIMARY=${APP}_staging \
   -e DB_CACHE=${APP}_staging_cache \
   -e DB_QUEUE=${APP}_staging_queue \

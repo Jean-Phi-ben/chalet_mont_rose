@@ -59,10 +59,17 @@ Rails.application.configure do
   # Set host to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: "chaletmontrose.fr", protocol: "https" }
 
-  # SMTP Gmail (actif uniquement si les variables d'environnement sont présentes).
-  # Les identifiants sont fournis au runtime via les variables d'env du conteneur
-  # (GMAIL_SMTP_USERNAME / GMAIL_SMTP_APP_PASSWORD), comme en développement.
-  if ENV["GMAIL_SMTP_USERNAME"].present?
+  # Envoi d'emails :
+  # - En staging (ENV["STAGING"] présent), aucun email réel n'est envoyé : le
+  #   mailer est en mode :test (les mails restent en mémoire). Le flux applicatif
+  #   reste intact (EmailLog est tout de même créé).
+  # - Sinon, SMTP Gmail si les identifiants sont fournis au runtime
+  #   (GMAIL_SMTP_USERNAME / GMAIL_SMTP_APP_PASSWORD), comme en développement.
+  if ENV["STAGING"].present?
+    config.action_mailer.delivery_method = :test
+    config.action_mailer.perform_deliveries = true
+    config.action_mailer.raise_delivery_errors = false
+  elsif ENV["GMAIL_SMTP_USERNAME"].present?
     config.action_mailer.delivery_method = :smtp
     config.action_mailer.perform_deliveries = true
     config.action_mailer.raise_delivery_errors = true
