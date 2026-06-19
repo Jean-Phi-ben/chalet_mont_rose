@@ -114,10 +114,10 @@ class Booking < ApplicationRecord
   # Montant TVA inclus dans le TTC d'une catégorie de ligne.
   def vat_cents_for(category)
     ttc = case category
-          when :accommodation then accommodation_cents.to_i
-          when :cleaning      then cleaning_fee_cents.to_i
-          when :tourist_tax   then tourist_tax_cents.to_i
-          end
+    when :accommodation then accommodation_cents.to_i
+    when :cleaning      then cleaning_fee_cents.to_i
+    when :tourist_tax   then tourist_tax_cents.to_i
+    end
     rate = vat_rate_for(category)
     return 0 if rate.zero?
 

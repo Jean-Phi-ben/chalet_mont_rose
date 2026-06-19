@@ -12,8 +12,8 @@ class BookingMailerTest < ActionMailer::TestCase
   test "new_request_to_owner targets the owner and replies to the client" do
     with_env("MAILER_OWNER_EMAIL", "owner@example.com") do
       mail = BookingMailer.new_request_to_owner(@booking)
-      assert_equal ["owner@example.com"], mail.to
-      assert_equal ["client@example.com"], mail.reply_to
+      assert_equal [ "owner@example.com" ], mail.to
+      assert_equal [ "client@example.com" ], mail.reply_to
       assert_match "Jean Dupont", mail.subject
       assert_match "Jean Dupont", mail.body.encoded
     end
@@ -21,14 +21,14 @@ class BookingMailerTest < ActionMailer::TestCase
 
   test "acknowledgement_to_client targets the client with a tracking link" do
     mail = BookingMailer.acknowledgement_to_client(@booking)
-    assert_equal ["client@example.com"], mail.to
+    assert_equal [ "client@example.com" ], mail.to
     assert_match "Chalet Mont Rose", mail.subject
     assert_match @booking.token, mail.body.encoded
   end
 
   test "rejected targets the client and references the period" do
     mail = BookingMailer.rejected(@booking)
-    assert_equal ["client@example.com"], mail.to
+    assert_equal [ "client@example.com" ], mail.to
     assert_match "Chalet Mont Rose", mail.subject
     assert_match "Jean", mail.body.encoded
   end
@@ -38,7 +38,7 @@ class BookingMailerTest < ActionMailer::TestCase
     SendContractJob.perform_now(@booking)
 
     mail = BookingMailer.confirmation(@booking)
-    assert_equal ["client@example.com"], mail.to
+    assert_equal [ "client@example.com" ], mail.to
     assert_match "confirmée", mail.subject
     html = mail.html_part.body.decoded
     text = mail.text_part.body.decoded

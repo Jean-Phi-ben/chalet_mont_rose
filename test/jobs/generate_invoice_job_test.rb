@@ -19,7 +19,7 @@ class GenerateInvoiceJobTest < ActiveJob::TestCase
 
     deposit = @booking.deposit_invoice
     balance = @booking.balance_invoice
-    assert_equal  66_000, deposit.amount_cents
+    assert_equal 66_000, deposit.amount_cents
     # Arrhes non reçues à la création → solde = total séjour entier.
     assert_equal 314_560, balance.amount_cents
     assert deposit.pdf.attached?

@@ -58,6 +58,6 @@ class TouristTaxPeriod < ApplicationRecord
       periods << find_or_initialize_by(season: "winter", year: y) if today > Date.new(y + 1, 4, 30)
     end
 
-    periods.sort_by { |p| [p.year, p.summer? ? 0 : 1] }
+    periods.sort_by { |p| [ p.year, p.summer? ? 0 : 1 ] }
   end
 end

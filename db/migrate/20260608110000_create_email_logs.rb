@@ -10,7 +10,7 @@ class CreateEmailLogs < ActiveRecord::Migration[8.1]
       t.string  :from_address
       t.string  :subject
       t.datetime :sent_at, null: false
-      t.string  :message_id    # Message-ID RFC 822 pour traçabilité
+      t.string :message_id    # Message-ID RFC 822 pour traçabilité
       t.timestamps
     end
     add_index :email_logs, :sent_at

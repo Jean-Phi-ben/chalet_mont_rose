@@ -14,8 +14,8 @@ class BalanceReminderMailerTest < ActionMailer::TestCase
   test "sends to the client and CCs the admin owner" do
     ENV["MAILER_OWNER_EMAIL"] = "owner@chaletmontrose.fr"
     mail = BookingMailer.balance_reminder(@booking)
-    assert_equal ["ines@example.com"], mail.to
-    assert_equal ["owner@chaletmontrose.fr"], mail.cc
+    assert_equal [ "ines@example.com" ], mail.to
+    assert_equal [ "owner@chaletmontrose.fr" ], mail.cc
     assert_match(/solde/i, mail.subject)
     body = mail.html_part.body.decoded
     assert_match "solde de", body

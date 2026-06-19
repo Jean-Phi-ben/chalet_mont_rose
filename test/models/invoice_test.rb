@@ -17,7 +17,7 @@ class InvoiceTest < ActiveSupport::TestCase
     balance.save!
 
     assert deposit.kind_deposit?
-    assert_equal  66_000, deposit.amount_cents
+    assert_equal 66_000, deposit.amount_cents
     assert balance.kind_balance?
     # Arrhes non encore reçues → solde = total séjour (rien à déduire).
     assert_equal 314_560, balance.amount_cents

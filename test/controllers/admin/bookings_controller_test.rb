@@ -163,8 +163,8 @@ class Admin::BookingsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Sophie Marceau", booking.full_name
     assert booking.pending?
     assert_equal 100_000, booking.accommodation_cents          # 1 semaine
-    assert_equal  40_000, booking.cleaning_fee_cents           # 1 × 40 000
-    assert_equal   7_280, booking.tourist_tax_cents            # 260 × 4 × 7
+    assert_equal 40_000, booking.cleaning_fee_cents           # 1 × 40 000
+    assert_equal 7_280, booking.tourist_tax_cents            # 260 × 4 × 7
     assert_redirected_to admin_booking_path(booking)
   end
 
@@ -265,10 +265,10 @@ class Admin::BookingsControllerTest < ActionDispatch::IntegrationTest
     @booking.reload
     assert_equal Date.new(2026, 1, 10), @booking.check_in
     assert_equal 120_000, @booking.accommodation_cents
-    assert_equal  40_000, @booking.cleaning_fee_cents       # 40 000 × 1 sem.
+    assert_equal 40_000, @booking.cleaning_fee_cents       # 40 000 × 1 sem.
     assert_equal   7_280, @booking.tourist_tax_cents        # 260 × 4 voy. × 7 nuits
     assert_equal 167_280, @booking.total_price_cents
-    assert_equal  36_000, @booking.deposit_cents            # 30 % de l'hébergement
+    assert_equal 36_000, @booking.deposit_cents            # 30 % de l'hébergement
   end
 
   test "destroy removes the booking and its invoices, then redirects to the index" do

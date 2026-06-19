@@ -32,7 +32,7 @@ module ApplicationHelper
   def calendar_months
     first       = Date.current.beginning_of_month
     last_priced = WeeklyRate.maximum(:week_start)&.beginning_of_month
-    last        = [last_priced, first >> 11].compact.max
+    last        = [ last_priced, first >> 11 ].compact.max
     span        = (last.year - first.year) * 12 + (last.month - first.month)
     (0..span).map { |i| first >> i }
   end
@@ -52,4 +52,3 @@ module ApplicationHelper
     end
   end
 end
-
