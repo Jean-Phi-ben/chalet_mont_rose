@@ -9,6 +9,8 @@
 #   end
 
 User.destroy_all
-User.create!(email_address: "admin@prestige.com", password: "password123", admin: true)
-User.create!(email_address: "client@prestige.com", password: "password123", admin: false)
+# Le statut admin ne dépend plus du drapeau en base mais de la liste blanche
+# ADMIN_EMAILS (.env) : pour être admin, l'adresse doit y figurer.
+User.create!(email_address: "admin@prestige.com", password: "password123")
+User.create!(email_address: "client@prestige.com", password: "password123")
 puts "Utilisateurs créés !"

@@ -1,0 +1,46 @@
+<% content_for :title, "Mon profil — Espace client" %>
+
+<div class="max-w-xl">
+  <h1 class="text-2xl sm:text-3xl font-serif text-stone-900 tracking-wide mb-6" style="font-family: 'Playfair Display', serif;">Mon profil</h1>
+
+  <div class="bg-white border border-stone-200 rounded-2xl p-6">
+    <% if @client.errors.any? %>
+      <div class="mb-5 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">
+        <%= @client.errors.full_messages.to_sentence %>
+      </div>
+    <% end %>
+
+    <%= form_with model: @client, url: account_profile_path, method: :patch, class: "space-y-5" do |f| %>
+      <div>
+        <label class="block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5">Email (connexion Google)</label>
+        <input type="email" value="<%= current_email %>" disabled
+               class="w-full bg-stone-100 border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-500 cursor-not-allowed">
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <%= f.label :first_name, "Prénom", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+          <%= f.text_field :first_name, class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+        </div>
+        <div>
+          <%= f.label :last_name, "Nom", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+          <%= f.text_field :last_name, class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+        </div>
+      </div>
+
+      <div>
+        <%= f.label :phone, "Téléphone", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+        <%= f.telephone_field :phone, class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+      </div>
+
+      <div>
+        <%= f.label :address, "Adresse", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
+        <%= f.text_area :address, rows: 3, class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+      </div>
+
+      <div class="pt-2">
+        <%= f.submit "Enregistrer", class: "bg-stone-900 text-white px-6 py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition cursor-pointer" %>
+      </div>
+    <% end %>
+  </div>
+</div>

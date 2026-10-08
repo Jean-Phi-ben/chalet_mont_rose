@@ -19,15 +19,17 @@ export default class extends Controller {
 
   open() {
     this.menuTarget.classList.remove("hidden")
-    this.iconOpenTarget.classList.add("hidden")
-    this.iconCloseTarget.classList.remove("hidden")
+    // Styles inline : Font Awesome (CSS non-layered) impose display:inline-block
+    // aux .fa-* et écrase le .hidden de Tailwind v4 (layered). L'inline gagne.
+    this.iconOpenTarget.style.display = "none"
+    this.iconCloseTarget.style.display = "inline-block"
     this.toggleTarget.setAttribute("aria-expanded", "true")
   }
 
   close() {
     this.menuTarget.classList.add("hidden")
-    this.iconOpenTarget.classList.remove("hidden")
-    this.iconCloseTarget.classList.add("hidden")
+    this.iconOpenTarget.style.display = "inline-block"
+    this.iconCloseTarget.style.display = "none"
     this.toggleTarget.setAttribute("aria-expanded", "false")
   }
 

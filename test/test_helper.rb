@@ -6,6 +6,11 @@ ENV["RAILS_ENV"] ||= "test"
 %w[SWIKLY_API_KEY SWIKLY_API_SECRET SWIKLY_ACCOUNT_ID CAUTION_AMOUNT
    MAILER_OWNER_EMAIL BALANCE_REMINDER_DAYS].each { |k| ENV.delete(k) }
 
+# Liste blanche admin déterministe pour les tests (le statut admin dépend de
+# ADMIN_EMAILS via AdminAccess). Défini AVANT dotenv, qui n'écrase pas une
+# variable déjà présente → les emails de test ci-dessous sont bien admins.
+ENV["ADMIN_EMAILS"] = "admin@example.com,patron@example.com"
+
 require_relative "../config/environment"
 require "rails/test_help"
 require_relative "test_helpers/session_test_helper"

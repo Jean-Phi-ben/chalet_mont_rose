@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lato:wght@300;400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <%= render "shared/font_awesome" %>
   </head>
 
   <body class="bg-stone-100 min-h-screen" style="font-family: 'Lato', sans-serif;">
@@ -61,7 +61,7 @@
                 aria-label="Ouvrir le menu"
                 class="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg text-stone-700 hover:bg-stone-100 transition">
           <i data-navbar-target="iconOpen"  class="fa-solid fa-bars text-lg"></i>
-          <i data-navbar-target="iconClose" class="fa-solid fa-xmark text-lg hidden"></i>
+          <i data-navbar-target="iconClose" class="fa-solid fa-xmark text-lg" style="display:none"></i>
         </button>
       </div>
 

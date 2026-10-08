@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <title><%= content_for(:title) || "Espace client — Chalet Mont Rose" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= yield :head %>
+    <link rel="icon" href="/logo.png" type="image/png">
+    <link rel="apple-touch-icon" href="/logo.png">
+    <%# Font Awesome dans une couche CSS « fa » sous Tailwind (cf. layout application). %>
+    <style>@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css") layer(fa);</style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="bg-stone-50 min-h-screen flex flex-col">
+    <header class="bg-white border-b border-stone-200 sticky top-0 z-10">
+      <div class="max-w-5xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16 gap-3">
+        <%= link_to root_path, title: "Retour à l'accueil du site",
+              class: "shrink-0 flex items-center gap-2 font-serif text-lg text-stone-900 tracking-wide whitespace-nowrap",
+              style: "font-family: 'Playfair Display', serif;" do %>
+          <i class="fa-solid fa-house text-sm text-stone-400"></i>
+          <span class="hidden sm:inline">Chalet Mont Rose</span>
+        <% end %>
+        <% link_base = "flex items-center gap-2 px-3 py-2 rounded-lg whitespace-nowrap" %>
+        <% active = "bg-stone-100 text-stone-900" %>
+        <% idle   = "text-stone-600 hover:text-stone-900 hover:bg-stone-50" %>
+        <nav class="flex items-center gap-1 text-sm min-w-0 overflow-x-auto">
+          <%= link_to account_root_path, class: "#{link_base} #{current_page?(account_root_path) ? active : idle}" do %>
+            <i class="fa-solid fa-gauge opacity-70"></i><span>Tableau de bord</span>
+          <% end %>
+          <%= link_to account_profile_path, class: "#{link_base} #{current_page?(account_profile_path) ? active : idle}" do %>
+            <i class="fa-solid fa-user opacity-70"></i><span>Mon profil</span>
+          <% end %>
+          <%= link_to account_documents_path, class: "#{link_base} #{current_page?(account_documents_path) ? active : idle}" do %>
+            <i class="fa-solid fa-folder-open opacity-70"></i><span>Documents</span>
+          <% end %>
+          <%= button_to session_path, method: :delete, class: "#{link_base} text-stone-500 hover:text-red-600 hover:bg-red-50" do %>
+            <i class="fa-solid fa-arrow-right-from-bracket"></i><span>Déconnexion</span>
+          <% end %>
+        </nav>
+      </div>
+    </header>
+
+    <%= render "shared/flashes" %>
+
+    <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8">
+      <%= yield %>
+    </main>
+  </body>
+</html>

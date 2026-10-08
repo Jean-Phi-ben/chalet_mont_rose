@@ -1,0 +1,7 @@
+<%# Font Awesome chargé dans une COUCHE CSS « fa » déclarée AVANT Tailwind.
+    Tailwind v4 met ses utilitaires dans @layer utilities ; sans cette couche,
+    le CSS non-layered de FA (display:inline-block sur .fa-*) écrase .hidden et
+    les variantes responsive. En layered + déclaré en premier, FA passe sous
+    utilities → les utilitaires Tailwind gagnent partout (.hidden, sm:block…).
+    Partagé entre les layouts application et admin pour éviter toute divergence. %>
+<style>@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css") layer(fa);</style>

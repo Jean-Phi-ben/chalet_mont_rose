@@ -25,7 +25,7 @@ class Booking < ApplicationRecord
   validates :check_in, :check_out, presence: true
   validates :first_name, :last_name, presence: true
   validates :email, presence: true, format: { with: EMAIL_FORMAT, allow_blank: true }
-  validates :guests_count, numericality: { greater_than: 0 }, allow_nil: true
+  validates :guests_count, numericality: { greater_than: 0, less_than_or_equal_to: 12 }, allow_nil: true
   validate :dates_must_be_saturdays
   validate :check_out_after_check_in
 

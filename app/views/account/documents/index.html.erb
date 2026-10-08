@@ -1,0 +1,34 @@
+<% content_for :title, "Documents — Espace client" %>
+
+<div class="mb-6">
+  <h1 class="text-2xl sm:text-3xl font-serif text-stone-900 tracking-wide" style="font-family: 'Playfair Display', serif;">Documents du chalet</h1>
+  <p class="text-sm text-stone-500 mt-1">Conditions générales, livret d'accueil et informations pratiques.</p>
+</div>
+
+<% if @documents.empty? %>
+  <div class="bg-white border border-stone-200 rounded-2xl p-10 text-center">
+    <i class="fa-regular fa-folder-open text-3xl text-stone-300 mb-3"></i>
+    <p class="text-stone-600">Aucun document disponible pour le moment.</p>
+  </div>
+<% else %>
+  <div class="grid sm:grid-cols-2 gap-4">
+    <% @documents.each do |document| %>
+      <div class="bg-white border border-stone-200 rounded-2xl p-5 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3 min-w-0">
+          <i class="fa-solid fa-file-lines text-xl text-stone-300"></i>
+          <div class="min-w-0">
+            <p class="text-stone-900 font-medium truncate"><%= document.title %></p>
+            <p class="text-xs text-stone-400"><%= document.kind_label %></p>
+          </div>
+        </div>
+        <% if document.file.attached? %>
+          <%= link_to account_document_path(document), class: "shrink-0 inline-flex items-center gap-2 text-sm text-stone-700 hover:text-stone-900 underline" do %>
+            <i class="fa-solid fa-download"></i> Ouvrir
+          <% end %>
+        <% else %>
+          <span class="shrink-0 text-xs text-stone-400">indisponible</span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

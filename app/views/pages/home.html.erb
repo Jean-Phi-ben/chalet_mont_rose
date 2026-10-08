@@ -1,16 +1,63 @@
 <% photos = [
-  { src: "salon.jpg",       alt: "Le Grand Salon" },
-  { src: "chambre.jpg",     alt: "Suite de Maître" },
-  { src: "vue.jpg",         alt: "Panorama Alpin" },
-  { src: "spa.jpg",         alt: "Espace Bien-être" },
-  { src: "chalet_1.jpg",    alt: "Le Chalet" },
-  { src: "chalet_3.jpg",    alt: "Le Chalet, façade Sud" }
+  # Extérieur
+  { src: "chalet-1.jpg",                    alt: "Le Chalet" },
+  { src: "chalet-3.jpg",                    alt: "Le Chalet, façade Sud" },
+  { src: "vue-mont-blanc-chalet.jpg",       alt: "Le chalet face au Mont Blanc" },
+  { src: "terrasse-sud-chien.jpg",          alt: "Terrasse Sud" },
+  # Salon & séjour
+  { src: "salon.jpg",                       alt: "Le Grand Salon" },
+  { src: "salon-vue-nord.jpg",              alt: "Salon, vue Nord" },
+  { src: "salon-ete.jpg",                   alt: "Le salon en été" },
+  { src: "cheminee.jpg",                    alt: "Cheminée" },
+  # Cuisine
+  { src: "coin-cuisine.jpg",                alt: "Coin cuisine" },
+  { src: "chalet-cuisine-book.jpg",         alt: "La cuisine" },
+  # Chambres
+  { src: "master-bedroom.jpg",              alt: "Suite de Maître" },
+  { src: "dressing-master-bedroom.jpg",     alt: "Dressing de la suite" },
+  { src: "chambre.jpg",                     alt: "Chambre" },
+  { src: "chambre-rdc.jpg",                 alt: "Chambre du rez-de-chaussée" },
+  { src: "chambre-r2.jpg",                  alt: "Chambre du R+2" },
+  { src: "chambre-enfants.jpg",             alt: "Chambre des enfants" },
+  { src: "mezzanine-vue-nord.jpg",          alt: "Mezzanine, vue Nord" },
+  { src: "mezzanine-vue-sud.jpg",           alt: "Mezzanine, vue Sud" },
+  # Salles de bain
+  { src: "salle-de-bain-master-bedroom.jpg", alt: "Salle de bain de la suite" },
+  { src: "salle-de-bain-chambre-r2.jpg",    alt: "Salle de bain, chambre R+2" },
+  { src: "salle-de-bain-enfant.jpg",        alt: "Salle de bain des enfants" },
+  { src: "toilette-japonaises.jpg",         alt: "Toilettes japonaises" },
+  # Spa & bien-être
+  { src: "bain-nordique-ete.jpg",           alt: "Bain nordique en été" },
+  { src: "bain-nordique-neige.jpg",         alt: "Bain nordique sous la neige" },
+  { src: "bain-nordique-eneige.jpg",        alt: "Bain nordique enneigé" },
+  { src: "cuve-en-ete.jpg",                 alt: "La cuve en été" },
+  { src: "cuve-hiver.jpg",                  alt: "La cuve en hiver" },
+  { src: "sauna-vue-sud.jpg",               alt: "Sauna, vue Sud" },
+  { src: "saune-vue-nord.jpg",              alt: "Sauna panoramique, vue Nord" },
+  { src: "sauna-et-douche-sauna.jpg",       alt: "Sauna et douche" },
+  { src: "sauna-appareil.jpg",              alt: "Sauna" },
+  { src: "poele-sauna.jpg",                 alt: "Poêle du sauna" },
+  # Salle de cinéma & jeux
+  { src: "salle-cine-vue-ouest.jpg",        alt: "Salle de cinéma" },
+  { src: "salle-cine-ecran-top-gun.jpg",    alt: "Salle de cinéma, écran" },
+  { src: "salle-cine-ecran.jpg",            alt: "Salle de cinéma" },
+  { src: "play-station.jpg",                alt: "Espace jeux PlayStation" },
+  # Vues & montagne
+  { src: "vue-ete.jpg",                     alt: "Vue en été" },
+  { src: "vue-hiver.jpg",                   alt: "Vue en hiver" },
+  { src: "mont-blanc.jpg",                  alt: "Le Mont Blanc" },
+  { src: "mont-d-arbois.jpg",               alt: "Le Mont d'Arbois" },
+  { src: "vaches-mont-blanc.jpg",           alt: "Alpages face au Mont Blanc" },
+  # Plans
+  { src: "plan-r0.jpg",                     alt: "Plan du rez-de-chaussée" },
+  { src: "plan-r1.jpg",                     alt: "Plan du 1ᵉʳ étage" },
+  { src: "plan-r2.jpg",                     alt: "Plan du 2ᵉ étage" }
 ] %>
 
 <% content_for :full_width do %>
   <!-- HERO -->
   <div class="relative h-[60vh] sm:h-[70vh] md:h-[85vh] w-full overflow-hidden">
-    <%= image_tag "chalet_main.jpg", class: "absolute inset-0 w-full h-full object-cover object-center" %>
+    <%= image_tag "chalet-main.jpg", class: "absolute inset-0 w-full h-full object-cover object-center" %>
     <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-transparent"></div>
 
     <div class="absolute inset-0 flex flex-col items-center justify-end text-center px-4 pb-12 sm:pb-16 md:pb-24">
@@ -139,8 +186,9 @@
     <div class="text-stone-600 leading-relaxed space-y-4">
       <p>
         Niché au cœur des Alpes, le Chalet Mont Rose est un havre de paix alliant élégance contemporaine
-        et charme authentique de la montagne. Avec ses 280 m² répartis sur trois niveaux, il offre
-        un cadre exceptionnel pour des vacances inoubliables en famille ou entre amis.
+        et charme authentique de la montagne. Avec ses 260 m² répartis sur trois niveaux, il peut
+        accueillir jusqu'à 12 voyageurs et offre un cadre exceptionnel pour des vacances inoubliables
+        en famille ou entre amis.
       </p>
       <p>
         Le grand salon, baigné de lumière naturelle, s'ouvre sur une terrasse panoramique avec vue
@@ -157,31 +205,22 @@
 
   <!-- BOOKING CARD -->
   <div class="md:col-span-1">
-    <div class="bg-white border border-stone-200 rounded-2xl p-6 shadow-sm md:sticky md:top-28">
+    <div role="button" tabindex="0"
+         data-action="click->modal#open keydown.enter->modal#open keydown.space->modal#open"
+         aria-controls="reservation-modal"
+         aria-label="Demander une réservation"
+         class="group block w-full text-left bg-white border border-stone-200 rounded-2xl p-6 shadow-sm md:sticky md:top-28 cursor-pointer transition-all duration-300 hover:shadow-xl hover:border-stone-300 hover:-translate-y-0.5">
       <p class="text-sm text-stone-400 uppercase tracking-wider mb-1">À partir de</p>
-      <p class="text-3xl font-serif text-stone-900 mb-4">5 800 € <span class="text-base font-sans text-stone-400">/ semaine</span></p>
-      <div class="space-y-3 mb-6">
-        <div class="grid grid-cols-2 gap-3">
-          <div class="border border-stone-200 rounded-lg p-3">
-            <p class="text-[10px] text-stone-400 uppercase tracking-wider">Arrivée</p>
-            <p class="text-sm text-stone-700">Sélectionner</p>
-          </div>
-          <div class="border border-stone-200 rounded-lg p-3">
-            <p class="text-[10px] text-stone-400 uppercase tracking-wider">Départ</p>
-            <p class="text-sm text-stone-700">Sélectionner</p>
-          </div>
-        </div>
-        <div class="border border-stone-200 rounded-lg p-3">
-          <p class="text-[10px] text-stone-400 uppercase tracking-wider">Voyageurs</p>
-          <p class="text-sm text-stone-700">10 voyageurs max.</p>
-        </div>
-      </div>
-      <button type="button"
-              data-action="click->modal#open"
-              aria-controls="reservation-modal"
-              class="block w-full text-center bg-stone-900 text-white py-3.5 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition cursor-pointer">
+      <p class="text-3xl font-serif text-stone-900 mb-5">
+        <% if @cheapest_week_price %>
+          <%= number_with_delimiter(@cheapest_week_price, delimiter: " ") %> € <span class="text-base font-sans text-stone-400">/ semaine</span>
+        <% else %>
+          Sur demande
+        <% end %>
+      </p>
+      <span class="block w-full text-center bg-stone-900 text-white py-3.5 rounded-xl text-sm uppercase tracking-widest transition group-hover:bg-stone-800">
         Demander une réservation
-      </button>
+      </span>
       <p class="text-xs text-stone-400 text-center mt-3">Aucun paiement immédiat requis</p>
     </div>
   </div>
@@ -225,7 +264,7 @@
   <h2 class="text-2xl font-serif text-stone-900 tracking-wide mb-6">Services inclus</h2>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <% [
-      ["fa-broom", "Ménage quotidien", "Entretien du chalet pendant tout votre séjour"],
+      ["fa-broom", "Ménage dans la semaine", "Entretien du chalet si nécessaire"],
       ["fa-concierge-bell", "Conciergerie dédiée", "Un interlocuteur unique avant et pendant votre séjour"],
       ["fa-champagne-glasses", "Accueil personnalisé", "Panier de bienvenue et provisions pour les premiers jours"],
       ["fa-bed", "Linge de maison", "Draps, serviettes & peignoirs haut de gamme fournis"]
@@ -268,10 +307,10 @@
     <h2 class="text-2xl md:text-3xl font-serif text-white tracking-wide mb-3">Une question ?</h2>
     <p class="text-stone-400 mb-6">Nous sommes à votre disposition pour organiser votre séjour sur mesure.</p>
     <div class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-      <a href="tel:+33100000000" class="inline-flex items-center gap-2 bg-white text-stone-900 px-6 py-3 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-100 transition">
+      <a href="tel:+33689064057" class="inline-flex items-center gap-2 bg-white text-stone-900 px-6 py-3 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-100 transition">
         <i class="fa-solid fa-phone"></i> Nous appeler
       </a>
-      <a href="mailto:contact@chaletmontrose.com" class="inline-flex items-center gap-2 border border-white/30 text-white px-6 py-3 rounded-xl text-sm uppercase tracking-widest hover:bg-white/10 transition">
+      <a href="mailto:chaletmontrose74@gmail.com" class="inline-flex items-center gap-2 border border-white/30 text-white px-6 py-3 rounded-xl text-sm uppercase tracking-widest hover:bg-white/10 transition">
         <i class="fa-solid fa-envelope"></i> Nous écrire
       </a>
     </div>
@@ -347,7 +386,7 @@
 
           <div>
             <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Voyageurs</label>
-            <%= f.select :guests_count, (1..10).map { |n| ["#{n} voyageur#{'s' if n > 1}", n] }, {},
+            <%= f.select :guests_count, (1..12).map { |n| ["#{n} voyageur#{'s' if n > 1}", n] }, {},
                   data: { calendar_target: "guests", action: "change->calendar#guestsChanged" },
                   class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
           </div>

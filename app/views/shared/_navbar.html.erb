@@ -20,58 +20,22 @@
     </div>
 
     <div class="flex items-center gap-2">
-      <!-- Auth dropdown (desktop) -->
-      <div class="dropdown relative hidden lg:inline-flex [--auto-close:outside] [--placement:bottom-end] z-50"
-           data-controller="dropdown">
-        <button id="dropdown-auth" type="button"
-                class="dropdown-toggle btn btn-text flex items-center justify-center gap-2 text-stone-600 hover:text-stone-900 hover:bg-stone-100 min-w-[3rem]"
-                aria-haspopup="menu" aria-expanded="false">
+      <!-- Menu espace client (desktop) — dropdown Stimulus autonome -->
+      <div class="relative hidden lg:block" data-controller="usermenu"
+           data-action="click@window->usermenu#closeOnOutside keydown.esc@window->usermenu#close">
+        <button type="button"
+                class="inline-flex items-center justify-center gap-2 rounded-full px-3 h-11 text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition"
+                aria-haspopup="menu" aria-expanded="false"
+                data-usermenu-target="button"
+                data-action="click->usermenu#toggle">
           <i class="fa-solid fa-house-chimney text-xl"></i>
-          <span class="icon-[tabler--chevron-down] size-4"></span>
+          <i class="fa-solid fa-chevron-down text-xs opacity-60 transition-transform" data-usermenu-target="chevron"></i>
         </button>
 
-        <ul class="dropdown-menu hidden min-w-60 bg-white shadow-lg rounded-xl border border-stone-100 p-2" role="menu" aria-labelledby="dropdown-auth">
-          <% if authenticated? %>
-            <li class="px-4 py-2 border-b border-stone-100 mb-1">
-              <p class="text-xs text-stone-500 uppercase tracking-widest">Mon Compte</p>
-              <p class="text-sm font-medium text-stone-900 truncate"><%= Current.user.email_address %></p>
-            </li>
-            <li>
-              <button type="button" class="dropdown-item w-full text-left flex items-center gap-2 p-3 rounded-lg hover:bg-stone-50 text-stone-700">
-                <i class="fa-solid fa-user-gear size-4 opacity-70"></i>
-                Profil
-              </button>
-            </li>
-            <li>
-              <button type="button" class="dropdown-item w-full text-left flex items-center gap-2 p-3 rounded-lg hover:bg-stone-50 text-stone-700">
-                <i class="fa-solid fa-calendar-check size-4 opacity-70"></i>
-                Mes Réservations
-              </button>
-            </li>
-            <% if Current.user.admin? %>
-              <li>
-                <%= link_to admin_root_path, class: "dropdown-item flex items-center gap-2 p-3 rounded-lg hover:bg-stone-50 text-stone-700" do %>
-                  <i class="fa-solid fa-gauge size-4 opacity-70"></i>
-                  Dashboard Admin
-                <% end %>
-              </li>
-            <% end %>
-            <li><div class="my-1 border-t border-stone-100"></div></li>
-            <li>
-              <%= button_to session_path, method: :delete, class: "dropdown-item flex w-full items-center gap-2 p-3 rounded-lg hover:bg-red-50 text-red-600 transition" do %>
-                <i class="fa-solid fa-arrow-right-from-bracket size-4"></i>
-                Déconnexion
-              <% end %>
-            </li>
-          <% else %>
-            <li>
-              <%= link_to new_session_path, class: "dropdown-item flex items-center gap-2 p-3 rounded-lg hover:bg-stone-50 text-stone-700" do %>
-                <i class="fa-solid fa-key size-4 opacity-70"></i>
-                Se connecter
-              <% end %>
-            </li>
-          <% end %>
-        </ul>
+        <div class="hidden absolute right-0 mt-2 w-64 max-h-[80vh] overflow-y-auto bg-white shadow-lg rounded-xl border border-stone-100 p-2 z-50"
+             role="menu" data-usermenu-target="menu">
+          <%= render "shared/main_menu" %>
+        </div>
       </div>
 
       <!-- Hamburger (mobile / tablet) -->
@@ -83,7 +47,7 @@
               data-navbar-target="toggle"
               data-action="click->navbar#toggle">
         <i class="fa-solid fa-bars text-lg" data-navbar-target="iconOpen"></i>
-        <i class="fa-solid fa-xmark text-lg hidden" data-navbar-target="iconClose"></i>
+        <i class="fa-solid fa-xmark text-lg" style="display:none" data-navbar-target="iconClose"></i>
       </button>
     </div>
   </div>
@@ -102,32 +66,8 @@
       <a href="#contact" data-action="click->navbar#close"
          class="block px-3 py-3 rounded-lg text-sm tracking-[0.2em] uppercase text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition">Contact</a>
 
-      <div class="my-3 border-t border-stone-100"></div>
-
-      <% if authenticated? %>
-        <div class="px-3 py-2">
-          <p class="text-[10px] text-stone-400 uppercase tracking-widest">Mon Compte</p>
-          <p class="text-sm font-medium text-stone-900 truncate"><%= Current.user.email_address %></p>
-        </div>
-        <button type="button" class="flex items-center gap-3 px-3 py-3 rounded-lg text-stone-700 hover:bg-stone-50 w-full text-left">
-          <i class="fa-solid fa-user-gear w-4 text-center opacity-70"></i> Profil
-        </button>
-        <button type="button" class="flex items-center gap-3 px-3 py-3 rounded-lg text-stone-700 hover:bg-stone-50 w-full text-left">
-          <i class="fa-solid fa-calendar-check w-4 text-center opacity-70"></i> Mes Réservations
-        </button>
-        <% if Current.user.admin? %>
-          <%= link_to admin_root_path, class: "flex items-center gap-3 px-3 py-3 rounded-lg text-stone-700 hover:bg-stone-50" do %>
-            <i class="fa-solid fa-gauge w-4 text-center opacity-70"></i> Dashboard Admin
-          <% end %>
-        <% end %>
-        <%= button_to session_path, method: :delete, class: "flex items-center gap-3 px-3 py-3 rounded-lg text-red-600 hover:bg-red-50 w-full" do %>
-          <i class="fa-solid fa-arrow-right-from-bracket w-4 text-center"></i> Déconnexion
-        <% end %>
-      <% else %>
-        <%= link_to new_session_path, class: "flex items-center gap-3 px-3 py-3 rounded-lg text-stone-700 hover:bg-stone-50" do %>
-          <i class="fa-solid fa-key w-4 text-center opacity-70"></i> Se connecter
-        <% end %>
-      <% end %>
+      <div class="my-2 border-t border-stone-100"></div>
+      <%= render "shared/main_menu" %>
     </div>
   </div>
 </nav>

@@ -19,6 +19,25 @@ Rails.application.routes.draw do
   # Webhooks fournisseurs (CSRF désactivé sur le contrôleur)
   post "webhooks/swikly", to: "webhooks/swikly#create"
 
+  # --- Connexion client via Google (OmniAuth) ------------------------------
+  # La phase de requête (POST /auth/google_oauth2) est gérée par le middleware
+  # OmniAuth ; on déclare ici la page de connexion, le callback et l'échec.
+  get  "connexion",               to: "sessions/omniauth#new",     as: :login
+  get  "inscription",             to: "registrations#new",         as: :signup
+  post "inscription",             to: "registrations#create"
+  get  "auth/:provider/callback", to: "sessions/omniauth#create"
+  match "auth/failure",           to: "sessions/omniauth#failure", via: %i[get post]
+
+  # --- Espace client (cloisonné de l'admin) --------------------------------
+  scope path: "espace", module: "account", as: "account" do
+    get   "/",             to: "dashboard#index", as: :root
+    get   "profil",        to: "profiles#edit",   as: :profile
+    patch "profil",        to: "profiles#update"
+    get   "factures/:id",  to: "invoices#show",   as: :invoice
+    get   "documents",     to: "documents#index", as: :documents
+    get   "documents/:id", to: "documents#show",  as: :document
+  end
+
   namespace :admin do
     root to: "dashboard#index"
     resources :weekly_rates do

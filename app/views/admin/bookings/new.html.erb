@@ -57,7 +57,7 @@
 
       <div>
         <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Voyageurs</label>
-        <%= f.select :guests_count, (1..10).map { |n| ["#{n} voyageur#{'s' if n > 1}", n] }, {},
+        <%= f.select :guests_count, (1..12).map { |n| ["#{n} voyageur#{'s' if n > 1}", n] }, {},
               data: { calendar_target: "guests", action: "change->calendar#guestsChanged" },
               class: "w-full sm:w-48 border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
       </div>

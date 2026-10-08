@@ -403,6 +403,35 @@ DEXT_INBOX_EMAIL=...@dext.cc
 - [ ] Message Telegram : libellé de la période, montant cumulé (depuis `TouristTaxPeriod#tax_total_cents`), lien vers `/admin/booking_setting`.
 - [ ] Une notification par jour max pendant la fenêtre — horodatée pour éviter les doublons.
 
+### Phase 10 — Espace client (Google + email/mot de passe) ✅
+
+Objectif : un espace personnel pour le client, **strictement cloisonné de l'admin** (aucun lien ni indice visible), où il peut gérer son profil, signer/retrouver son contrat, consulter ses factures et les documents du chalet.
+
+**Principes de conception**
+- **Cloisonnement strict** : layout et navigation dédiés ; aucun lien, libellé ou indice vers l'admin côté client. L'admin conserve sa connexion email/mot de passe (`/session`, **non liée** depuis le public) ; le public n'expose que la **connexion Google**. `Account::BaseController` n'exige qu'une session valide (pas `admin?`), et n'affiche jamais de contenu admin même si l'utilisateur est admin.
+- **Connexion Google** (OmniAuth `google_oauth2`) : un `User` non-admin est créé/retrouvé par email à la 1re connexion.
+- **Rattachement des données par email** : le client voit les `Booking` dont l'`email` = son email Google ; son profil = la fiche `Client` correspondante (créée à la volée si besoin).
+- **Réutilisation** : la signature et le téléchargement du contrat passent par les pages **token** existantes (`/reservations/:token/contract`), liées depuis l'espace.
+
+**Tâches**
+- [x] Gem `omniauth-rails_csrf_protection` + initializer OmniAuth (Google, scope email/profile).
+- [x] Callback OAuth → `User`(admin:false) find/create par email + session Rails 8. — `Sessions::OmniauthController`
+- [x] Connexion **email/mot de passe** + **inscription** publique (`/inscription`, `User` non-admin) en complément de Google — `SessionsController`, `RegistrationsController`. Reset mot de passe → `/connexion`.
+- [x] Connexion publique `/connexion` (bouton « Se connecter avec Google ») ; navbar publique repointée (plus aucun lien vers `/session` ni `/admin`) ; redirection d'auth par défaut → `/connexion`.
+- [x] Namespace `account` (`/espace`) + `Account::BaseController` (auth requise, chargement `Client` par email, layout dédié).
+- [x] Tableau de bord : réservations (statut, dates) + liens contrat (signer / télécharger) et factures.
+- [x] Profil : édition fiche `Client` (nom, téléphone, adresse ; email en lecture seule).
+- [x] Factures : téléchargement PDF (autorisé seulement pour ses propres factures).
+- [x] Documents du chalet : consultation/téléchargement (cgu, livret) en lecture seule.
+- [x] Layout `account` + navbar client (déconnexion), zéro référence admin.
+- [x] Tests : accès restreint à ses données, cloisonnement admin, callback OAuth (stub) — `test/integration/account_flow_test.rb`.
+
+> ⚙️ **Action requise côté Google** (hors code) : autoriser l'URI de redirection OAuth dans Google Cloud Console — `http://localhost:3000/auth/google_oauth2/callback` (dev) et `https://chaletmontrose.fr/auth/google_oauth2/callback` (prod). Sans cela, la connexion Google renverra une erreur `redirect_uri_mismatch`.
+
+### Phase 11 — Chat RAG sur les documents du chalet *(à venir)*
+- [ ] Indexation des documents du chalet (embeddings) + recherche sémantique.
+- [ ] Chat dans l'espace client répondant aux questions techniques (RAG) à partir des documents.
+
 ## 15. Tests (Minitest)
 
 - **Unitaires** : `Pricing` (quotes, semaines, non-tarifé), validations `Booking` (samedi, chevauchement), numérotation `Invoice`.

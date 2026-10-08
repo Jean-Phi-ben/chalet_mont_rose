@@ -31,11 +31,17 @@ module Authentication
 
     def request_authentication
       session[:return_to_after_authenticating] = request.url
-      redirect_to new_session_path
+      # Connexion publique = Google (espace client). Le login admin email/mot de
+      # passe (/session) n'est volontairement lié nulle part pour ne pas exposer
+      # l'existence d'une partie admin.
+      redirect_to login_path
     end
 
+    # Destination après connexion : la page demandée avant la redirection vers le
+    # login, sinon l'espace client. Source unique utilisée par sessions /
+    # registrations / omniauth pour garder un comportement cohérent.
     def after_authentication_url
-      session.delete(:return_to_after_authenticating) || root_url
+      session.delete(:return_to_after_authenticating) || account_root_path
     end
 
     def start_new_session_for(user)

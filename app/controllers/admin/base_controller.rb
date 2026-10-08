@@ -9,8 +9,9 @@ class Admin::BaseController < ApplicationController
   def require_admin
     return if Current.user&.admin?
 
-    flash[:alert] = "Accès réservé à l'administrateur."
-    redirect_to root_path
+    # On ne révèle pas l'existence du back-office : tout accès non autorisé
+    # renvoie un 404 standard, comme si la page n'existait pas.
+    render file: Rails.public_path.join("404.html"), status: :not_found, layout: false
   end
 
   def record_not_found

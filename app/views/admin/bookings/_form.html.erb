@@ -23,7 +23,7 @@
 
   <div>
     <%= f.label :guests_count, "Voyageurs", class: "block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5" %>
-    <%= f.number_field :guests_count, min: 1, class: "w-full sm:w-48 border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+    <%= f.number_field :guests_count, min: 1, max: 12, class: "w-full sm:w-48 border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
   </div>
 
   <div class="border-t border-stone-100 pt-5 grid grid-cols-1 sm:grid-cols-3 gap-4"

@@ -6,8 +6,9 @@ class User < ApplicationRecord
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 
-  # On ajoute une petite méthode pratique pour Pundit
+  # Le statut admin dépend uniquement de la liste blanche d'adresses autorisées
+  # (ADMIN_EMAILS), pas d'un drapeau en base. Utilisé par Pundit et le back-office.
   def admin?
-    admin == true
+    AdminAccess.authorized?(email_address)
   end
 end

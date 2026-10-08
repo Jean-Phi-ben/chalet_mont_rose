@@ -1,0 +1,81 @@
+<% content_for :title, "Tableau de bord — Espace client" %>
+
+<div class="mb-8">
+  <h1 class="text-2xl sm:text-3xl font-serif text-stone-900 tracking-wide" style="font-family: 'Playfair Display', serif;">Mes réservations</h1>
+  <p class="text-sm text-stone-500 mt-1"><%= current_email %></p>
+</div>
+
+<% if @bookings.empty? %>
+  <div class="bg-white border border-stone-200 rounded-2xl p-10 text-center">
+    <i class="fa-regular fa-calendar text-3xl text-stone-300 mb-3"></i>
+    <p class="text-stone-600">Vous n'avez pas encore de réservation associée à cette adresse.</p>
+    <%= link_to "Voir les disponibilités", calendar_path, class: "inline-block mt-5 bg-stone-900 text-white px-5 py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition" %>
+  </div>
+<% else %>
+  <div class="space-y-5">
+    <% @bookings.each do |booking| %>
+      <%
+        badge = case booking.status
+                when "confirmed" then ["Confirmée", "bg-emerald-50 text-emerald-700 border-emerald-200"]
+                when "pending"   then ["En attente de validation", "bg-amber-50 text-amber-700 border-amber-200"]
+                when "rejected"  then ["Refusée", "bg-red-50 text-red-700 border-red-200"]
+                else                  ["Annulée", "bg-stone-100 text-stone-500 border-stone-200"]
+                end
+      %>
+      <div class="bg-white border border-stone-200 rounded-2xl p-6">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p class="text-lg text-stone-900 font-medium">
+              <%= fr_date(booking.check_in) %> → <%= fr_date(booking.check_out) %>
+            </p>
+            <p class="text-sm text-stone-500 mt-0.5"><%= pluralize(booking.nights, "nuit") %> · <%= money(booking.total_price_cents) %></p>
+          </div>
+          <span class="text-xs px-3 py-1 rounded-full border <%= badge[1] %>"><%= badge[0] %></span>
+        </div>
+
+        <% if booking.confirmed? %>
+          <div class="mt-5 pt-5 border-t border-stone-100 grid sm:grid-cols-2 gap-4">
+            <%# --- Contrat --- %>
+            <div>
+              <p class="text-[11px] uppercase tracking-widest text-stone-400 mb-2">Contrat</p>
+              <% if booking.contract&.status_signed? %>
+                <p class="text-sm text-emerald-700 flex items-center gap-2"><i class="fa-solid fa-circle-check"></i> Signé</p>
+                <%= link_to "Télécharger le contrat signé", signed_contract_pdf_reservation_path(booking.token),
+                      class: "inline-flex items-center gap-2 mt-2 text-sm text-stone-700 underline hover:text-stone-900" %>
+              <% elsif booking.contract.present? %>
+                <p class="text-sm text-amber-700 flex items-center gap-2"><i class="fa-solid fa-pen-nib"></i> À signer</p>
+                <%= link_to contract_reservation_path(booking.token),
+                      class: "inline-flex items-center gap-2 mt-2 bg-stone-900 text-white px-4 py-2 rounded-lg text-sm hover:bg-stone-800 transition" do %>
+                  Signer le contrat
+                <% end %>
+              <% else %>
+                <p class="text-sm text-stone-400">En préparation…</p>
+              <% end %>
+            </div>
+
+            <%# --- Factures --- %>
+            <div>
+              <p class="text-[11px] uppercase tracking-widest text-stone-400 mb-2">Factures</p>
+              <% if booking.invoices.any? %>
+                <ul class="space-y-1.5">
+                  <% booking.invoices.order(:created_at).each do |invoice| %>
+                    <li class="text-sm flex items-center justify-between gap-3">
+                      <span class="text-stone-600"><%= invoice.label %> — <%= money(invoice.amount_cents) %></span>
+                      <% if invoice.pdf.attached? %>
+                        <%= link_to account_invoice_path(invoice), class: "text-stone-700 hover:text-stone-900" do %>
+                          <i class="fa-solid fa-download"></i> PDF
+                        <% end %>
+                      <% end %>
+                    </li>
+                  <% end %>
+                </ul>
+              <% else %>
+                <p class="text-sm text-stone-400">Aucune facture disponible.</p>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

@@ -6,6 +6,9 @@ class WeeklyRate < ApplicationRecord
 
   scope :ordered, -> { order(:week_start) }
   scope :upcoming, -> { where("week_start >= ?", Date.current.beginning_of_week(:saturday)) }
+  # Tarifs réservables sur une seule semaine (min_weeks = 1) : les seuls qui peuvent
+  # être annoncés « à partir de X € / semaine » sans induire en erreur.
+  scope :single_week_bookable, -> { where("min_weeks <= ?", 1) }
 
   def nightly_cents
     (price_cents / 7.0).round
