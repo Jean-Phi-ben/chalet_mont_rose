@@ -1,5 +1,7 @@
 Rails.application.routes.draw do
   root to: "pages#home"
+  # Politique de confidentialité (exigée par Google pour publier l'écran de consentement OAuth).
+  get "confidentialite", to: "pages#privacy", as: :privacy
 
   # Calendrier public + devis (sélection samedi → samedi)
   # Le calendrier est désormais une section de la page d'accueil ; l'ancienne URL y redirige.

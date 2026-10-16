@@ -36,6 +36,13 @@
     <div id="main-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <%= yield %>
     </div>
+
+    <footer class="border-t border-stone-200 mt-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-stone-400">
+        <p>© <%= Date.current.year %> Chalet Mont Rose · Le Bettex, Saint-Gervais-les-Bains</p>
+        <%= link_to "Politique de confidentialité", privacy_path, class: "hover:text-stone-700 underline-offset-2 hover:underline" %>
+      </div>
+    </footer>
   </body>
   
 </html>

@@ -14,4 +14,14 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     # Le formulaire poste bien vers la création de réservation.
     assert_select "form[action=?]", reservations_path
   end
+
+  test "privacy policy is public and linked from the home page footer" do
+    get root_path
+    assert_select "footer a[href=?]", privacy_path
+
+    get privacy_path
+    assert_response :success
+    assert_select "h1", "Politique de confidentialité"
+    assert_select "h2", "Connexion avec Google"
+  end
 end
