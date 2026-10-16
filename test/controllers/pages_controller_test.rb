@@ -43,6 +43,18 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "link[rel=canonical]", false
   end
 
+  test "robots, sitemap and llms files are served with a short cache" do
+    { "/robots.txt" => [ "text/plain", "Sitemap: https://www.chaletmontrose.fr/sitemap.xml" ],
+      "/sitemap.xml" => [ "application/xml", "<loc>https://www.chaletmontrose.fr/</loc>" ],
+      "/llms.txt" => [ "text/plain", "# Chalet Mont Rose" ] }.each do |path, (media_type, content)|
+      get path
+      assert_response :success
+      assert_equal media_type, response.media_type
+      assert_includes response.body, content
+      assert_equal "max-age=3600, public", response.headers["Cache-Control"]
+    end
+  end
+
   test "bare domain and http redirect permanently to https://www" do
     host! "chaletmontrose.fr"
     get "/confidentialite?x=1"

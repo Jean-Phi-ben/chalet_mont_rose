@@ -3,6 +3,11 @@ Rails.application.routes.draw do
   # Politique de confidentialité (exigée par Google pour publier l'écran de consentement OAuth).
   get "confidentialite", to: "pages#privacy", as: :privacy
 
+  # Fichiers pour les robots (moteurs de recherche et IA), avec un cache court.
+  get "robots.txt",  to: "seo#robots",  format: false, defaults: { format: :text }
+  get "sitemap.xml", to: "seo#sitemap", format: false, defaults: { format: :xml }
+  get "llms.txt",    to: "seo#llms",    format: false, defaults: { format: :text }
+
   # Calendrier public + devis (sélection samedi → samedi)
   # Le calendrier est désormais une section de la page d'accueil ; l'ancienne URL y redirige.
   get "calendrier",       to: redirect("/#disponibilites"), as: :calendar
