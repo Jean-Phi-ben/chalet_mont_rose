@@ -145,10 +145,14 @@
       <div class="flex" data-carousel-target="track">
         <% photos.each do |photo| %>
           <div class="shrink-0 w-full" data-carousel-target="slide">
-            <%= image_tag photo[:src],
-                          alt: photo[:alt],
-                          class: "w-full h-[260px] sm:h-[440px] md:h-[560px] object-cover select-none",
-                          draggable: false %>
+            <button type="button" data-action="click->carousel#open"
+                    aria-label="Agrandir la photo : <%= photo[:alt] %>"
+                    class="block w-full cursor-zoom-in focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 focus-visible:ring-inset">
+              <%= image_tag photo[:src],
+                            alt: photo[:alt],
+                            class: "w-full h-[260px] sm:h-[440px] md:h-[560px] object-cover select-none",
+                            draggable: false %>
+            </button>
           </div>
         <% end %>
       </div>
@@ -168,6 +172,14 @@
       <i class="fa-solid fa-chevron-right text-sm"></i>
     </button>
 
+    <!-- Plein écran -->
+    <button type="button"
+            data-action="click->carousel#open"
+            aria-label="Afficher en plein écran"
+            class="absolute right-3 sm:right-5 top-3 sm:top-5 inline-flex items-center gap-2 h-9 sm:h-10 px-3 sm:px-4 rounded-full bg-white/85 hover:bg-white text-stone-700 hover:text-stone-900 text-[11px] uppercase tracking-widest shadow-md backdrop-blur-sm transition-all duration-300 opacity-80 group-hover:opacity-100">
+      <i class="fa-solid fa-expand text-sm"></i><span class="hidden sm:inline">Plein écran</span>
+    </button>
+
     <!-- Dots -->
     <div class="flex items-center justify-center gap-2 mt-5">
       <% photos.each_with_index do |_, i| %>
@@ -178,6 +190,40 @@
                 aria-label="Aller à la photo <%= i + 1 %>"
                 class="h-2 rounded-full transition-all duration-300 <%= i.zero? ? 'w-8 bg-stone-900' : 'w-2 bg-stone-300' %>"></button>
       <% end %>
+    </div>
+  </div>
+
+  <!-- Plein écran : photo entière, navigation ← → / glisser, Échap pour fermer -->
+  <div data-carousel-target="lightbox"
+       data-action="click->carousel#backdropClose"
+       class="hidden opacity-0 transition-opacity duration-200 fixed inset-0 z-[70] bg-stone-950 select-none"
+       role="dialog" aria-modal="true" aria-label="Galerie en plein écran">
+    <div class="flex flex-col h-full" data-lightbox-backdrop>
+      <div class="flex items-center justify-between gap-4 px-4 sm:px-6 py-3" data-lightbox-backdrop>
+        <span data-carousel-target="lightboxCounter" class="text-xs sm:text-sm text-white/70 tracking-widest"></span>
+        <button type="button" data-carousel-target="lightboxClose" data-action="click->carousel#close"
+                aria-label="Fermer le plein écran"
+                class="w-10 h-10 rounded-full text-white/80 hover:text-white hover:bg-white/10 flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+      </div>
+
+      <div class="relative flex-1 min-h-0 px-2 sm:px-20" data-lightbox-backdrop>
+        <img data-carousel-target="lightboxImage" alt="" draggable="false"
+             class="w-full h-full object-contain">
+
+        <button type="button" data-action="click->carousel#prev" aria-label="Photo précédente"
+                class="absolute left-2 sm:left-5 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center backdrop-blur-sm transition">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <button type="button" data-action="click->carousel#next" aria-label="Photo suivante"
+                class="absolute right-2 sm:right-5 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center backdrop-blur-sm transition">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+
+      <p data-carousel-target="lightboxCaption" data-lightbox-backdrop
+         class="text-center text-sm sm:text-base text-white/80 font-serif tracking-wide px-4 py-3 sm:py-4"></p>
     </div>
   </div>
 </div>

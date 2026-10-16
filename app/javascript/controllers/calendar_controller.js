@@ -39,6 +39,22 @@ export default class extends Controller {
     if (this.hasPickerBackdropTarget && event.target === this.pickerBackdropTarget) this.closePicker()
   }
 
+  // --- Retour au jour courant ---
+
+  // Le calendrier est rendu deux fois (page + sélecteur de la modale) : on fait défiler
+  // celui dont le bouton a été cliqué, jusqu'au mois contenant aujourd'hui.
+  scrollToToday(event) {
+    const scroller = event.currentTarget.closest("[data-calendar-scroller]")
+    const today = scroller?.querySelector("[data-today]")
+    if (!today) return
+
+    const month = today.closest("[data-calendar-month]") || today
+    const header = scroller.querySelector("[data-calendar-header]")
+    const top = month.getBoundingClientRect().top - scroller.getBoundingClientRect().top
+              + scroller.scrollTop - (header?.offsetHeight || 0) - 8
+    scroller.scrollTo({ top: Math.max(top, 0), behavior: "smooth" })
+  }
+
   // --- Sélection des jours ---
 
   pick(event) {

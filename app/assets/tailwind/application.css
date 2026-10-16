@@ -14,6 +14,11 @@
 }
 
 @layer components {
+  /* Avant .cal-selected / .cal-range : la sélection reste prioritaire sur le jour courant. */
+  .cal-today {
+    background-color: color-mix(in oklab, var(--color-amber-300) 35%, transparent);
+    border-color: color-mix(in oklab, var(--color-amber-400) 60%, transparent) !important;
+  }
   .cal-selected {
     background-color: var(--color-stone-900);
     border-color: var(--color-stone-900) !important;
