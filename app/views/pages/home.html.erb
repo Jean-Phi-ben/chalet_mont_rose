@@ -65,7 +65,7 @@
         Chalet Mont Rose
       </h1>
       <p class="text-white/90 text-xs sm:text-base md:text-xl font-light tracking-[0.18em] sm:tracking-[0.2em] mt-3 sm:mt-4">
-        Saint-Gervais-les-Bains, sous le Bettex
+        Saint-Gervais-les-Bains, proche du Bettex
       </p>
       <p class="text-white/90 text-xs sm:text-base md:text-xl font-light tracking-[0.18em] sm:tracking-[0.2em] mt-1 sm:mt-2">
         Le haut de gamme en famille
@@ -360,6 +360,13 @@
        data-map-lng-value="<%= chalet_lng %>"
        data-map-zoom-value="13"
        data-map-label-value="Chalet Mont Rose"
+       data-map-places-value="<%= [
+         # Gare de la télécabine Bettex – Mont d'Arbois / ESF : départ des pistes.
+         { lat: 45.8746, lng: 6.6860, label: "Le Bettex", detail: "Pistes de ski", icon: "fa-person-skiing" },
+         # Gare aval du télésiège des Monts Rosset (OSM way 34596483) ; étiquette à gauche
+         # pour ne pas recouvrir le chalet, tout proche.
+         { lat: 45.8814, lng: 6.6811, label: "Monts Rosset", detail: "Départ télésiège", icon: "chairlift", side: "left" }
+       ].to_json %>"
        class="relative isolate z-0 mb-6 overflow-hidden rounded-2xl border border-stone-200 bg-stone-100">
     <div data-map-target="canvas" class="w-full h-[300px] sm:h-[400px] md:h-[480px]"
          role="region" aria-label="Carte de localisation du Chalet Mont Rose"></div>
