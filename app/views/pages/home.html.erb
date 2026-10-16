@@ -1,6 +1,32 @@
+<% content_for :title, "Chalet de luxe 12 personnes à Saint-Gervais, près de Megève | Chalet Mont Rose" %>
+
+<%# Questions fréquentes : affichées en bas de page ET publiées en données structurées (FAQPage). %>
+<% faqs = [
+  ["Combien de personnes peut accueillir le Chalet Mont Rose ?",
+   "Le chalet accueille jusqu'à 12 voyageurs sur 260 m² répartis sur trois niveaux, avec 5 chambres et 6 salles de bain."],
+  ["Où se trouve le chalet ?",
+   "Sur les hauteurs de Saint-Gervais-les-Bains (Haute-Savoie), à 3 minutes des pistes du Bettex, face au massif du Mont-Blanc. " \
+   "Megève est à 20 minutes en voiture, Chamonix à 30 minutes et l'aéroport de Genève à environ 1 h 15."],
+  ["Peut-on skier jusqu'à Megève ?",
+   "Oui. Le Bettex donne accès au domaine skiable Évasion Mont-Blanc, relié à Megève par le Mont d'Arbois."],
+  ["Quels équipements de bien-être propose le chalet ?",
+   "Un sauna finlandais panoramique, un bain nordique extérieur face au Mont-Blanc, une salle de cinéma, une salle de jeux et une cheminée."],
+  ["Quels services sont inclus ?",
+   "Une conciergerie dédiée avant et pendant le séjour, un panier de bienvenue, le linge de maison haut de gamme (draps, serviettes, peignoirs) " \
+   "et le ménage dans la semaine si nécessaire."],
+  ["Comment réserver ?",
+   "Le chalet se loue à la semaine, du samedi au samedi. Choisissez vos dates dans le calendrier et envoyez une demande, sans paiement immédiat : " \
+   "des arrhes de 30 % de l'hébergement sont demandées à la confirmation. Les frais de ménage de fin de séjour et la taxe de séjour s'ajoutent au tarif."]
+] %>
+
+<% content_for :head do %>
+  <%= json_ld_tag(vacation_rental_json_ld(cheapest_week_price: @cheapest_week_price)) %>
+  <%= json_ld_tag(faq_json_ld(faqs)) %>
+<% end %>
+
 <% photos = [
   # Extérieur
-  { src: "chalet-1.jpg",                    alt: "Le Chalet" },
+  { src: "chalet-1.jpg",                    alt: "Le salon et sa cheminée à Noël" },
   { src: "chalet-3.jpg",                    alt: "Le Chalet, façade Sud" },
   { src: "vue-mont-blanc-chalet.jpg",       alt: "Le chalet face au Mont Blanc" },
   { src: "terrasse-sud-chien.jpg",          alt: "Terrasse Sud" },
@@ -57,16 +83,16 @@
 <% content_for :full_width do %>
   <!-- HERO -->
   <div class="relative h-[60vh] sm:h-[70vh] md:h-[85vh] w-full overflow-hidden">
-    <%= image_tag "chalet-main.jpg", class: "absolute inset-0 w-full h-full object-cover object-center" %>
+    <%= image_tag "chalet-main.jpg", alt: "Le Chalet Mont Rose illuminé, de nuit sous la neige",
+                  fetchpriority: "high", class: "absolute inset-0 w-full h-full object-cover object-center" %>
     <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-transparent"></div>
 
     <div class="absolute inset-0 flex flex-col items-center justify-end text-center px-4 pb-12 sm:pb-16 md:pb-24">
-      <h1 class="text-white uppercase text-2xl sm:text-4xl md:text-6xl font-serif font-light tracking-[0.18em] sm:tracking-[0.25em] drop-shadow-2xl leading-tight">
-        Chalet Mont Rose
+      <%# Le sous-titre fait partie du h1 (même rendu) : nom + lieu, ce que Google lit en premier. %>
+      <h1>
+        <span class="block text-white uppercase text-2xl sm:text-4xl md:text-6xl font-serif font-light tracking-[0.18em] sm:tracking-[0.25em] drop-shadow-2xl leading-tight">Chalet Mont Rose</span>
+        <span class="block text-white/90 text-xs sm:text-base md:text-xl font-light tracking-[0.18em] sm:tracking-[0.2em] mt-3 sm:mt-4">Chalet de luxe à Saint-Gervais-les-Bains, proche du Bettex</span>
       </h1>
-      <p class="text-white/90 text-xs sm:text-base md:text-xl font-light tracking-[0.18em] sm:tracking-[0.2em] mt-3 sm:mt-4">
-        Saint-Gervais-les-Bains, proche du Bettex
-      </p>
       <p class="text-white/90 text-xs sm:text-base md:text-xl font-light tracking-[0.18em] sm:tracking-[0.2em] mt-1 sm:mt-2">
         Le haut de gamme en famille
       </p>
@@ -115,7 +141,7 @@
 <div class="mb-14">
   <div class="grid grid-cols-3 sm:grid-cols-3 md:flex md:flex-wrap md:justify-center gap-4 sm:gap-6 md:gap-10">
     <% [
-      ["fa-person-skiing", "ski à 4 min"],
+      ["fa-person-skiing", "ski à 3 min"],
       ["fa-mountain-sun", "Vue panoramique"],
       ["fa-hot-tub-person", "Bain nordique & Sauna"],
       ["fa-fire", "Cheminée"],
@@ -143,13 +169,16 @@
     <!-- Viewport -->
     <div class="overflow-hidden rounded-2xl bg-stone-100">
       <div class="flex" data-carousel-target="track">
-        <% photos.each do |photo| %>
+        <% photos.each_with_index do |photo, i| %>
           <div class="shrink-0 w-full" data-carousel-target="slide">
             <button type="button" data-action="click->carousel#open"
                     aria-label="Agrandir la photo : <%= photo[:alt] %>"
                     class="block w-full cursor-zoom-in focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 focus-visible:ring-inset">
+              <%# Chargement différé : sans lui, les 45 photos (~12 Mo) partent dès l'ouverture de la page. %>
               <%= image_tag photo[:src],
                             alt: photo[:alt],
+                            loading: i.zero? ? "eager" : "lazy",
+                            decoding: "async",
                             class: "w-full h-[260px] sm:h-[440px] md:h-[560px] object-cover select-none",
                             draggable: false %>
             </button>
@@ -234,10 +263,10 @@
     <h2 class="text-2xl font-serif text-stone-900 tracking-wide mb-6">Le Chalet</h2>
     <div class="text-stone-600 leading-relaxed space-y-4">
       <p>
-        Niché au cœur des Alpes, le Chalet Mont Rose est un havre de paix alliant élégance contemporaine
-        et charme authentique de la montagne. Avec ses 260 m² répartis sur trois niveaux, il peut
-        accueillir jusqu'à 12 voyageurs et offre un cadre exceptionnel pour des vacances inoubliables
-        en famille ou entre amis.
+        Niché sur les hauteurs de Saint-Gervais-les-Bains, face au massif du Mont-Blanc, le Chalet Mont Rose
+        est un chalet familial de luxe alliant élégance contemporaine et charme authentique de la montagne.
+        Avec ses 260 m² répartis sur trois niveaux, il peut accueillir jusqu'à 12 voyageurs et offre un cadre
+        exceptionnel pour des vacances inoubliables en famille ou entre amis, entre Megève et Chamonix.
       </p>
       <p>
         Le grand salon, baigné de lumière naturelle, s'ouvre sur une terrasse panoramique avec vue
@@ -246,7 +275,7 @@
       </p>
       <p>
         Les cinq suites, chacune dotée de sa propre salle de bain, ont été pensées comme de
-        véritables cocons. L'espace bien-être privatif avec sauna et spa complète cette
+        véritables cocons. L'espace bien-être privatif avec sauna et bain nordique complète cette
         expérience d'exception.
       </p>
     </div>
@@ -297,7 +326,7 @@
     <div>
       <h3 class="text-sm uppercase tracking-widest text-stone-400 mb-4">Extérieur &amp; Bien-être</h3>
       <ul class="space-y-3 text-stone-600">
-        <li class="flex items-center gap-3"><i class="fa-solid fa-hot-tub-person w-5 text-center text-stone-400"></i> Jacuzzi privatif</li>
+        <li class="flex items-center gap-3"><i class="fa-solid fa-hot-tub-person w-5 text-center text-stone-400"></i> Bain nordique privatif</li>
         <li class="flex items-center gap-3"><i class="fa-solid fa-spa w-5 text-center text-stone-400"></i> Sauna finlandais</li>
         <li class="flex items-center gap-3"><i class="fa-solid fa-person-skiing w-5 text-center text-stone-400"></i> Local à skis chauffé</li>
         <li class="flex items-center gap-3"><i class="fa-solid fa-mountain-sun w-5 text-center text-stone-400"></i> Terrasse panoramique</li>
@@ -386,6 +415,27 @@
       </div>
     <% end %>
   </div>
+
+  <h3 class="text-lg font-serif text-stone-900 mt-10 mb-3">Entre Megève et Chamonix</h3>
+  <p class="text-stone-600 leading-relaxed mb-5">
+    À quelques minutes du Bettex, porte d'entrée du domaine skiable Évasion Mont-Blanc relié à Megève
+    par le Mont d'Arbois, le chalet est idéalement placé pour profiter de tout le pays du Mont-Blanc :
+    ski l'hiver, randonnée, Tramway du Mont-Blanc et Thermes de Saint-Gervais l'été.
+  </p>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <% [
+      ["fa-mountain", "Megève", "20 min en voiture"],
+      ["fa-mountain-sun", "Chamonix-Mont-Blanc", "30 min en voiture"],
+      ["fa-train", "Tramway du Mont-Blanc", "Départ à Saint-Gervais"],
+      ["fa-plane", "Aéroport de Genève", "≈ 1 h 15 en voiture"]
+    ].each do |icon, title, dist| %>
+      <div class="bg-white border border-stone-200 rounded-xl p-4 sm:p-5 text-center">
+        <i class="fa-solid <%= icon %> text-2xl text-stone-400 mb-2"></i>
+        <p class="text-sm font-medium text-stone-800"><%= title %></p>
+        <p class="text-xs text-stone-400 mt-1"><%= dist %></p>
+      </div>
+    <% end %>
+  </div>
 </div>
 
 <%# Un seul controller « calendar » pour le calendrier de la page, la modale de réservation
@@ -437,6 +487,22 @@
         </button>
       </div>
     </aside>
+  </div>
+</div>
+
+<!-- FAQ -->
+<div id="faq" class="mb-14">
+  <h2 class="text-2xl font-serif text-stone-900 tracking-wide mb-6">Questions fréquentes</h2>
+  <div class="divide-y divide-stone-200 border-y border-stone-200">
+    <% faqs.each do |question, answer| %>
+      <details class="group py-4">
+        <summary class="flex items-center justify-between gap-4 cursor-pointer list-none font-medium text-stone-800">
+          <h3 class="text-base"><%= question %></h3>
+          <i class="fa-solid fa-chevron-down text-xs text-stone-400 transition group-open:rotate-180"></i>
+        </summary>
+        <p class="text-stone-600 leading-relaxed mt-3"><%= answer %></p>
+      </details>
+    <% end %>
   </div>
 </div>
 

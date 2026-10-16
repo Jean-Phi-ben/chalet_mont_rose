@@ -10,7 +10,29 @@ class ApplicationController < ActionController::Base
   # Changes to the importmap will invalidate the etag for HTML responses
   stale_when_importmap_changes
 
+  before_action :redirect_to_canonical_host
+
+  # Seules les pages publiques (PagesController) sont indexables ; tout le reste
+  # (connexion, espace client, suivi de réservation, admin) reçoit un noindex.
+  helper_method :indexable?
+
   private
+
+  def indexable?
+    false
+  end
+
+  # Une seule adresse pour Google : http:// et chaletmontrose.fr sans www redirigent
+  # en 301 vers https://www.chaletmontrose.fr. GET/HEAD seulement (un POST redirigé
+  # perdrait son corps) ; les autres hôtes (localhost, staging par IP) ne sont pas touchés.
+  def redirect_to_canonical_host
+    return unless request.get? || request.head?
+    return unless request.host.in?(SeoHelper::SITE_HOSTS)
+    return if request.host == SeoHelper::SITE_HOST && request.ssl?
+
+    redirect_to "https://#{SeoHelper::SITE_HOST}#{request.fullpath}",
+                status: :moved_permanently, allow_other_host: true
+  end
 
   # Pundit appelle `current_user` par défaut ; on utilise l'auth Rails 8 (Current.user).
   def pundit_user

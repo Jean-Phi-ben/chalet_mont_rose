@@ -1,8 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
   <head>
-    <title><%= content_for(:title) || "Chalet Mont Rose" %></title>
+    <% page_title = content_for(:title) || "Chalet Mont Rose" %>
+    <title><%= page_title %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="<%= page_description %>">
+    <% if indexable? %>
+      <link rel="canonical" href="<%= canonical_url %>">
+      <meta property="og:type" content="website">
+      <meta property="og:locale" content="fr_FR">
+      <meta property="og:site_name" content="Chalet Mont Rose">
+      <meta property="og:title" content="<%= page_title %>">
+      <meta property="og:description" content="<%= page_description %>">
+      <meta property="og:url" content="<%= canonical_url %>">
+      <meta property="og:image" content="<%= absolute_image_url("chalet-main.jpg") %>">
+      <meta property="og:image:alt" content="Le Chalet Mont Rose illuminé, de nuit sous la neige">
+      <meta name="twitter:card" content="summary_large_image">
+    <% else %>
+      <meta name="robots" content="noindex, nofollow">
+    <% end %>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Chalet Mont Rose">
     <meta name="mobile-web-app-capable" content="yes">

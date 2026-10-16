@@ -24,4 +24,37 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", "Politique de confidentialité"
     assert_select "h2", "Connexion avec Google"
   end
+
+  test "home exposes SEO tags and structured data" do
+    get root_path
+    assert_select "html[lang=fr]"
+    assert_select "meta[name=description][content*=?]", "Megève"
+    assert_select "link[rel=canonical][href=?]", "https://www.chaletmontrose.fr/"
+    assert_select "meta[property='og:image']"
+    assert_select "meta[name=robots]", false
+
+    types = css_select("script[type='application/ld+json']").map { |s| JSON.parse(s.text)["@type"] }
+    assert_equal %w[VacationRental FAQPage], types
+  end
+
+  test "private pages are noindex" do
+    get login_path
+    assert_select "meta[name=robots][content=?]", "noindex, nofollow"
+    assert_select "link[rel=canonical]", false
+  end
+
+  test "bare domain and http redirect permanently to https://www" do
+    host! "chaletmontrose.fr"
+    get "/confidentialite?x=1"
+    assert_response :moved_permanently
+    assert_redirected_to "https://www.chaletmontrose.fr/confidentialite?x=1"
+
+    host! "www.chaletmontrose.fr"
+    get root_path
+    assert_redirected_to "https://www.chaletmontrose.fr/"
+
+    https!
+    get root_path
+    assert_response :success
+  end
 end

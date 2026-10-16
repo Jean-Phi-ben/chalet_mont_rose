@@ -1,1 +1,9 @@
-# See https://www.robotstxt.org/robotstxt.html for documentation on how to use the robots.txt file
+# Tous les robots (moteurs de recherche et moteurs de réponse IA) sont les bienvenus
+# sur les pages publiques. Les pages privées portent en plus une balise noindex.
+User-agent: *
+Disallow: /calendrier/quote
+Disallow: /reservations/
+Disallow: /auth/
+Disallow: /espace
+
+Sitemap: https://www.chaletmontrose.fr/sitemap.xml

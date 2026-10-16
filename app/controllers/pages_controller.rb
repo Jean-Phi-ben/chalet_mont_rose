@@ -8,4 +8,10 @@ class PagesController < ApplicationController
 
   def privacy
   end
+
+  private
+
+  def indexable?
+    true
+  end
 end
