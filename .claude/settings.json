@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bin/rails test)",
+      "Bash(bin/rails test *)",
+      "Bash(RAILS_ENV=test bin/rails test *)",
+      "Bash(bin/brakeman)",
+      "Bash(bin/brakeman *)",
+      "Bash(wsl.exe -l -q)",
+      "Bash(ip -6 route show *)",
+      "PowerShell(ping *)"
+    ]
+  }
+}
