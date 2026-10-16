@@ -18,6 +18,8 @@
                      "Semaine déjà réservée"
                    elsif is_transition && in_month
                      "Jour de transition — utilisable comme arrivée OU départ d'une autre réservation"
+                   elsif clickable && !day.saturday? && day.beginning_of_week(:saturday) < Date.current
+                     "Semaine en cours déjà commencée : arrivée le samedi suivant"
                    elsif clickable && !day.saturday?
                      "Sélectionne le samedi de la semaine"
                    end %>

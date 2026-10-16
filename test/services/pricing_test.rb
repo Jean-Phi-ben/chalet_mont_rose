@@ -21,6 +21,23 @@ class PricingTest < ActiveSupport::TestCase
     assert_equal 66_000, q[:deposit_cents]
   end
 
+  test "earliest_check_in rejects a week that has already started" do
+    q = Pricing.quote(@check_in, @check_out, earliest_check_in: @check_in + 2)
+    assert_not q[:bookable]
+    assert_equal "semaine_commencee", q[:reason]
+  end
+
+  test "earliest_check_in accepts an arrival on that very day" do
+    assert Pricing.quote(@check_in, @check_out, earliest_check_in: @check_in)[:bookable]
+  end
+
+  test "without earliest_check_in (admin) a past stay is still quotable" do
+    travel_to @check_out + 30
+    assert Pricing.quote(@check_in, @check_out)[:bookable]
+  ensure
+    travel_back
+  end
+
   test "returns semaine_indisponible when overlapping a confirmed booking" do
     Booking.create!(
       check_in: @check_in, check_out: @check_out,

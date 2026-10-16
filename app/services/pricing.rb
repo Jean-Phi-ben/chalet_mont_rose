@@ -34,10 +34,13 @@ class Pricing
   # Devis pour une période. Renvoie un hash sérialisable en JSON.
   # `guests_count` est utilisé pour la taxe de séjour.
   # `except_id` permet d'exclure une réservation existante (utile à l'admin lors d'un édit).
-  def self.quote(check_in, check_out, guests_count: 1, except_id: nil)
+  # `earliest_check_in` : arrivée au plus tôt (côté client : aujourd'hui, donc pas de semaine
+  # déjà commencée). Absent côté admin, qui peut saisir un séjour passé ou en cours.
+  def self.quote(check_in, check_out, guests_count: 1, except_id: nil, earliest_check_in: nil)
     return { bookable: false, reason: "dates_manquantes" } if check_in.nil? || check_out.nil?
     return { bookable: false, reason: "samedi_requis" } unless check_in.saturday? && check_out.saturday?
     return { bookable: false, reason: "ordre_invalide" } unless check_out > check_in
+    return { bookable: false, reason: "semaine_commencee" } if earliest_check_in && check_in < earliest_check_in
 
     week_starts = weeks_between(check_in, check_out)
     rates = week_starts.map { |s| WeeklyRate.find_by(week_start: s) }

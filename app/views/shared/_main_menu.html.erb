@@ -16,7 +16,7 @@
 <%= link_to root_path, class: item do %>
   <i class="fa-solid fa-house w-4 text-center opacity-70"></i> Accueil
 <% end %>
-<%= link_to calendar_path, class: item do %>
+<%= link_to root_path(anchor: "disponibilites"), class: item do %>
   <i class="fa-solid fa-calendar-days w-4 text-center opacity-70"></i> Disponibilités &amp; tarifs
 <% end %>
 <% if authenticated? %>

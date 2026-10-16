@@ -2,7 +2,8 @@ Rails.application.routes.draw do
   root to: "pages#home"
 
   # Calendrier public + devis (sélection samedi → samedi)
-  get "calendrier",       to: "bookings#calendar", as: :calendar
+  # Le calendrier est désormais une section de la page d'accueil ; l'ancienne URL y redirige.
+  get "calendrier",       to: redirect("/#disponibilites"), as: :calendar
   get "calendrier/quote", to: "bookings#quote",    as: :calendar_quote
 
   # Demande de réservation + suivi client (accès par token, sans login).

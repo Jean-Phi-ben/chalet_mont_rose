@@ -9,7 +9,7 @@
   <div class="bg-white border border-stone-200 rounded-2xl p-10 text-center">
     <i class="fa-regular fa-calendar text-3xl text-stone-300 mb-3"></i>
     <p class="text-stone-600">Vous n'avez pas encore de réservation associée à cette adresse.</p>
-    <%= link_to "Voir les disponibilités", calendar_path, class: "inline-block mt-5 bg-stone-900 text-white px-5 py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition" %>
+    <%= link_to "Voir les disponibilités", root_path(anchor: "disponibilites"), class: "inline-block mt-5 bg-stone-900 text-white px-5 py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition" %>
   </div>
 <% else %>
   <div class="space-y-5">

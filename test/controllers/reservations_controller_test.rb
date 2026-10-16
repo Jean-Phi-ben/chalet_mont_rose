@@ -3,6 +3,10 @@ require "test_helper"
 class ReservationsControllerTest < ActionDispatch::IntegrationTest
   include ActionMailer::TestHelper
 
+  # Dates de test en janvier 2026 : on se place avant pour qu'elles soient réservables.
+  setup { travel_to Date.new(2025, 12, 15) }
+  teardown { travel_back }
+
   setup do
     @check_in  = Date.new(2026, 1, 3)
     @check_out = Date.new(2026, 1, 17)
@@ -45,7 +49,16 @@ class ReservationsControllerTest < ActionDispatch::IntegrationTest
         booking: booking_params(check_in: Date.new(2026, 2, 7), check_out: Date.new(2026, 2, 14))
       }
     end
-    assert_redirected_to calendar_path
+    assert_redirected_to root_path(anchor: "disponibilites")
+  end
+
+  test "create rejects a week that has already started" do
+    travel_to Date.new(2026, 1, 5) # lundi : la semaine du samedi 3 a commencé
+    assert_no_difference "Booking.count" do
+      post reservations_url, params: { booking: booking_params }
+    end
+    assert_redirected_to root_path(anchor: "disponibilites")
+    assert_match "pas disponible", flash[:calendar_alert]
   end
 
   test "show finds a booking by token" do

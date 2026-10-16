@@ -1,4 +1,7 @@
 <% max_height ||= "60vh" %>
+<%# months_html : mois déjà rendus (render coûteux : une requête de tarif par jour), pour
+    afficher le même calendrier deux fois sur une page sans le recalculer. %>
+<% months_html ||= nil %>
 
 <div class="bg-white border border-stone-200 rounded-2xl overflow-hidden">
   <div class="overflow-y-auto" style="max-height: <%= max_height %>;">
@@ -9,8 +12,12 @@
     </div>
 
     <div class="px-4 sm:px-6 py-4 space-y-8">
-      <% calendar_months.each do |m| %>
-        <%= render "bookings/month", month: m %>
+      <% if months_html %>
+        <%= months_html %>
+      <% else %>
+        <% calendar_months.each do |m| %>
+          <%= render "bookings/month", month: m %>
+        <% end %>
       <% end %>
     </div>
   </div>

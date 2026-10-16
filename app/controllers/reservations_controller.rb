@@ -5,10 +5,11 @@ class ReservationsController < ApplicationController
 
   def create
     @booking = Booking.new(booking_params)
-    quote = Pricing.quote(@booking.check_in, @booking.check_out, guests_count: @booking.guests_count.to_i)
+    quote = Pricing.quote(@booking.check_in, @booking.check_out,
+                          guests_count: @booking.guests_count.to_i, earliest_check_in: Date.current)
 
     unless quote[:bookable]
-      redirect_to calendar_path, alert: "La période sélectionnée n'est pas disponible." and return
+      redirect_to root_path(anchor: "disponibilites"), flash: { calendar_alert: "La période sélectionnée n'est pas disponible." } and return
     end
 
     @booking.accommodation_cents = quote[:accommodation_cents]
@@ -24,8 +25,8 @@ class ReservationsController < ApplicationController
                   notice: "Votre demande a bien été envoyée. Nous vous répondrons rapidement.",
                   status: :see_other
     else
-      redirect_to calendar_path,
-                  alert: @booking.errors.full_messages.to_sentence,
+      redirect_to root_path(anchor: "disponibilites"),
+                  flash: { calendar_alert: @booking.errors.full_messages.to_sentence },
                   status: :see_other
     end
   end

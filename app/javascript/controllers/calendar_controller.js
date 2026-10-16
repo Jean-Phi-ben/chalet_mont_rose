@@ -48,12 +48,12 @@ export default class extends Controller {
     const isFirstPick = !this.checkIn || this.checkOut
 
     if (isFirstPick) {
-      this.checkIn = this.snapBackToSaturday(iso)
+      this.checkIn = this.arrivalFor(iso)
       this.checkOut = null
     } else {
       const candidate = this.snapForwardToSaturday(iso, this.checkIn)
       if (candidate <= this.checkIn) {
-        this.checkIn = this.snapBackToSaturday(iso)
+        this.checkIn = this.arrivalFor(iso)
         this.checkOut = null
       } else {
         this.checkOut = candidate
@@ -65,7 +65,14 @@ export default class extends Controller {
     else this.hideSummary()
   }
 
-  // Samedi du même jour ou immédiatement antérieur (pour l'arrivée).
+  // Arrivée pour un jour cliqué : le samedi de sa semaine, sauf si ce samedi est déjà
+  // passé (semaine en cours commencée) → samedi suivant.
+  arrivalFor(iso) {
+    const saturday = this.snapBackToSaturday(iso)
+    return saturday < this.isoOf(new Date()) ? this.snapForwardToSaturday(iso, null) : saturday
+  }
+
+  // Samedi du même jour ou immédiatement antérieur.
   snapBackToSaturday(iso) {
     const d = new Date(`${iso}T00:00:00`)
     const back = (d.getDay() + 1) % 7
@@ -140,32 +147,36 @@ export default class extends Controller {
     if (this.hasAccommodationPlaceholderTarget) {
       this.accommodationPlaceholderTarget.placeholder = `Auto · ${this.euros(data.accommodation_cents)}`
     }
-    if (this.hasSummaryTarget) this.summaryTarget.classList.remove("hidden")
-    if (this.hasMessageTarget) this.messageTarget.classList.add("hidden")
-    if (this.hasReserveTarget) this.reserveTarget.classList.remove("hidden")
+    // Pluriel : sur l'accueil, récap / message / bouton existent à la fois dans la page
+    // et dans la modale de réservation.
+    this.toggleAll(this.summaryTargets, true)
+    this.toggleAll(this.messageTargets, false)
+    this.toggleAll(this.reserveTargets, true)
     if (this.hasConfirmTarget) this.confirmTarget.disabled = false
     if (this.hasSubmitTarget) this.submitTarget.disabled = false
   }
 
   hideSummary() {
-    if (this.hasSummaryTarget) this.summaryTarget.classList.add("hidden")
-    if (this.hasMessageTarget) this.messageTarget.classList.add("hidden")
-    if (this.hasReserveTarget) this.reserveTarget.classList.add("hidden")
+    this.toggleAll(this.summaryTargets, false)
+    this.toggleAll(this.messageTargets, false)
+    this.toggleAll(this.reserveTargets, false)
     if (this.hasPickerInfoTarget) this.pickerInfoTarget.classList.add("hidden")
     if (this.hasConfirmTarget) this.confirmTarget.disabled = true
     if (this.hasSubmitTarget) this.submitTarget.disabled = true
   }
 
   showMessage(text) {
-    if (this.hasSummaryTarget) this.summaryTarget.classList.add("hidden")
-    if (this.hasReserveTarget) this.reserveTarget.classList.add("hidden")
+    this.toggleAll(this.summaryTargets, false)
+    this.toggleAll(this.reserveTargets, false)
     if (this.hasPickerInfoTarget) this.pickerInfoTarget.classList.add("hidden")
     if (this.hasConfirmTarget) this.confirmTarget.disabled = true
     if (this.hasSubmitTarget) this.submitTarget.disabled = true
-    if (this.hasMessageTarget) {
-      this.messageTarget.textContent = text
-      this.messageTarget.classList.remove("hidden")
-    }
+    this.messageTargets.forEach((el) => { el.textContent = text })
+    this.toggleAll(this.messageTargets, true)
+  }
+
+  toggleAll(elements, visible) {
+    elements.forEach((el) => el.classList.toggle("hidden", !visible))
   }
 
   euros(cents) {
@@ -187,6 +198,7 @@ export default class extends Controller {
   reason(code) {
     return {
       samedi_requis: "Les arrivées et départs se font le samedi.",
+      semaine_commencee: "La semaine en cours a déjà commencé : arrivée possible à partir du prochain samedi.",
       ordre_invalide: "La date de départ doit suivre l'arrivée.",
       semaine_non_tarifee: "Une ou plusieurs semaines ne sont pas disponibles."
     }[code] || "Période indisponible."

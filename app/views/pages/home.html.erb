@@ -65,6 +65,9 @@
         Chalet Mont Rose
       </h1>
       <p class="text-white/90 text-xs sm:text-base md:text-xl font-light tracking-[0.18em] sm:tracking-[0.2em] mt-3 sm:mt-4">
+        Saint-Gervais-les-Bains, sous le Bettex
+      </p>
+      <p class="text-white/90 text-xs sm:text-base md:text-xl font-light tracking-[0.18em] sm:tracking-[0.2em] mt-1 sm:mt-2">
         Le haut de gamme en famille
       </p>
 
@@ -283,8 +286,39 @@
 </div>
 
 <!-- LOCATION -->
+<% content_for :head do %>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"
+        integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+<% end %>
+<% chalet_lat, chalet_lng = 45.8852955, 6.6892642 %>
 <div id="location" class="mb-14">
   <h2 class="text-2xl font-serif text-stone-900 tracking-wide mb-6">Localisation</h2>
+
+  <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4">
+    <p class="text-stone-600 flex items-start gap-2">
+      <i class="fa-solid fa-location-dot text-stone-400 mt-1"></i>
+      <span>2417 route de Cupelin, 74170 Saint-Gervais-les-Bains<br>
+        <span class="text-sm text-stone-400">Haute-Savoie · face au massif du Mont-Blanc</span></span>
+    </p>
+    <a href="https://www.google.com/maps/dir/?api=1&destination=<%= chalet_lat %>,<%= chalet_lng %>"
+       target="_blank" rel="noopener"
+       class="inline-flex items-center justify-center gap-2 self-start sm:self-auto border border-stone-300 text-stone-700 px-5 py-2.5 rounded-xl text-xs uppercase tracking-widest hover:bg-stone-100 transition">
+      <i class="fa-solid fa-route"></i> Itinéraire
+    </a>
+  </div>
+
+  <%# isolate : les panneaux Leaflet (z-index jusqu'à 1000) restent sous la navbar et la modale. %>
+  <div data-controller="map"
+       data-map-lat-value="<%= chalet_lat %>"
+       data-map-lng-value="<%= chalet_lng %>"
+       data-map-zoom-value="13"
+       data-map-label-value="Chalet Mont Rose"
+       class="relative isolate z-0 mb-6 overflow-hidden rounded-2xl border border-stone-200 bg-stone-100">
+    <div data-map-target="canvas" class="w-full h-[300px] sm:h-[400px] md:h-[480px]"
+         role="region" aria-label="Carte de localisation du Chalet Mont Rose"></div>
+  </div>
+
   <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
     <% [
       ["fa-person-skiing", "Pistes de ski", "3 min voiture / navette"],
@@ -301,24 +335,80 @@
   </div>
 </div>
 
+<%# Un seul controller « calendar » pour le calendrier de la page, la modale de réservation
+    et son sélecteur de dates : la sélection est partagée entre les deux calendriers. %>
+<div data-controller="calendar" data-calendar-quote-url-value="<%= calendar_quote_path %>">
+
+<%# Mois rendus une seule fois, réutilisés ici et dans le sélecteur de la modale. %>
+<% calendar_months_html = capture do %>
+  <% calendar_months.each do |m| %><%= render "bookings/month", month: m %><% end %>
+<% end %>
+
+<!-- DISPONIBILITÉS & TARIFS -->
+<div id="disponibilites" class="mb-14">
+  <h2 class="text-2xl font-serif text-stone-900 tracking-wide mb-2">Disponibilités &amp; tarifs</h2>
+  <p class="text-sm text-stone-500 mb-6">Cliquez n'importe quel jour : l'arrivée et le départ se calent automatiquement sur le <strong>samedi</strong>.</p>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+    <div class="lg:col-span-2">
+      <%= render "bookings/calendar", max_height: "70vh", months_html: calendar_months_html %>
+    </div>
+
+    <aside class="lg:col-span-1">
+      <div class="bg-white border border-stone-200 rounded-2xl p-6 lg:sticky lg:top-28">
+        <p class="text-sm text-stone-400 uppercase tracking-wider mb-4">Votre séjour</p>
+
+        <%# Erreur de demande de réservation (ReservationsController), affichée près du calendrier. %>
+        <% if flash[:calendar_alert] %>
+          <p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4"><%= flash[:calendar_alert] %></p>
+        <% end %>
+
+        <div data-calendar-target="summary" class="hidden space-y-3">
+          <div class="flex justify-between text-sm text-stone-600">
+            <span><span data-calendar-target="nights"></span> nuits</span>
+            <span class="font-medium text-stone-900" data-calendar-target="total"></span>
+          </div>
+          <div class="flex justify-between text-sm text-stone-500 border-t border-stone-100 pt-3">
+            <span>Arrhes (30 %)</span>
+            <span data-calendar-target="deposit"></span>
+          </div>
+        </div>
+
+        <p data-calendar-target="message" class="hidden text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3"></p>
+
+        <p class="text-xs text-stone-400 mt-4">Le prix affiché par jour est indicatif (prix de la semaine ÷ 7).</p>
+
+        <button type="button" data-calendar-target="reserve" data-action="click->modal#open" aria-controls="reservation-modal"
+                class="hidden mt-6 w-full bg-stone-900 text-white py-3 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition">
+          Demander une réservation
+        </button>
+      </div>
+    </aside>
+  </div>
+</div>
+
 <!-- CONTACT -->
 <div id="contact" class="mb-8">
   <div class="bg-stone-900 rounded-2xl p-6 sm:p-8 md:p-12 text-center">
     <h2 class="text-2xl md:text-3xl font-serif text-white tracking-wide mb-3">Une question ?</h2>
     <p class="text-stone-400 mb-6">Nous sommes à votre disposition pour organiser votre séjour sur mesure.</p>
-    <div class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-      <a href="tel:+33689064057" class="inline-flex items-center gap-2 bg-white text-stone-900 px-6 py-3 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-100 transition">
-        <i class="fa-solid fa-phone"></i> Nous appeler
+    <%# email_off : désactive l'« Email Obfuscation » de Cloudflare sur ce bloc. Sinon le
+        mailto: est réécrit en /cdn-cgi/l/email-protection, décodé par un script que Turbo
+        ne relance pas → le lien ouvre une page Cloudflare au lieu de la messagerie. %>
+    <!--email_off-->
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 max-w-sm sm:max-w-none mx-auto">
+      <a href="tel:+33689064057" class="inline-flex items-center justify-center gap-2 bg-white text-stone-900 px-6 py-3 rounded-xl text-sm tracking-wide hover:bg-stone-100 transition">
+        <i class="fa-solid fa-phone"></i> +33 6 89 06 40 57
       </a>
-      <a href="mailto:chaletmontrose74@gmail.com" class="inline-flex items-center gap-2 border border-white/30 text-white px-6 py-3 rounded-xl text-sm uppercase tracking-widest hover:bg-white/10 transition">
-        <i class="fa-solid fa-envelope"></i> Nous écrire
+      <a href="mailto:chaletmontrose74@gmail.com" class="inline-flex items-center justify-center gap-2 border border-white/30 text-white px-6 py-3 rounded-xl text-sm tracking-wide hover:bg-white/10 transition break-all">
+        <i class="fa-solid fa-envelope"></i> chaletmontrose74@gmail.com
       </a>
     </div>
+    <!--/email_off-->
   </div>
 </div>
 
 <!-- ============ MODALE RÉSERVATION + SÉLECTEUR DE DATES ============ -->
-<div data-controller="calendar" data-calendar-quote-url-value="<%= calendar_quote_path %>">
 
   <!-- Modale de demande -->
   <div id="reservation-modal"
@@ -469,7 +559,7 @@
         </div>
 
         <div class="p-4 sm:p-6">
-          <%= render "bookings/calendar", max_height: "55vh" %>
+          <%= render "bookings/calendar", max_height: "55vh", months_html: calendar_months_html %>
 
           <p data-calendar-target="message" class="hidden mt-4 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3"></p>
           <p data-calendar-target="pickerInfo" class="hidden mt-4 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg p-3"></p>
