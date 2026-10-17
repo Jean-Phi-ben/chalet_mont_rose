@@ -97,6 +97,18 @@ class AccountFlowTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", account_invoice_path(Invoice.last)       # lien téléchargement facture
   end
 
+  test "l'espace client garde l'en-tête du site : menu maison, burger et liens vers l'accueil" do
+    sign_in_as(users(:one))
+    [ account_root_path, account_profile_path, account_documents_path ].each do |path|
+      get path
+      assert_response :success
+      assert_select "nav[data-controller=navbar] [data-controller=usermenu]"   # menu maison (desktop)
+      assert_select "#mobile-menu"                                              # burger (mobile)
+      assert_select "nav[data-controller=navbar] a[href=?]", root_path(anchor: "gallery")
+      assert_select "nav[aria-label='Espace client'] a[href=?]", account_profile_path
+    end
+  end
+
   test "le tableau de bord indique si chaque facture est payée, avec date de paiement ou échéance" do
     travel_to Date.new(2026, 5, 1) do
       user = users(:one)
