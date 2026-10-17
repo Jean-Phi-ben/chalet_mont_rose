@@ -43,7 +43,8 @@ class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "empty states" do
-    Booking.destroy_all
+    Invoice.delete_all # une réservation facturée ne se détruit pas ; on vide à plat
+    Booking.delete_all
     get admin_root_url
     assert_select "[data-dashboard-section=pending-bookings]", text: /Aucune demande en attente/
     assert_select "[data-dashboard-section=upcoming-invoices]", text: /Aucune facture en attente/

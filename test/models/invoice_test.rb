@@ -19,27 +19,34 @@ class InvoiceTest < ActiveSupport::TestCase
     assert deposit.kind_deposit?
     assert_equal 66_000, deposit.amount_cents
     assert balance.kind_balance?
-    # Arrhes non encore reçues → solde = total séjour (rien à déduire).
-    assert_equal 314_560, balance.amount_cents
+    # Solde = total − arrhes facturées (dès l'émission, réglées ou non).
+    assert_equal 248_560, balance.amount_cents
     assert_equal Date.current, deposit.issued_on
   end
 
-  test "balance amount resyncs to (total − deposit) once the deposit is marked received" do
+  test "balance amount does not depend on the deposit payment status" do
     Invoice.from_booking(@booking).each(&:save!)
     deposit = @booking.deposit_invoice
     balance = @booking.balance_invoice
-    assert_equal 314_560, balance.amount_cents
+    assert_equal 248_560, balance.amount_cents  # 314 560 − 66 000
 
     deposit.mark_received!
-    assert_equal 248_560, balance.reload.amount_cents  # 314 560 − 66 000
+    assert_equal 248_560, balance.reload.amount_cents
+    deposit.mark_awaiting!
+    assert_equal 248_560, balance.reload.amount_cents
   end
 
-  test "balance amount resyncs back to the full total when the deposit is reverted" do
+  test "locked? once paid or when invoicing is archived" do
     Invoice.from_booking(@booking).each(&:save!)
     deposit = @booking.deposit_invoice
+    assert_not deposit.locked?
     deposit.mark_received!
-    deposit.mark_awaiting!
-    assert_equal 314_560, @booking.balance_invoice.reload.amount_cents
+    assert deposit.locked?
+
+    balance = @booking.balance_invoice
+    assert_not balance.locked?
+    @booking.archive_invoicing!
+    assert balance.reload.locked?
   end
 
   test "auto-numbers invoices sequentially per year" do

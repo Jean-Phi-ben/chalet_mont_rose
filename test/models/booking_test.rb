@@ -146,4 +146,20 @@ class BookingTest < ActiveSupport::TestCase
     refute Booking.confirmed_overlap?(Date.new(2026, 1, 3), Date.new(2026, 1, 10)),
            "Réserver [Sat 3 → Sat 10) doit être possible même si Sat 10 = check_in d'une autre résa"
   end
+
+  test "cannot be destroyed once invoiced, and email logs survive a deletion" do
+    booking = Booking.create!(valid_attributes)
+    booking.invoices.create!(kind: :deposit, amount_cents: 1_000)
+    assert_not booking.destroy
+    assert_match(/facturée/, booking.errors.full_messages.to_sentence)
+    assert Booking.exists?(booking.id)
+    assert Invoice.exists?(booking.invoices.first.id), "pas de suppression en cascade avortée à moitié"
+
+    other = Booking.create!(valid_attributes(check_in: Date.new(2026, 2, 7), check_out: Date.new(2026, 2, 14)))
+    log = EmailLog.create!(booking: other, mailer: "BookingMailer", action: "acknowledgement_to_client",
+                           to_addresses: "x@example.com", subject: "s", message_id: "m-#{SecureRandom.hex}",
+                           sent_at: Time.current)
+    assert other.destroy
+    assert_nil log.reload.booking_id
+  end
 end

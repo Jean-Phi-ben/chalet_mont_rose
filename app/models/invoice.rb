@@ -1,5 +1,8 @@
 # Une facture est associée à une réservation et représente soit les arrhes (`deposit`),
 # soit le solde (`balance`). Chaque réservation a donc deux factures avec deux numéros distincts.
+#
+# Règle d'immutabilité : une facture payée (ou dont la facturation est archivée) ne
+# change plus, ni de montant ni de PDF (cf. #locked? et GenerateInvoiceJob).
 class Invoice < ApplicationRecord
   belongs_to :booking
   has_one_attached :pdf
@@ -15,21 +18,16 @@ class Invoice < ApplicationRecord
   validates :issued_on,    presence: true
   validates :amount_cents, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :kind,         uniqueness: { scope: :booking_id }
+  validate  :amount_frozen_once_paid, on: :update
 
   before_validation :assign_issued_on, on: :create
   before_validation :assign_number,    on: :create
   # Une facture payée a toujours une date de paiement (ex. statut changé depuis l'admin sans date).
   before_save -> { self.received_on ||= Date.current }, if: :payment_received?
 
-  # Si le statut de la facture d'arrhes change, on resynchronise le montant du solde.
-  after_save_commit :resync_balance_amount, if: -> { kind_deposit? && saved_change_to_status? }
-
-  scope :awaiting, -> { where(status: :awaiting) }
-  scope :ordered,  -> { order(:kind, :id) }
+  scope :ordered, -> { order(:kind, :id) }
 
   # Construit (sans sauvegarder) les deux factures pour une réservation.
-  # Le montant du solde est calculé selon l'état actuel du paiement des arrhes :
-  # arrhes non reçues → solde = total ; arrhes reçues → solde = total − arrhes.
   def self.from_booking(booking)
     [
       new(booking: booking, kind: :deposit, amount_cents: booking.deposit_cents),
@@ -37,11 +35,11 @@ class Invoice < ApplicationRecord
     ]
   end
 
-  # Solde dû en fonction de l'état des arrhes (utilisé à la création et lors des sync).
+  # Solde = total du séjour − arrhes facturées, quel que soit l'état de leur paiement :
+  # une facture d'arrhes émise est due, le solde ne la réclame pas une seconde fois.
   def self.balance_amount_for(booking)
-    deposit = booking.invoices.find_by(kind: :deposit)
-    deposit_paid = deposit&.payment_received? ? deposit.amount_cents.to_i : 0
-    booking.total_price_cents.to_i - deposit_paid
+    deposit_cents = booking.deposit_invoice&.amount_cents || booking.deposit_cents
+    booking.total_price_cents.to_i - deposit_cents.to_i
   end
 
   def label
@@ -57,6 +55,11 @@ class Invoice < ApplicationRecord
     payment_awaiting? && due_on < today
   end
 
+  # Facture figée : payée, ou facturation de la réservation archivée.
+  def locked?
+    payment_received? || booking.invoicing_archived?
+  end
+
   def mark_received!(on: Date.current)
     update!(status: :received, received_on: on)
   end
@@ -66,6 +69,12 @@ class Invoice < ApplicationRecord
   end
 
   private
+
+  def amount_frozen_once_paid
+    return unless amount_cents_changed? && status_was == "received"
+
+    errors.add(:amount_cents, "ne peut plus être modifié : facture déjà payée")
+  end
 
   def assign_issued_on
     self.issued_on ||= Date.current
@@ -78,15 +87,5 @@ class Invoice < ApplicationRecord
     last = self.class.where("number LIKE ?", "CMR-#{year}-%").order(number: :desc).first
     seq  = last ? last.number.split("-").last.to_i + 1 : 1
     self.number = format("CMR-%d-%04d", year, seq)
-  end
-
-  def resync_balance_amount
-    balance = booking.balance_invoice
-    return unless balance
-
-    new_amount = self.class.balance_amount_for(booking)
-    return if balance.amount_cents.to_i == new_amount
-
-    balance.update_columns(amount_cents: new_amount, updated_at: Time.current)
   end
 end

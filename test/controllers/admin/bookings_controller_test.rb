@@ -271,14 +271,46 @@ class Admin::BookingsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 36_000, @booking.deposit_cents            # 30 % de l'hébergement
   end
 
-  test "destroy removes the booking and its invoices, then redirects to the index" do
-    Invoice.from_booking(@booking).each(&:save!)
+  test "destroy removes a pending, uninvoiced booking and redirects to the index" do
     assert_difference -> { Booking.count }, -1 do
-      assert_difference -> { Invoice.count }, -2 do
-        delete admin_booking_url(@booking)
-      end
+      delete admin_booking_url(@booking)
     end
     assert_redirected_to admin_bookings_path
+  end
+
+  test "destroy is refused once the booking has invoices" do
+    Invoice.from_booking(@booking).each(&:save!)
+    assert_no_difference [ "Booking.count", "Invoice.count" ] do
+      delete admin_booking_url(@booking)
+    end
+    assert_response :redirect
+    assert Booking.exists?(@booking.id)
+  end
+
+  test "confirm is refused on a rejected booking (no re-confirmation)" do
+    @booking.update!(status: :rejected)
+    assert_no_emails do
+      patch confirm_admin_booking_url(@booking)
+    end
+    assert @booking.reload.rejected?
+  end
+
+  test "update without changing the dates keeps the recorded amounts (manual price survives)" do
+    @booking.update_columns(accommodation_cents: 150_000, deposit_cents: 50_000,
+                            total_price_cents: 150_000 + @booking.cleaning_fee_cents.to_i + @booking.tourist_tax_cents.to_i)
+    patch admin_booking_url(@booking), params: { booking: { phone: "+33611111111" } }
+    assert_redirected_to admin_booking_path(@booking)
+    @booking.reload
+    assert_equal "+33611111111", @booking.phone
+    assert_equal 150_000, @booking.accommodation_cents, "prix négocié conservé"
+    assert_equal 50_000,  @booking.deposit_cents,       "arrhes conservées"
+  end
+
+  test "update with the recalculate flag recomputes from the rate grid" do
+    @booking.update_columns(accommodation_cents: 150_000, deposit_cents: 50_000)
+    patch admin_booking_url(@booking), params: { booking: { phone: "+33611111111", recalculate: "1" } }
+    @booking.reload
+    assert_not_equal 150_000, @booking.accommodation_cents, "recalculé depuis les tarifs hebdomadaires"
   end
 
   test "update keeps the admin override on the accommodation amount" do

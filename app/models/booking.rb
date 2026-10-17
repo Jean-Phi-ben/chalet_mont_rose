@@ -8,11 +8,15 @@ class Booking < ApplicationRecord
 
   belongs_to :user, optional: true
   belongs_to :client, optional: true
+  # Une réservation facturée ou au contrat signé ne se supprime pas : la numérotation
+  # des factures doit rester continue et le contrat signé conservé. `prepend` : le
+  # contrôle passe AVANT les suppressions en cascade déclarées ci-dessous.
+  before_destroy :refuse_destroy_unless_deletable, prepend: true
   has_many :invoices, dependent: :destroy
   has_one  :contract, dependent: :destroy
   has_one  :caution,  dependent: :destroy
-  # La suppression d'une résa efface aussi son journal d'emails.
-  has_many :email_logs, dependent: :destroy
+  # Le journal des emails survit à la suppression d'une demande (trace d'audit).
+  has_many :email_logs, dependent: :nullify
   has_secure_token
 
   # Champ virtuel : l'adresse vit sur le Client (synchronisée à la sauvegarde).
@@ -212,6 +216,11 @@ class Booking < ApplicationRecord
     deposit_invoice&.payment_received? && balance_invoice&.payment_received?
   end
 
+  # Supprimable seulement sans facture émise ni contrat signé.
+  def deletable?
+    invoices.none? && !contract&.status_signed?
+  end
+
   def archive_invoicing!(at: Time.current)
     update!(invoicing_archived_at: at)
   end
@@ -243,6 +252,13 @@ class Booking < ApplicationRecord
   end
 
   private
+
+  def refuse_destroy_unless_deletable
+    return if deletable?
+
+    errors.add(:base, "Impossible de supprimer une réservation facturée ou dont le contrat est signé.")
+    throw :abort
+  end
 
   def dates_must_be_saturdays
     errors.add(:check_in, "doit être un samedi") if check_in && !check_in.saturday?

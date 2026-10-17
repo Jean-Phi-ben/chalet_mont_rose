@@ -17,6 +17,10 @@ class InvoicePdf
   STONE_500 = "78716c"
   STONE_300 = "d6d3d1"
 
+  # À incrémenter à chaque changement de mise en page : force la régénération des
+  # PDF non verrouillés (entre dans l'empreinte calculée par GenerateInvoiceJob).
+  LAYOUT_VERSION = 2
+
   def self.render(invoice)
     new(invoice).render
   end
@@ -102,7 +106,7 @@ class InvoicePdf
     designation = "Arrhes (#{@booking.deposit_percent_label}) pour le séjour du #{fr_date(@booking.check_in)} au #{fr_date(@booking.check_out)}"
 
     rows = [
-      [ "Désignation", "Montant HT", "Quantité", "TVA", "Montant TTC" ],
+      [ "Désignation", "PU HT", "Quantité", "TVA", "Montant TTC" ],
       [ designation, money(ht), "1", "#{vat_rate_accommodation.to_i} %", money(ttc) ]
     ]
     draw_table(rows)
@@ -122,40 +126,34 @@ class InvoicePdf
 
   def balance_breakdown
     rows = [
-      [ "Désignation", "Montant HT", "Quantité", "TVA", "Montant TTC" ],
+      [ "Désignation", "PU HT", "Quantité", "TVA", "Montant TTC" ],
       [ "Hébergement",     money(@booking.accommodation_per_night_ht_cents),  "#{@booking.nights} nuits",    "#{vat_rate_accommodation.to_i} %", money(@booking.accommodation_cents) ],
-      [ "Frais de ménage", money(@booking.cleaning_per_week_ht_cents),        "#{@booking.weeks} sem.",      "#{vat_rate_cleaning.to_i} %",      money(@booking.cleaning_fee_cents) ]
+      [ "Frais de ménage", money(@booking.cleaning_per_week_ht_cents),        "#{@booking.weeks} sem.",      "#{vat_rate_cleaning.to_i} %",      money(@booking.cleaning_fee_cents) ],
+      [ "Taxe de séjour",  money(@booking.tax_per_person_per_night_ht_cents), "#{@booking.nuitees} nuitées", "non soumise",                      money(@booking.tourist_tax_cents) ]
     ]
-
-    deposit = @booking.deposit_invoice
-    if deposit&.payment_received?
-      dep_ttc = deposit.amount_cents.to_i
-      dep_ht  = ht_for(dep_ttc, vat_rate_accommodation)
-      rows << [ "Déduction arrhes (réf. #{deposit.number})", "-#{money(dep_ht)}", "1", "#{vat_rate_accommodation.to_i} %", "-#{money(dep_ttc)}" ]
-    end
-
-    rows << [ "Taxe de séjour", money(@booking.tax_per_person_per_night_ht_cents), "#{@booking.nuitees} nuitées", "#{vat_rate_tourist_tax.to_i} %", money(@booking.tourist_tax_cents) ]
     draw_table(rows)
   end
 
+  # Totaux du séjour complet, puis déduction des arrhes FACTURÉES (réglées ou non :
+  # une facture d'arrhes émise reste due, le solde ne la réclame pas une 2e fois).
   def balance_totals
+    acc_vat = @booking.vat_cents_for(:accommodation)
+    cln_vat = @booking.vat_cents_for(:cleaning)
+    ht      = @booking.accommodation_cents.to_i + @booking.cleaning_fee_cents.to_i - acc_vat - cln_vat
     deposit = @booking.deposit_invoice
-    deposit_paid = deposit&.payment_received? ? deposit.amount_cents.to_i : 0
-    dep_vat = deposit_paid.zero? ? 0 : (deposit_paid - ht_for(deposit_paid, vat_rate_accommodation))
-
-    acc_vat_full = @booking.vat_cents_for(:accommodation)
-    cln_vat      = @booking.vat_cents_for(:cleaning)
-    acc_vat_left = acc_vat_full - dep_vat
-    ht_left      = (@booking.accommodation_cents.to_i + @booking.cleaning_fee_cents.to_i - deposit_paid) - (acc_vat_left + cln_vat)
-    net          = @booking.total_price_cents.to_i - deposit_paid
 
     lines = [
-      [ "Total HT restant (hors taxe de séjour)", money(ht_left) ],
-      [ "TVA #{vat_rate_accommodation.to_i} %" + (deposit_paid.positive? ? " restante" : ""), money(acc_vat_left) ],
-      [ "TVA #{vat_rate_cleaning.to_i} %",                                                     money(cln_vat) ],
-      [ "Taxe de séjour (hors TVA)",                                                            money(@booking.tourist_tax_cents) ]
+      [ "Total HT (hébergement + ménage)",            money(ht) ],
+      [ "TVA #{vat_rate_accommodation.to_i} % (hébergement)", money(acc_vat) ],
+      [ "TVA #{vat_rate_cleaning.to_i} % (ménage)",   money(cln_vat) ],
+      [ "Taxe de séjour (non soumise à TVA)",         money(@booking.tourist_tax_cents) ],
+      [ "Total TTC du séjour",                        money(@booking.total_price_cents) ]
     ]
-    draw_totals(lines, bottom: [ "Net à payer", money(net) ])
+    if deposit
+      state = deposit.payment_received? ? "réglée le #{fr_date(deposit.received_on)}" : "en attente de règlement"
+      lines << [ "Arrhes facturées n° #{deposit.number} (#{state})", "-#{money(deposit.amount_cents)}" ]
+    end
+    draw_totals(lines, bottom: [ "Net à payer", money(@invoice.amount_cents) ])
   end
 
   # ---- Helpers de mise en forme. ----------------------------------------------
@@ -170,7 +168,7 @@ class InvoicePdf
   end
 
   def draw_totals(lines, bottom:)
-    table_width = 260
+    table_width = 320
     rows = lines + [ bottom ]
     @doc.bounding_box([ @doc.bounds.width - table_width, @doc.cursor ], width: table_width) do
       @doc.table(rows, width: table_width, cell_style: { borders: [], padding: [ 4, 8 ], size: 10 }) do
@@ -216,7 +214,7 @@ class InvoicePdf
     @doc.fill_color STONE_500
     capital = ENV["COMPANY_CAPITAL"]
     @doc.text "Capital social : #{capital}" if capital.present?
-    @doc.text "TVA exigible sur les encaissements (art. 269 du CGI). Référence à indiquer en virement : #{@invoice.number}."
+    @doc.text "TVA acquittée sur les encaissements (art. 269 du CGI). Pas d'escompte pour paiement anticipé. Référence à indiquer lors du virement : #{@invoice.number}."
     if @invoice.kind_deposit?
       @doc.text "Arrhes (art. 1590 du Code civil) : leur perte par le client, ou leur restitution au double par le propriétaire, libère du contrat."
     end
@@ -233,5 +231,4 @@ class InvoicePdf
 
   def vat_rate_accommodation = Booking::VAT_RATES[:accommodation]
   def vat_rate_cleaning      = Booking::VAT_RATES[:cleaning]
-  def vat_rate_tourist_tax   = Booking::VAT_RATES[:tourist_tax]
 end

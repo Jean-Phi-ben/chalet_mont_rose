@@ -268,15 +268,10 @@
     </div>
 
     <% if policy(@booking).destroy? %>
-      <% destroy_confirm = if @booking.invoices.any?
-                            "Supprimer définitivement cette demande ainsi que ses #{@booking.invoices.size} facture(s) ?"
-                          else
-                            "Supprimer définitivement cette demande de réservation ?"
-                          end %>
       <div class="bg-white border border-stone-200 rounded-2xl p-6">
         <p class="text-[10px] text-stone-400 uppercase tracking-widest mb-2">Zone sensible</p>
         <%= button_to admin_booking_path(@booking), method: :delete,
-              form: { data: { turbo_confirm: destroy_confirm } },
+              form: { data: { turbo_confirm: "Supprimer définitivement cette demande de réservation ?" } },
               class: "block w-full text-center text-stone-500 hover:text-red-700 text-xs uppercase tracking-widest py-2 transition cursor-pointer" do %>
           <i class="fa-solid fa-trash mr-1"></i> Supprimer la demande
         <% end %>

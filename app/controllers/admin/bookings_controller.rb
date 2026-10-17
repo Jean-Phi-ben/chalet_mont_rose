@@ -51,10 +51,14 @@ class Admin::BookingsController < Admin::BaseController
   def update
     authorize @booking
     @booking.assign_attributes(booking_params)
-    compute_pricing(@booking,
-                    override: params.dig(:booking, :accommodation_euros).presence,
-                    cleaning_override: params.dig(:booking, :cleaning_fee_euros).presence,
-                    deposit_override: params.dig(:booking, :deposit_euros).presence)
+    if recalculation_requested?
+      compute_pricing(@booking,
+                      override: params.dig(:booking, :accommodation_euros).presence,
+                      cleaning_override: params.dig(:booking, :cleaning_fee_euros).presence,
+                      deposit_override: params.dig(:booking, :deposit_euros).presence)
+    else
+      keep_recorded_amounts
+    end
 
     if @booking.errors.empty? && @booking.save
       GenerateInvoiceJob.perform_now(@booking) if @booking.confirmed? && @booking.invoices.any?
@@ -155,11 +159,38 @@ class Admin::BookingsController < Admin::BaseController
 
   def destroy
     authorize @booking
-    @booking.destroy!
-    redirect_to admin_bookings_path, notice: "Demande de réservation supprimée."
+    if @booking.destroy
+      redirect_to admin_bookings_path, notice: "Demande de réservation supprimée."
+    else
+      redirect_to admin_booking_path(@booking), alert: @booking.errors.full_messages.to_sentence
+    end
   end
 
   private
+
+  # Recalcul complet (tarifs hebdomadaires + paramètres en cours) uniquement si les
+  # dates changent ou si l'admin le demande. Sinon les montants enregistrés — y
+  # compris ceux saisis à la main — sont conservés (corriger un téléphone ne doit
+  # pas réécrire un prix négocié).
+  def recalculation_requested?
+    params.dig(:booking, :recalculate) == "1" || @booking.check_in_changed? || @booking.check_out_changed?
+  end
+
+  def keep_recorded_amounts
+    if @booking.guests_count_changed?
+      @booking.tourist_tax_cents = BookingSetting.current.tourist_tax_per_person_per_night_cents *
+                                   @booking.guests_count.to_i * @booking.nights
+    end
+    manual_deposit = params.dig(:booking, :deposit_euros).presence
+    deposit_override = if manual_deposit
+      (manual_deposit.to_d * 100).round
+    elsif @booking.accommodation_cents_changed?
+      nil # hébergement ressaisi : arrhes recalculées au ratio en vigueur
+    else
+      @booking.deposit_cents
+    end
+    @booking.recompute_total(deposit_override: deposit_override)
+  end
 
   def set_booking
     @booking = Booking.find(params[:id])

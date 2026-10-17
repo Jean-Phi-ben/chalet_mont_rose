@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_18_090100) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_18_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -166,6 +166,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_090100) do
     t.date "issued_on", null: false
     t.integer "kind", default: 0, null: false
     t.string "number", null: false
+    t.string "pdf_fingerprint"
     t.date "received_on"
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false

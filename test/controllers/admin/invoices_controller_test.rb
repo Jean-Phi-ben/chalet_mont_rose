@@ -138,7 +138,7 @@ class Admin::InvoicesControllerTest < ActionDispatch::IntegrationTest
   test "show displays the breakdown table with HT / quantity / TTC columns" do
     get admin_invoice_url(@deposit)
     assert_response :success
-    assert_match "Montant HT",  response.body
+    assert_match "PU HT", response.body
     assert_match "Quantité",    response.body
     assert_match "Montant TTC", response.body
     assert_match "14 nuits",   response.body
@@ -151,30 +151,29 @@ class Admin::InvoicesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match "TVA", response.body
     assert_match "Total séjour", response.body
-    # Une colonne TVA avec les taux par catégorie : 10 %, 20 %, 0 %.
+    # Une colonne TVA avec les taux par catégorie ; la taxe de séjour est hors champ.
     assert_match "10 %", response.body
     assert_match "20 %", response.body
-    assert_match "0 %",  response.body
+    assert_match "non soumise", response.body
     assert_match "hébergement + ménage", response.body  # libellé du total TVA
-    # Vue consolidée : ligne « Arrhes réglées » + « Solde à régler à J-10 ».
-    assert_match "Arrhes réglées", response.body
-    assert_match "Solde à régler à J-10", response.body
+    # Vue consolidée : arrhes facturées toujours déduites + solde avec sa date limite.
+    assert_match "Arrhes facturées", response.body
+    assert_match "Solde à régler au plus tard le", response.body
   end
 
   test "show on the balance invoice always shows the arrhes line, negative when paid" do
     @deposit.update!(status: :received, received_on: Date.new(2025, 11, 15))
     get admin_invoice_url(@balance)
     assert_response :success
-    assert_match "Arrhes réglées le", response.body
-    assert_match "Solde à régler à J-10", response.body
+    assert_match "réglées le 15 novembre 2025", response.body
+    assert_match "Solde à régler au plus tard le", response.body
   end
 
-  test "show on the balance invoice shows arrhes 0 € when deposit is not paid yet" do
+  test "show on the balance invoice deducts the invoiced deposit even when not paid yet" do
     get admin_invoice_url(@balance)
     assert_response :success
-    # Ligne « Arrhes réglées » présente avec 0 € tant que les arrhes ne sont pas reçues.
-    assert_select "td", text: "Arrhes réglées"
-    assert_match "Solde à régler à J-10", response.body
+    assert_select "td", text: /Arrhes facturées.*en attente de règlement/m
+    assert_match "−#{ApplicationController.helpers.money(@deposit.amount_cents)}", response.body
   end
 
   test "archive button appears only when both invoices are paid and locks editing" do
