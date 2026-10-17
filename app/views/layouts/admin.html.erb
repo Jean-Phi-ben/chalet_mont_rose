@@ -41,16 +41,30 @@
           <%= link_to "Paramètres", admin_booking_setting_path, class: "hover:text-stone-900 transition" %>
         </nav>
 
-        <%# Actions de droite — visibles à partir de lg %>
-        <div class="hidden lg:flex items-center gap-4 shrink-0">
-          <%= link_to root_path, class: "text-xs text-stone-400 hover:text-stone-700 transition" do %>
-            <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Voir le site
+        <%# Actions de droite — visibles à partir de lg : retour au site + même menu que le site public %>
+        <div class="hidden lg:flex items-center gap-2 shrink-0">
+          <%# Texte masqué entre lg et xl : la barre (logo + 7 liens) est déjà pleine. %>
+          <%= link_to root_path, title: "Voir le site", aria: { label: "Voir le site" },
+                class: "inline-flex items-center gap-2 border border-stone-300 rounded-full px-3 xl:px-4 h-9 text-xs uppercase tracking-widest text-stone-700 hover:bg-stone-100 hover:text-stone-900 transition" do %>
+            <i class="fa-solid fa-house"></i><span class="hidden xl:inline">Voir le site</span>
           <% end %>
-          <% if authenticated? %>
-            <%= button_to session_path, method: :delete, class: "text-xs text-red-600 hover:text-red-700 transition" do %>
-              <i class="fa-solid fa-arrow-right-from-bracket mr-1"></i> Déconnexion
-            <% end %>
-          <% end %>
+
+          <div class="relative" data-controller="usermenu"
+               data-action="click@window->usermenu#closeOnOutside keydown.esc@window->usermenu#close">
+            <button type="button"
+                    class="inline-flex items-center justify-center gap-2 rounded-full px-3 h-10 text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition"
+                    aria-haspopup="menu" aria-expanded="false" aria-label="Menu"
+                    data-usermenu-target="button"
+                    data-action="click->usermenu#toggle">
+              <i class="fa-solid fa-house-chimney text-lg"></i>
+              <i class="fa-solid fa-chevron-down text-xs opacity-60 transition-transform" data-usermenu-target="chevron"></i>
+            </button>
+
+            <div class="hidden absolute right-0 mt-2 w-64 max-h-[80vh] overflow-y-auto bg-white shadow-lg rounded-xl border border-stone-100 p-2 z-50"
+                 role="menu" data-usermenu-target="menu">
+              <%= render "shared/main_menu" %>
+            </div>
+          </div>
         </div>
 
         <%# Burger — visible en dessous de lg %>
@@ -71,6 +85,9 @@
            data-navbar-target="menu"
            class="hidden lg:hidden border-t border-stone-200 bg-white">
         <nav class="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex flex-col gap-1 text-sm">
+          <%= link_to root_path, class: "flex items-center justify-center gap-2 mb-2 py-3 rounded-xl bg-stone-900 text-white text-xs uppercase tracking-widest hover:bg-stone-800 transition" do %>
+            <i class="fa-solid fa-house"></i> Retour au site
+          <% end %>
           <% mobile_link_class = "block py-2.5 px-3 rounded-lg text-stone-700 hover:bg-stone-100 transition" %>
           <%= link_to "Tableau de bord", admin_root_path,           class: mobile_link_class %>
           <%= link_to "Réservations",    admin_bookings_path,       class: mobile_link_class %>
@@ -81,8 +98,8 @@
           <%= link_to "Paramètres",      admin_booking_setting_path, class: mobile_link_class %>
 
           <div class="border-t border-stone-200 mt-2 pt-3 flex items-center justify-between gap-3">
-            <%= link_to root_path, class: "text-xs text-stone-500 hover:text-stone-900 transition" do %>
-              <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Voir le site
+            <%= link_to root_path(anchor: "disponibilites"), class: "text-xs text-stone-500 hover:text-stone-900 transition" do %>
+              <i class="fa-solid fa-calendar-days mr-1"></i> Disponibilités &amp; tarifs
             <% end %>
             <% if authenticated? %>
               <%= button_to session_path, method: :delete, class: "text-xs text-red-600 hover:text-red-700 transition" do %>
@@ -93,6 +110,19 @@
         </nav>
       </div>
     </header>
+
+    <% if (missing = missing_company_settings).any? %>
+      <div class="bg-red-600 text-white" role="alert" data-company-settings-alert>
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 text-sm flex items-start gap-3">
+          <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+          <p>
+            <strong>Coordonnées de la société manquantes sur le serveur :</strong> <%= missing.to_sentence %>.
+            Les factures et contrats générés maintenant seront incomplets (RIB ou mentions légales absents).
+            À renseigner dans les variables <code class="font-mono text-xs">COMPANY_*</code> du serveur.
+          </p>
+        </div>
+      </div>
+    <% end %>
 
     <%= render "shared/flashes" %>
 
