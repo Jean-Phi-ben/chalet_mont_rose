@@ -97,6 +97,27 @@ class AccountFlowTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", account_invoice_path(Invoice.last)       # lien téléchargement facture
   end
 
+  test "le tableau de bord indique si chaque facture est payée, avec date de paiement ou échéance" do
+    travel_to Date.new(2026, 5, 1) do
+      user = users(:one)
+      booking = Booking.create!(
+        check_in: Date.new(2026, 6, 6), check_out: Date.new(2026, 6, 13),
+        guests_count: 2, first_name: "Client", last_name: "Test",
+        email: user.email_address, total_price_cents: 310_000, deposit_cents: 93_000,
+        status: :confirmed
+      )
+      deposit = booking.invoices.create!(kind: :deposit, amount_cents: 93_000, issued_on: Date.new(2026, 4, 20))
+      deposit.mark_received!(on: Date.new(2026, 4, 22))
+      booking.invoices.create!(kind: :balance, amount_cents: 217_000, issued_on: Date.new(2026, 4, 20))
+
+      sign_in_as(user)
+      get account_root_path
+
+      assert_select "[data-invoice-status=paid]", text: /Payée le 22 avril 2026/
+      assert_select "[data-invoice-status=awaiting]", text: /au plus tard le 27 mai 2026/  # J-10 du 6 juin
+    end
+  end
+
   test "menu navbar : socle public toujours ; + espace client si connecté ; + Administration si admin" do
     # Visiteur non connecté : socle grand public + connexion, aucune catégorie admin.
     get root_path

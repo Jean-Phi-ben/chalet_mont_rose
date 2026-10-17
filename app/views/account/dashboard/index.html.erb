@@ -57,14 +57,29 @@
             <div>
               <p class="text-[11px] uppercase tracking-widest text-stone-400 mb-2">Factures</p>
               <% if booking.invoices.any? %>
-                <ul class="space-y-1.5">
+                <ul class="space-y-3">
                   <% booking.invoices.order(:created_at).each do |invoice| %>
-                    <li class="text-sm flex items-center justify-between gap-3">
-                      <span class="text-stone-600"><%= invoice.label %> — <%= money(invoice.amount_cents) %></span>
-                      <% if invoice.pdf.attached? %>
-                        <%= link_to account_invoice_path(invoice), class: "text-stone-700 hover:text-stone-900" do %>
-                          <i class="fa-solid fa-download"></i> PDF
+                    <li class="text-sm" data-invoice-status="<%= invoice.payment_received? ? "paid" : (invoice.overdue? ? "overdue" : "awaiting") %>">
+                      <div class="flex items-center justify-between gap-3">
+                        <span class="text-stone-600"><%= invoice.label %> — <%= money(invoice.amount_cents) %></span>
+                        <% if invoice.pdf.attached? %>
+                          <%= link_to account_invoice_path(invoice), class: "text-stone-700 hover:text-stone-900 shrink-0" do %>
+                            <i class="fa-solid fa-download"></i> PDF
+                          <% end %>
                         <% end %>
+                      </div>
+                      <% if invoice.payment_received? %>
+                        <p class="text-xs text-emerald-700 flex items-center gap-1.5 mt-0.5">
+                          <i class="fa-solid fa-circle-check"></i> Payée le <%= fr_date(invoice.received_on) %>
+                        </p>
+                      <% elsif invoice.overdue? %>
+                        <p class="text-xs text-red-700 flex items-center gap-1.5 mt-0.5">
+                          <i class="fa-solid fa-circle-exclamation"></i> Non payée — échéance dépassée (<%= fr_date(invoice.due_on) %>)
+                        </p>
+                      <% else %>
+                        <p class="text-xs text-amber-700 flex items-center gap-1.5 mt-0.5">
+                          <i class="fa-regular fa-clock"></i> Non payée — à régler au plus tard le <%= fr_date(invoice.due_on) %>
+                        </p>
                       <% end %>
                     </li>
                   <% end %>

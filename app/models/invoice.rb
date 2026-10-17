@@ -7,6 +7,10 @@ class Invoice < ApplicationRecord
   enum :kind,   { deposit: 0, balance: 1 }, prefix: :kind
   enum :status, { awaiting: 0, received: 1 }, prefix: :payment
 
+  # Délais de règlement (repris sur le PDF et dans l'espace client).
+  DEPOSIT_DUE_DAYS = 7   # arrhes à régler dans les 7 jours suivant l'émission
+  BALANCE_DUE_DAYS = 10  # solde dû J-10 du séjour
+
   validates :number,       presence: true, uniqueness: true
   validates :issued_on,    presence: true
   validates :amount_cents, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
@@ -14,6 +18,8 @@ class Invoice < ApplicationRecord
 
   before_validation :assign_issued_on, on: :create
   before_validation :assign_number,    on: :create
+  # Une facture payée a toujours une date de paiement (ex. statut changé depuis l'admin sans date).
+  before_save -> { self.received_on ||= Date.current }, if: :payment_received?
 
   # Si le statut de la facture d'arrhes change, on resynchronise le montant du solde.
   after_save_commit :resync_balance_amount, if: -> { kind_deposit? && saved_change_to_status? }
@@ -40,6 +46,15 @@ class Invoice < ApplicationRecord
 
   def label
     kind_deposit? ? "Arrhes" : "Solde"
+  end
+
+  # Date limite de règlement : arrhes à J+7 de l'émission, solde à J-10 de l'arrivée.
+  def due_on
+    kind_deposit? ? issued_on + DEPOSIT_DUE_DAYS : booking.check_in - BALANCE_DUE_DAYS
+  end
+
+  def overdue?(today = Date.current)
+    payment_awaiting? && due_on < today
   end
 
   def mark_received!(on: Date.current)

@@ -17,10 +17,6 @@ class InvoicePdf
   STONE_500 = "78716c"
   STONE_300 = "d6d3d1"
 
-  # Délais de règlement.
-  DEPOSIT_DUE_DAYS = 7   # arrhes à régler dans les 7 jours suivant l'émission
-  BALANCE_DUE_DAYS = 10  # solde dû J-10 du séjour (à régler au plus tard à cette date)
-
   def self.render(invoice)
     new(invoice).render
   end
@@ -191,11 +187,9 @@ class InvoicePdf
   def payment_terms
     @doc.font_size 10
     if @invoice.kind_deposit?
-      due = (@invoice.issued_on + DEPOSIT_DUE_DAYS).then { |d| fr_date(d) }
-      @doc.text "<b>À régler au plus tard le #{due}</b> par virement bancaire (RIB ci-dessous).", inline_format: true
+      @doc.text "<b>À régler au plus tard le #{fr_date(@invoice.due_on)}</b> par virement bancaire (RIB ci-dessous).", inline_format: true
     else
-      due_date = @booking.check_in - BALANCE_DUE_DAYS
-      @doc.text "<b>Solde à régler au plus tard le #{fr_date(due_date)}</b> (10 jours avant l'arrivée) par virement bancaire.", inline_format: true
+      @doc.text "<b>Solde à régler au plus tard le #{fr_date(@invoice.due_on)}</b> (#{Invoice::BALANCE_DUE_DAYS} jours avant l'arrivée) par virement bancaire.", inline_format: true
     end
     @doc.move_down 14
   end

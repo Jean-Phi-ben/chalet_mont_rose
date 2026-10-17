@@ -51,6 +51,28 @@ class InvoiceTest < ActiveSupport::TestCase
     assert_equal "CMR-#{year}-0002", numbers.last
   end
 
+  test "due_on: deposit 7 days after issue, balance 10 days before arrival" do
+    deposit = @booking.invoices.create!(kind: :deposit, amount_cents: 66_000, issued_on: Date.new(2025, 11, 20))
+    balance = @booking.invoices.create!(kind: :balance, amount_cents: 248_560, issued_on: Date.new(2025, 11, 20))
+
+    assert_equal Date.new(2025, 11, 27), deposit.due_on
+    assert_equal Date.new(2025, 12, 24), balance.due_on  # arrivée le 3 janvier 2026
+
+    assert deposit.overdue?(Date.new(2025, 11, 28))
+    assert_not deposit.overdue?(Date.new(2025, 11, 27))
+    deposit.mark_received!(on: Date.new(2025, 11, 25))
+    assert_not deposit.overdue?(Date.new(2025, 12, 31))
+  end
+
+  test "a paid invoice always gets a payment date" do
+    invoice = @booking.invoices.create!(kind: :deposit, amount_cents: 66_000)
+    invoice.update!(status: :received)   # comme depuis l'admin, sans saisir de date
+    assert_equal Date.current, invoice.received_on
+
+    invoice.update!(received_on: Date.new(2025, 12, 2))
+    assert_equal Date.new(2025, 12, 2), invoice.reload.received_on  # une date saisie n'est pas écrasée
+  end
+
   test "mark_received! updates status and date" do
     deposit, balance = Invoice.from_booking(@booking)
     deposit.save!
