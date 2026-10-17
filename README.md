@@ -211,6 +211,7 @@ ssh jeanphi@100.73.93.75          # MagicDNS : jpserver.tail3db033.ts.net
 ```
 
 - **Application** : conteneur Docker `chalet_mont_rose` en `--network host`, écoutant sur le **port 8000** (Thruster → Puma), `--restart unless-stopped`.
+- **Jobs** : **Solid Queue** tourne dans Puma (`plugin :solid_queue` dès que `RAILS_ENV=production`, cf. [config/puma.rb](config/puma.rb)) sur la base `chalet_mont_rose_production_queue` (schéma `db/queue_schema.rb`, créée par `db:prepare`). Les tâches planifiées sont dans [config/recurring.yml](config/recurring.yml) (rappel de solde quotidien). Contrôle : `docker exec chalet_mont_rose bin/rails runner 'puts SolidQueue::RecurringTask.count'`.
 - **Base de données** : PostgreSQL **sur l'hôte** (`127.0.0.1:5432`) — bases `chalet_mont_rose_production` (+ `_cache` / `_queue` / `_cable`). La base n'est pas dans le conteneur : un redéploiement ne touche pas aux données.
 - **Exposition publique** : tunnel **Cloudflare** (`cloudflared`) → `chaletmontrose.fr` et `www.chaletmontrose.fr` vers `localhost:8000`. Aucun port entrant ouvert sur la machine.
 - **Secrets** : `~/.chalet_env` (mode `600`), chargé via `--env-file` (mot de passe DB, `RAILS_MASTER_KEY`, identifiants Gmail SMTP, `MAILER_FROM`).
