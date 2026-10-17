@@ -6,7 +6,7 @@ class Admin::InvoicesControllerTest < ActionDispatch::IntegrationTest
 
   setup do
     travel_to Date.new(2025, 12, 1)
-    @admin = User.create!(email_address: "admin@example.com", password: "password", admin: true)
+    @admin = User.create!(email_address: "admin@example.com", password: "motdepasse", admin: true)
     sign_in_as(@admin)
 
     @booking = Booking.create!(

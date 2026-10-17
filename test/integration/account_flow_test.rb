@@ -11,29 +11,114 @@ class AccountFlowTest < ActionDispatch::IntegrationTest
     assert_no_match %r{/admin}, response.body
   end
 
-  test "inscription : crée un compte client non-admin, ouvre une session et redirige vers l'espace" do
+  test "inscription : crée un compte non vérifié, envoie le lien, et l'espace reste vide jusqu'au clic" do
     assert_difference -> { User.count } => 1 do
       post signup_path, params: { user: {
-        email_address: "Nouveau@Example.com", password: "secret123", password_confirmation: "secret123"
+        email_address: "Nouveau@Example.com", password: "secret12345", password_confirmation: "secret12345"
       } }
     end
-    assert_redirected_to account_root_path
+    assert_redirected_to verification_pending_path
     user = User.find_by(email_address: "nouveau@example.com")
     assert user, "le compte doit être créé (email normalisé)"
     assert_not user.admin?, "un compte créé publiquement n'est jamais admin"
+    assert_not user.verified?
+    assert_enqueued_email_with UserMailer, :verification, args: [ user ]
+
+    # Connecté mais non vérifié : l'espace n'affiche rien d'autre que l'invitation à vérifier.
+    Booking.create!(check_in: Date.new(2026, 6, 6), check_out: Date.new(2026, 6, 13), guests_count: 2,
+                    first_name: "Vrai", last_name: "Client", email: "nouveau@example.com",
+                    total_price_cents: 310_000, deposit_cents: 93_000, status: :confirmed)
+    get account_root_path
+    assert_response :success
+    assert_select "[data-email-verification-pending]"
+    assert_no_match "Vrai Client", response.body
+    assert_no_match "310", response.body
+
+    # Clic sur le lien reçu → vérifié → l'espace montre la réservation.
+    get email_verification_path(user.generate_token_for(:email_verification))
+    assert_redirected_to account_root_path
+    assert user.reload.verified?
+    get account_root_path
+    assert_select "[data-email-verification-pending]", false
+    assert_match "6 juin 2026", response.body
+  end
+
+  test "un lien de vérification périmé ou altéré est refusé" do
+    get email_verification_path("jeton-bidon")
+    assert_redirected_to login_path
+    assert_match "invalide ou a expiré", flash[:alert]
+  end
+
+  test "inscription refusée avec une adresse administratrice" do
+    assert_no_difference -> { User.count } do
+      post signup_path, params: { user: {
+        email_address: AdminAccess.emails.first || "admin@prestige.com",
+        password: "secret12345", password_confirmation: "secret12345"
+      } }
+    end
+    assert_response :unprocessable_entity
+    assert_match "réservée", response.body
+  end
+
+  test "inscription refusée avec un mot de passe trop court" do
+    assert_no_difference -> { User.count } do
+      post signup_path, params: { user: { email_address: "x@example.com", password: "court", password_confirmation: "court" } }
+    end
+    assert_response :unprocessable_entity
+  end
+
+  test "la connexion Google reprend un compte créé par mot de passe mais jamais vérifié" do
+    # Un tiers a pré-enregistré l'adresse de Nina avec son propre mot de passe.
+    squatter = User.create!(email_address: "nina@example.com", password: "mdp-du-tiers-123")
+    squatter.sessions.create!
+    assert_not squatter.verified?
+
+    OmniAuth.config.test_mode = true
+    OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new(
+      provider: "google_oauth2",
+      info: { email: "Nina@Example.com", first_name: "Nina", last_name: "Test" },
+      extra: { raw_info: { email_verified: true } }
+    )
+    assert_no_difference -> { User.count } do
+      get "/auth/google_oauth2/callback"
+    end
+    assert_redirected_to account_root_path
+
+    squatter.reload
+    assert squatter.verified?
+    assert_nil User.authenticate_by(email_address: "nina@example.com", password: "mdp-du-tiers-123"),
+               "le mot de passe du tiers ne fonctionne plus"
+    assert_equal 1, squatter.sessions.count, "les anciennes sessions sont coupées, seule la session Google reste"
+  ensure
+    OmniAuth.config.test_mode = false
+  end
+
+  test "la connexion Google est refusée si Google n'a pas vérifié l'adresse" do
+    OmniAuth.config.test_mode = true
+    OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new(
+      provider: "google_oauth2",
+      info: { email: "pas-verifie@example.com" },
+      extra: { raw_info: { email_verified: false } }
+    )
+    assert_no_difference -> { User.count } do
+      get "/auth/google_oauth2/callback"
+    end
+    assert_redirected_to login_path
+  ensure
+    OmniAuth.config.test_mode = false
   end
 
   test "inscription refusée si les mots de passe ne correspondent pas" do
     assert_no_difference -> { User.count } do
       post signup_path, params: { user: {
-        email_address: "x@example.com", password: "secret123", password_confirmation: "different"
+        email_address: "x@example.com", password: "secret12345", password_confirmation: "different"
       } }
     end
     assert_response :unprocessable_entity
   end
 
   test "connexion email/mot de passe d'un client mène à l'espace" do
-    post session_path, params: { email_address: users(:one).email_address, password: "password" }
+    post session_path, params: { email_address: users(:one).email_address, password: "motdepasse" }
     assert_redirected_to account_root_path
     assert cookies[:session_id]
   end
@@ -47,7 +132,8 @@ class AccountFlowTest < ActionDispatch::IntegrationTest
     OmniAuth.config.test_mode = true
     OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new(
       provider: "google_oauth2",
-      info: { email: "Nina@Example.com", first_name: "Nina", last_name: "Test" }
+      info: { email: "Nina@Example.com", first_name: "Nina", last_name: "Test" },
+      extra: { raw_info: { email_verified: true } }
     )
 
     assert_difference -> { User.count } => 1, -> { Client.count } => 1 do
@@ -57,8 +143,9 @@ class AccountFlowTest < ActionDispatch::IntegrationTest
     assert_redirected_to account_root_path
     user = User.find_by(email_address: "nina@example.com")
     assert user, "le User doit être créé (email normalisé)"
+    assert user.verified?, "une adresse vérifiée par Google est vérifiée d'office"
     assert_not user.admin?, "un client connecté via Google ne doit jamais être admin"
-    assert Client.exists?(["lower(email) = ?", "nina@example.com"])
+    assert Client.exists?([ "lower(email) = ?", "nina@example.com" ])
   ensure
     OmniAuth.config.test_mode = false
   end
@@ -149,7 +236,7 @@ class AccountFlowTest < ActionDispatch::IntegrationTest
 
     # Admin (email dans ADMIN_EMAILS) : + catégorie Administration et liens admin.
     sign_out
-    admin = User.create!(email_address: "admin@example.com", password: "password")
+    admin = User.create!(email_address: "admin@example.com", password: "motdepasse")
     sign_in_as(admin)
     get root_path
     assert_match "Administration", response.body
@@ -158,7 +245,7 @@ class AccountFlowTest < ActionDispatch::IntegrationTest
   end
 
   test "aucun lien vers l'admin n'apparaît dans l'espace client, même pour un admin connecté" do
-    admin = User.create!(email_address: "patron@example.com", password: "password", admin: true)
+    admin = User.create!(email_address: "patron@example.com", password: "motdepasse", admin: true)
     sign_in_as(admin)
 
     get account_root_path

@@ -1,0 +1,12 @@
+Réinitialisation de votre mot de passe
+=====================================
+
+Bonjour,
+
+Vous avez demandé à réinitialiser le mot de passe de votre espace client Chalet Mont Rose.
+Pour en choisir un nouveau, ouvrez ce lien :
+
+<%= edit_password_url(@user.password_reset_token) %>
+
+Ce lien expire dans <%= distance_of_time_in_words(0, @user.password_reset_token_expires_in) %>.
+Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet email : votre mot de passe reste inchangé.

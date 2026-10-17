@@ -33,6 +33,10 @@ Rails.application.routes.draw do
   get  "connexion",               to: "sessions/omniauth#new",     as: :login
   get  "inscription",             to: "registrations#new",         as: :signup
   post "inscription",             to: "registrations#create"
+  # Vérification de l'adresse email après inscription (page d'attente, renvoi, lien reçu).
+  get  "inscription/verification",  to: "email_verifications#pending", as: :verification_pending
+  post "inscription/verification",  to: "email_verifications#create"
+  get  "verification-email/:token", to: "email_verifications#show",    as: :email_verification
   get  "auth/:provider/callback", to: "sessions/omniauth#create"
   match "auth/failure",           to: "sessions/omniauth#failure", via: %i[get post]
 

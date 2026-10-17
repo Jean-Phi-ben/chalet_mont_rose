@@ -4,8 +4,17 @@
 # même si l'utilisateur connecté est administrateur.
 class Account::BaseController < ApplicationController
   layout "account"
+  before_action :require_verified_email
 
   private
+
+  # Tant que l'adresse n'est pas prouvée, aucune donnée rattachée à cet email
+  # n'est montrée (réservations, factures, profil).
+  def require_verified_email
+    return if Current.user.verified?
+
+    render "account/unverified"
+  end
 
   def current_email
     Current.user.email_address.to_s.downcase

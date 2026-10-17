@@ -1,9 +1,11 @@
-<% password_digest = BCrypt::Password.create("password") %>
+<% password_digest = BCrypt::Password.create("motdepasse") %>
 
 one:
   email_address: one@example.com
   password_digest: <%= password_digest %>
+  email_verified_at: 2026-01-01 10:00:00
 
 two:
   email_address: two@example.com
   password_digest: <%= password_digest %>
+  email_verified_at: 2026-01-01 10:00:00

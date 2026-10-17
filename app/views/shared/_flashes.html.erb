@@ -1,14 +1,17 @@
-<% if notice %>
-    <div class="alert alert-info alert-dismissible fade show m-1" role="alert">
-      <%= notice %>
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
-      </button>
-    </div>
-  <% end %>
-  <% if alert %>
-    <div class="alert alert-warning alert-dismissible fade show m-1" role="alert">
-      <%= alert %>
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
-      </button>
-    </div>
-  <% end %>
+<%# Bannières de message : notice (succès) et alert (erreur), fermables. %>
+<% messages = [ [ notice, :notice ], [ alert, :alert ] ].reject { |text, _| text.blank? } %>
+<% if messages.any? %>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 pt-4 space-y-2">
+    <% messages.each do |text, kind| %>
+      <% classes = kind == :alert ? "bg-amber-50 border-amber-200 text-amber-800" : "bg-emerald-50 border-emerald-200 text-emerald-800" %>
+      <div data-controller="flash" role="<%= kind == :alert ? "alert" : "status" %>"
+           class="flex items-start justify-between gap-4 border rounded-xl px-4 py-3 text-sm <%= classes %>">
+        <p><%= text %></p>
+        <button type="button" data-action="flash#dismiss" aria-label="Fermer"
+                class="shrink-0 -mr-1 -mt-0.5 w-7 h-7 rounded-full inline-flex items-center justify-center hover:bg-black/5 transition">
+          <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+        </button>
+      </div>
+    <% end %>
+  </div>
+<% end %>

@@ -9,7 +9,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create with valid credentials" do
-    post session_path, params: { email_address: @user.email_address, password: "password" }
+    post session_path, params: { email_address: @user.email_address, password: "motdepasse" }
 
     assert_redirected_to account_root_path
     assert cookies[:session_id]
@@ -20,6 +20,12 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to login_path
     assert_nil cookies[:session_id]
+
+    # La bannière d'alerte est bien rendue, avec son bouton de fermeture.
+    follow_redirect!
+    assert_select "[role=alert]", text: /incorrect/ do
+      assert_select "button[aria-label=Fermer][data-action='flash#dismiss']"
+    end
   end
 
   test "destroy" do

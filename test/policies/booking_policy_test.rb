@@ -2,7 +2,7 @@ require "test_helper"
 
 class BookingPolicyTest < ActiveSupport::TestCase
   setup do
-    @admin = User.create!(email_address: "admin@example.com", password: "password")
+    @admin = User.create!(email_address: "admin@example.com", password: "motdepasse")
     @booking = Booking.create!(
       check_in: Date.new(2026, 1, 3), check_out: Date.new(2026, 1, 10),
       first_name: "Jean", last_name: "Dupont", email: "j@example.com",
