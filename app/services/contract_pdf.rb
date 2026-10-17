@@ -37,15 +37,15 @@ class ContractPdf
     @doc.text "Contrat de location saisonnière"
     @doc.font "Helvetica", style: :normal, size: 9
     @doc.fill_color STONE_500
-    @doc.text "Version #{ContractTemplate::VERSION} · Émis le #{fr(@contract.sent_at || Time.current)}"
+    @doc.text "Version #{@contract.template_version.presence || ContractTemplate::VERSION} · Émis le #{fr(@contract.sent_at || Time.current)}"
     @doc.fill_color STONE_900
     @doc.move_down 16
   end
 
   def contract_body
     @doc.font "Helvetica", size: 10
-    text = ContractTemplate.canonical_text(@booking, @contract)
-    text.split("\n").each do |line|
+    # Contrat signé : texte gelé à la signature (cf. Contract#contract_text).
+    @contract.contract_text.split("\n").each do |line|
       if line =~ /^\d+\.\s/
         @doc.move_down 6
         @doc.font "Helvetica", style: :bold, size: 11

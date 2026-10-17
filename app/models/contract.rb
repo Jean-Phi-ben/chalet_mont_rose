@@ -78,6 +78,18 @@ class Contract < ApplicationRecord
     "#{signer_first_name} #{signer_last_name}".strip
   end
 
+  # Texte du contrat à afficher / imprimer. Pour un contrat signé, c'est le texte
+  # gelé à la signature (jamais recalculé) ; avant signature, le texte courant.
+  def contract_text
+    canonical_text.presence || ContractTemplate.canonical_text(booking, self)
+  end
+
+  # Le texte gelé reproduit-il exactement le hash enregistré à la signature ?
+  def integrity_ok?
+    status_signed? && canonical_text.present? && document_hash.present? &&
+      compute_document_hash(canonical_text) == document_hash
+  end
+
   private
 
   def status_signed_was_persisted?

@@ -109,6 +109,22 @@ class ReservationsSigningTest < ActionDispatch::IntegrationTest
     assert_nil @contract.otp_digest
     # PDF généré.
     assert @contract.signed_pdf.attached?
+    # Texte haché gelé en base, avec la version du template.
+    assert_equal ContractTemplate::VERSION, @contract.template_version
+    assert_equal @contract.compute_document_hash(@contract.canonical_text), @contract.document_hash
+    assert @contract.integrity_ok?
+  end
+
+  test "once signed, the frozen text survives later changes to the booking" do
+    code = @contract.generate_otp!
+    post sign_contract_reservation_url(@booking.token),
+         params: { otp_code: code, signature_image: FAKE_PNG_BIG, accepted: "1" }
+    @contract.reload
+    frozen = @contract.canonical_text
+
+    @booking.update_columns(total_price_cents: 999_999, deposit_cents: 1)
+    assert_equal frozen, @contract.reload.contract_text
+    assert @contract.integrity_ok?
   end
 
   test "POST sign_contract refuses if the checkbox isn't ticked" do

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_17_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_18_090100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -108,6 +108,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_120000) do
 
   create_table "contracts", force: :cascade do |t|
     t.bigint "booking_id", null: false
+    t.text "canonical_text"
     t.datetime "created_at", null: false
     t.string "document_hash"
     t.integer "otp_attempts", default: 0, null: false
@@ -124,6 +125,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_120000) do
     t.string "signer_last_name"
     t.string "signer_phone"
     t.integer "status", default: 0, null: false
+    t.string "template_version"
     t.string "token", default: "", null: false
     t.datetime "updated_at", null: false
     t.index ["booking_id"], name: "index_contracts_on_booking_id", unique: true

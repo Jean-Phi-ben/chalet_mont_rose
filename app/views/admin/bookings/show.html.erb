@@ -87,6 +87,33 @@
       </div>
     <% end %>
 
+    <% if (contract = @booking.contract) %>
+      <div class="border-t border-stone-100 pt-5" data-contract-status="<%= contract.status %>">
+        <p class="text-[10px] text-stone-400 uppercase tracking-widest mb-2">Contrat</p>
+        <% if contract.status_signed? %>
+          <p class="text-sm text-emerald-700 flex flex-wrap items-center gap-x-2 gap-y-1">
+            <i class="fa-solid fa-circle-check"></i>
+            Signé le <%= fr_date_full(contract.signed_at.to_date) %> par <%= contract.signer_full_name %>
+            <% if contract.integrity_ok? %>
+              <span class="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200" title="Le texte gelé à la signature reproduit l'empreinte SHA-256 enregistrée">Intégrité vérifiée</span>
+            <% else %>
+              <span class="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full border bg-amber-50 text-amber-700 border-amber-200" title="Texte d'origine non reconstituable : le PDF signé fait foi">Intégrité non vérifiable</span>
+            <% end %>
+          </p>
+          <% if contract.signed_pdf.attached? %>
+            <%= link_to rails_blob_path(contract.signed_pdf, disposition: "attachment"),
+                  class: "inline-flex items-center gap-1.5 mt-2 text-xs text-stone-700 underline hover:text-stone-900" do %>
+              <i class="fa-solid fa-file-arrow-down"></i> Télécharger le contrat signé
+            <% end %>
+          <% end %>
+        <% elsif contract.status_sent? %>
+          <p class="text-sm text-amber-700"><i class="fa-regular fa-file-signature mr-1"></i> Envoyé le <%= fr_date(contract.sent_at&.to_date) %>, en attente de signature</p>
+        <% else %>
+          <p class="text-sm text-stone-500">Statut : <%= contract.status %></p>
+        <% end %>
+      </div>
+    <% end %>
+
     <div class="border-t border-stone-100 pt-5 text-xs text-stone-400">
       <p>Reçue le <%= l(@booking.created_at, format: :short) rescue @booking.created_at.to_s %> · Suivi client : <%= link_to reservation_path(@booking.token), reservation_path(@booking.token), class: "text-stone-600 hover:text-stone-900 underline", target: "_blank" %></p>
     </div>

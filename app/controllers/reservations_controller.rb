@@ -88,6 +88,9 @@ class ReservationsController < ApplicationController
       return reject(:otp_code, @contract.otp_locked? ? "Trop de tentatives, contrat verrouillé." : "Code OTP invalide ou expiré.")
     end
 
+    # Le texte haché est gelé en base avec le contrat : il ne sera plus jamais
+    # recalculé (template, locale ou réservation peuvent changer ensuite).
+    canonical_text = ContractTemplate.canonical_text(@booking, @contract)
     Contract.transaction do
       @contract.update_columns(
         status:            Contract.statuses[:signed],
@@ -95,12 +98,12 @@ class ReservationsController < ApplicationController
         signed_ip:         request.remote_ip,
         signed_user_agent: request.user_agent.to_s[0, 500],
         signature_image:   image,
+        canonical_text:    canonical_text,
+        template_version:  ContractTemplate::VERSION,
         otp_digest:        nil,
         otp_sent_at:       nil
       )
-      canonical_text = ContractTemplate.canonical_text(@booking, @contract)
-      hash = @contract.compute_document_hash(canonical_text)
-      @contract.update_columns(document_hash: hash)
+      @contract.update_columns(document_hash: @contract.compute_document_hash(canonical_text))
     end
 
     GenerateSignedContractPdfJob.perform_now(@contract)

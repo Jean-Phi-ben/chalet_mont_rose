@@ -374,4 +374,22 @@ class Admin::BookingsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_equal Date.new(2026, 1, 17), other.reload.check_in
   end
+
+  test "show displays the contract block with the integrity check" do
+    SendContractJob.perform_now(@booking)
+    get admin_booking_url(@booking)
+    assert_select "[data-contract-status=sent]", text: /en attente de signature/
+
+    contract = @booking.reload.contract
+    text = ContractTemplate.canonical_text(@booking, contract)
+    contract.update_columns(status: Contract.statuses[:signed], signed_at: Time.current,
+                            signed_ip: "1.2.3.4", signed_user_agent: "UA", canonical_text: text)
+    contract.update_columns(document_hash: contract.compute_document_hash(text))
+    get admin_booking_url(@booking)
+    assert_select "[data-contract-status=signed]", text: /Intégrité vérifiée/
+
+    contract.update_columns(canonical_text: nil)
+    get admin_booking_url(@booking)
+    assert_select "[data-contract-status=signed]", text: /Intégrité non vérifiable/
+  end
 end

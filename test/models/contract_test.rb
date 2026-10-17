@@ -59,6 +59,27 @@ class ContractTest < ActiveSupport::TestCase
     refute_equal h1, h3, "texte différent → hash différent"
   end
 
+  test "contract_text : texte courant avant signature, texte gelé après" do
+    assert_equal ContractTemplate.canonical_text(@booking, @contract), @contract.contract_text
+
+    @contract.update_columns(canonical_text: "TEXTE GELÉ", status: Contract.statuses[:signed])
+    assert_equal "TEXTE GELÉ", @contract.reload.contract_text
+  end
+
+  test "integrity_ok? : vrai si le texte gelé reproduit le hash, faux sinon" do
+    text = ContractTemplate.canonical_text(@booking, @contract)
+    @contract.update_columns(status: Contract.statuses[:signed], signed_at: Time.current,
+                             signed_ip: "1.2.3.4", signed_user_agent: "UA", canonical_text: text)
+    @contract.update_columns(document_hash: @contract.compute_document_hash(text))
+    assert @contract.reload.integrity_ok?
+
+    @contract.update_columns(canonical_text: text + " altéré")
+    assert_not @contract.reload.integrity_ok?
+
+    @contract.update_columns(canonical_text: nil)
+    assert_not @contract.reload.integrity_ok?, "sans texte gelé, l'intégrité n'est pas vérifiable"
+  end
+
   test "freezing : cannot modify a signed contract" do
     @contract.update!(
       status: :signed, signed_at: Time.current,
