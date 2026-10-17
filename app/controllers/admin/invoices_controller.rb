@@ -37,9 +37,15 @@ class Admin::InvoicesController < Admin::BaseController
     if @invoice.booking.invoicing_archived?
       return redirect_to admin_invoice_path(@invoice), alert: "Facturation archivée — paiement non modifiable."
     end
-    @invoice.mark_received!
-    GenerateInvoiceJob.perform_now(@invoice.booking)
-    redirect_to admin_invoice_path(@invoice), notice: "#{@invoice.label} marquée comme reçue."
+    # Date saisie dans la fenêtre de confirmation (aujourd'hui par défaut).
+    received_on = params.dig(:invoice, :received_on).presence || Date.current
+    if @invoice.update(status: :received, received_on: received_on)
+      GenerateInvoiceJob.perform_now(@invoice.booking)
+      redirect_to admin_invoice_path(@invoice),
+                  notice: "#{@invoice.label} marquée comme reçue le #{helpers.fr_date(@invoice.received_on)}."
+    else
+      redirect_to admin_invoice_path(@invoice), alert: @invoice.errors.full_messages.to_sentence
+    end
   end
 
   def mark_awaiting

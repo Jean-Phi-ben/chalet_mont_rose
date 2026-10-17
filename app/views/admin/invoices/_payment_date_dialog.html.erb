@@ -1,0 +1,40 @@
+<%# Bouton + fenêtre modale demandant la date du paiement d'une facture.
+    locals : invoice, url (PATCH), title, submit_label, trigger_label, trigger_class %>
+<div data-controller="dialog">
+  <button type="button" data-action="dialog#open" class="<%= trigger_class %>">
+    <%= trigger_label %>
+  </button>
+
+  <%# m-auto : le reset Tailwind supprime le centrage natif du <dialog>. %>
+  <dialog data-dialog-target="dialog" data-action="click->dialog#backdropClose"
+          aria-labelledby="payment-dialog-title-<%= invoice.id %>"
+          class="m-auto w-[min(92vw,24rem)] rounded-2xl bg-white p-0 shadow-2xl backdrop:bg-stone-900/50">
+    <%= form_with url: url, method: :patch, class: "p-6 space-y-5" do %>
+      <div>
+        <h2 id="payment-dialog-title-<%= invoice.id %>" class="text-lg font-serif text-stone-900"><%= title %></h2>
+        <p class="text-sm text-stone-500 mt-1">
+          <%= invoice.label %> <%= invoice.number %> · <%= money(invoice.amount_cents) %>
+        </p>
+        <p class="text-xs text-stone-400 mt-0.5">Facture du <%= fr_date(invoice.issued_on) %></p>
+      </div>
+
+      <div>
+        <label for="received_on_<%= invoice.id %>" class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Date du paiement</label>
+        <%= date_field_tag "invoice[received_on]", invoice.received_on || Date.current,
+              id: "received_on_#{invoice.id}", required: true, autofocus: true,
+              class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+      </div>
+
+      <div class="flex justify-end gap-2">
+        <button type="button" data-action="dialog#close"
+                class="px-4 py-2.5 rounded-xl text-xs uppercase tracking-widest text-stone-600 hover:bg-stone-100 transition">
+          Annuler
+        </button>
+        <button type="submit"
+                class="px-4 py-2.5 rounded-xl text-xs uppercase tracking-widest bg-stone-900 text-white hover:bg-stone-800 transition cursor-pointer">
+          <%= submit_label %>
+        </button>
+      </div>
+    <% end %>
+  </dialog>
+</div>

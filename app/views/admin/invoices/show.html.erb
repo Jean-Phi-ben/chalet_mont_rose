@@ -37,6 +37,16 @@
         <div>
           <p class="text-[10px] text-stone-400 uppercase tracking-widest"><%= invoice.label %></p>
           <p class="text-xs text-stone-500"><%= invoice.number %></p>
+          <p class="text-xs text-stone-500" data-issued-on>Facture du <%= fr_date(invoice.issued_on) %></p>
+          <% if invoice.payment_awaiting? %>
+            <p class="text-xs <%= invoice.overdue? ? "text-red-700 font-medium" : "text-amber-700" %>" data-due-on>
+              <% if invoice.overdue? %>
+                <i class="fa-solid fa-circle-exclamation mr-0.5"></i> Échéance dépassée : <%= fr_date(invoice.due_on) %>
+              <% else %>
+                À régler au plus tard le <%= fr_date(invoice.due_on) %>
+              <% end %>
+            </p>
+          <% end %>
         </div>
         <% chip_label = if invoice.payment_received?
                          invoice.kind_deposit? ? "Reçues" : "Reçu"
@@ -56,27 +66,31 @@
       <% end %>
 
       <% if invoice.payment_received? %>
-        <% unless archived %>
-          <%= form_with model: invoice, url: admin_invoice_path(invoice), method: :patch,
-                data: { controller: "autosubmit" }, class: "space-y-2" do |f| %>
-            <label class="block text-[10px] text-stone-400 uppercase tracking-widest">Date de réception</label>
-            <%= f.date_field :received_on, data: { action: "change->autosubmit#submit" },
-                  class: "w-full border border-stone-200 rounded-lg px-3 py-2 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition" %>
+        <div class="flex items-center justify-between gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3" data-payment-date>
+          <p class="text-sm text-emerald-800">
+            <i class="fa-solid fa-circle-check mr-1"></i> Payée le <strong><%= fr_date(invoice.received_on) %></strong>
+          </p>
+          <% unless archived %>
+            <%= render "admin/invoices/payment_date_dialog", invoice: invoice,
+                  url: admin_invoice_path(invoice),
+                  title: "Modifier la date du paiement", submit_label: "Enregistrer",
+                  trigger_label: tag.i(class: "fa-solid fa-pen mr-1") + "Modifier",
+                  trigger_class: "shrink-0 text-xs uppercase tracking-widest text-emerald-800 hover:text-emerald-950 underline-offset-2 hover:underline cursor-pointer" %>
           <% end %>
+        </div>
+        <% unless archived %>
           <%= button_to mark_awaiting_admin_invoice_path(invoice), method: :patch,
                 form: { data: { turbo_confirm: "Annuler la réception de cette facture ?" } },
                 class: "block w-full text-center text-xs text-stone-500 hover:text-rose-700 uppercase tracking-widest py-1 transition cursor-pointer" do %>
             <i class="fa-solid fa-rotate-left mr-1"></i> Annuler le paiement
           <% end %>
-        <% else %>
-          <p class="text-xs text-stone-500">Reçue le <%= fr_date(invoice.received_on) %></p>
         <% end %>
       <% elsif !archived %>
-        <%= button_to mark_received_admin_invoice_path(invoice), method: :patch,
-              form: { data: { turbo_confirm: "Marquer #{invoice.label.downcase} comme reçu·es ?" } },
-              class: "block w-full text-center bg-stone-900 text-white py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition cursor-pointer" do %>
-          <i class="fa-solid fa-check mr-1"></i> <%= invoice.label %> reçues
-        <% end %>
+        <%= render "admin/invoices/payment_date_dialog", invoice: invoice,
+              url: mark_received_admin_invoice_path(invoice),
+              title: "Confirmer le paiement", submit_label: "Confirmer le paiement",
+              trigger_label: tag.i(class: "fa-solid fa-check mr-1") + "#{invoice.label} reçues",
+              trigger_class: "block w-full text-center bg-stone-900 text-white py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition cursor-pointer" %>
       <% end %>
     </div>
   <% end %>

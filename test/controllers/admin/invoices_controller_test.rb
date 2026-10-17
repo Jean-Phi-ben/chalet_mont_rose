@@ -96,11 +96,43 @@ class Admin::InvoicesControllerTest < ActionDispatch::IntegrationTest
     assert_nil @deposit.received_on
   end
 
+  test "mark_received records the payment date chosen in the dialog" do
+    patch mark_received_admin_invoice_url(@deposit), params: { invoice: { received_on: "2025-11-28" } }
+    assert_redirected_to admin_invoice_path(@deposit)
+    assert_equal Date.new(2025, 11, 28), @deposit.reload.received_on
+    assert @deposit.payment_received?
+    assert_match "28 novembre 2025", flash[:notice]
+  end
+
+  test "mark_received accepts a payment date later than the invoice date, even after today" do
+    later = Date.current + 5
+    patch mark_received_admin_invoice_url(@deposit), params: { invoice: { received_on: later.iso8601 } }
+    assert_redirected_to admin_invoice_path(@deposit)
+    assert_equal later, @deposit.reload.received_on
+    assert @deposit.payment_received?
+  end
+
+  test "show: unpaid invoice opens a dialog prefilled with today; paid invoice shows its date with a Modifier dialog" do
+    get admin_invoice_url(@deposit)
+    assert_select "[data-issued-on]", text: "Facture du #{ApplicationController.helpers.fr_date(@deposit.issued_on)}"
+    assert_select "dialog input[type=date][max]", false
+    # Non payée : date limite affichée (arrhes J+7 de l'émission ; solde J-10 de l'arrivée).
+    assert_select "[data-due-on]", text: /au plus tard le #{ApplicationController.helpers.fr_date(@deposit.due_on)}/
+    assert_select "[data-due-on]", text: /au plus tard le 24 décembre 2025/
+    assert_select "dialog form[action=?] input[type=date][name='invoice[received_on]'][value=?]",
+                  mark_received_admin_invoice_path(@deposit), Date.current.iso8601
+
+    @deposit.mark_received!(on: Date.new(2025, 11, 28))
+    get admin_invoice_url(@deposit)
+    assert_select "[data-payment-date]", text: /Payée le 28 novembre 2025/
+    assert_select "dialog form[action=?] input[type=date][value=?]", admin_invoice_path(@deposit), "2025-11-28"
+  end
+
   test "update edits the received_on date" do
     @deposit.mark_received!
-    patch admin_invoice_url(@deposit), params: { invoice: { received_on: "2026-02-10" } }
+    patch admin_invoice_url(@deposit), params: { invoice: { received_on: "2025-11-10" } }
     assert_redirected_to admin_invoice_path(@deposit)
-    assert_equal Date.new(2026, 2, 10), @deposit.reload.received_on
+    assert_equal Date.new(2025, 11, 10), @deposit.reload.received_on
   end
 
   test "show displays the breakdown table with HT / quantity / TTC columns" do
@@ -130,7 +162,7 @@ class Admin::InvoicesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "show on the balance invoice always shows the arrhes line, negative when paid" do
-    @deposit.update!(status: :received, received_on: Date.new(2025, 12, 15))
+    @deposit.update!(status: :received, received_on: Date.new(2025, 11, 15))
     get admin_invoice_url(@balance)
     assert_response :success
     assert_match "Arrhes réglées le", response.body
