@@ -23,6 +23,8 @@ module ActiveSupport
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
 
-    # Add more helper methods to be used by all tests here...
+    # Cache mémoire vidé entre les tests : les compteurs de rate_limit ne doivent
+    # pas fuir d'un test à l'autre.
+    setup { Rails.cache.clear }
   end
 end

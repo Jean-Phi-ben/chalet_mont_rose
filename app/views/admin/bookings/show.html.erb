@@ -108,6 +108,18 @@
           <% end %>
         <% elsif contract.status_sent? %>
           <p class="text-sm text-amber-700"><i class="fa-regular fa-file-signature mr-1"></i> Envoyé le <%= fr_date(contract.sent_at&.to_date) %>, en attente de signature</p>
+          <% if contract.otp_locked? %>
+            <p class="text-sm text-red-700 mt-2" data-contract-locked>
+              <i class="fa-solid fa-lock mr-1"></i> Signature verrouillée : trop de codes faux ou de demandes de code.
+            </p>
+            <% if policy(@booking).unlock_contract? %>
+              <%= button_to unlock_contract_admin_booking_path(@booking), method: :patch,
+                    form: { data: { turbo_confirm: "Débloquer la signature ? Le client pourra redemander un code." } },
+                    class: "mt-2 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-widest border border-stone-300 text-stone-700 px-3 py-1.5 rounded-lg hover:bg-stone-50 transition cursor-pointer" do %>
+                <i class="fa-solid fa-unlock"></i> Débloquer la signature
+              <% end %>
+            <% end %>
+          <% end %>
         <% else %>
           <p class="text-sm text-stone-500">Statut : <%= contract.status %></p>
         <% end %>

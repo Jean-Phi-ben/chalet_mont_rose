@@ -1,7 +1,5 @@
 require "prawn"
 
-Prawn::Fonts::AFM.hide_m17n_warning = true
-
 # Génère le PDF du contrat signé. Le PDF comprend :
 #   - le texte du contrat (ContractTemplate.canonical_text)
 #   - le tracé de signature embarqué (image PNG décodée du base64)
@@ -19,6 +17,7 @@ class ContractPdf
     @contract = contract
     @booking  = contract.booking
     @doc      = Prawn::Document.new(margin: 50, page_size: "A4")
+    PdfFonts.register(@doc)
   end
 
   def render
@@ -32,10 +31,10 @@ class ContractPdf
   private
 
   def header
-    @doc.font "Helvetica", style: :bold, size: 16
+    @doc.font PdfFonts::FAMILY, style: :bold, size: 16
     @doc.fill_color STONE_900
     @doc.text "Contrat de location saisonnière"
-    @doc.font "Helvetica", style: :normal, size: 9
+    @doc.font PdfFonts::FAMILY, style: :normal, size: 9
     @doc.fill_color STONE_500
     @doc.text "Version #{@contract.template_version.presence || ContractTemplate::VERSION} · Émis le #{fr(@contract.sent_at || Time.current)}"
     @doc.fill_color STONE_900
@@ -43,14 +42,14 @@ class ContractPdf
   end
 
   def contract_body
-    @doc.font "Helvetica", size: 10
+    @doc.font PdfFonts::FAMILY, size: 10
     # Contrat signé : texte gelé à la signature (cf. Contract#contract_text).
     @contract.contract_text.split("\n").each do |line|
       if line =~ /^\d+\.\s/
         @doc.move_down 6
-        @doc.font "Helvetica", style: :bold, size: 11
+        @doc.font PdfFonts::FAMILY, style: :bold, size: 11
         @doc.text line
-        @doc.font "Helvetica", style: :normal, size: 10
+        @doc.font PdfFonts::FAMILY, style: :normal, size: 10
       elsif line.strip.empty?
         @doc.move_down 4
       else
@@ -64,9 +63,9 @@ class ContractPdf
     @doc.stroke_color STONE_300
     @doc.stroke_horizontal_rule
     @doc.move_down 12
-    @doc.font "Helvetica", style: :bold, size: 11
+    @doc.font PdfFonts::FAMILY, style: :bold, size: 11
     @doc.text "Signature du Locataire"
-    @doc.font "Helvetica", style: :normal, size: 9
+    @doc.font PdfFonts::FAMILY, style: :normal, size: 9
     @doc.fill_color STONE_500
     @doc.text "#{@contract.signer_full_name} — signé électroniquement le #{fr(@contract.signed_at)}"
     @doc.fill_color STONE_900
@@ -97,13 +96,13 @@ class ContractPdf
       @doc.stroke_bounds
       @doc.pad(10) do
         @doc.indent(10, 10) do
-          @doc.font "Helvetica", style: :bold, size: 10
-          @doc.text "Dossier de preuve — Signature Électronique Simple (SES)"
-          @doc.font "Helvetica", style: :normal, size: 8
+          @doc.font PdfFonts::FAMILY, style: :bold, size: 10
+          @doc.text "Dossier de preuve — signature électronique simple (SES)"
+          @doc.font PdfFonts::FAMILY, style: :normal, size: 8
           @doc.fill_color STONE_500
           @doc.move_down 6
           @doc.text "Document signé électroniquement le #{fr(@contract.signed_at)} par #{@contract.signer_full_name}."
-          @doc.text "Validé par double authentification email (code OTP à 6 chiffres, vérifié, à usage unique, expirant après #{Contract::OTP_TTL.in_minutes.to_i} minutes)."
+          @doc.text "Validé par un code à usage unique à #{Contract::OTP_LENGTH} chiffres envoyé à #{@contract.signer_email} (valable #{Contract::OTP_TTL.in_minutes.to_i} minutes)."
           @doc.text "IP du signataire : #{@contract.signed_ip}"
           @doc.text "User agent : #{@contract.signed_user_agent.to_s[0, 200]}"
           @doc.text "Empreinte numérique (SHA-256) : #{@contract.document_hash}"

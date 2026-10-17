@@ -1,5 +1,5 @@
 class Admin::BookingsController < Admin::BaseController
-  before_action :set_booking, only: %i[show edit update confirm reject cancel destroy send_balance_reminder resend_email]
+  before_action :set_booking, only: %i[show edit update confirm reject cancel destroy send_balance_reminder resend_email unlock_contract]
 
   # Emails transactionnels renvoyables depuis la fiche réservation :
   #   - confirmation     : facture arrhes + lien contrat + lien caution
@@ -155,6 +155,13 @@ class Admin::BookingsController < Admin::BaseController
     redirect_to admin_booking_path(@booking), notice: "Email « #{action.humanize} » renvoyé."
   rescue StandardError => e
     redirect_to admin_booking_path(@booking), alert: "Échec du renvoi : #{e.message}"
+  end
+
+  # Signature verrouillée (trop de codes faux ou d'envois) : remise à zéro par l'admin.
+  def unlock_contract
+    authorize @booking
+    @booking.contract.unlock_otp!
+    redirect_to admin_booking_path(@booking), notice: "Signature débloquée : le client peut redemander un code."
   end
 
   def destroy

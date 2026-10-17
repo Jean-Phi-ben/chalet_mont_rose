@@ -68,6 +68,7 @@ Rails.application.routes.draw do
         patch :cancel
         post  :send_balance_reminder
         post  :resend_email
+        patch :unlock_contract
       end
     end
     resources :invoices, only: %i[index show update] do

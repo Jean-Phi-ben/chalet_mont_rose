@@ -1,8 +1,6 @@
 require "prawn"
 require "prawn/table"
 
-Prawn::Fonts::AFM.hide_m17n_warning = true
-
 # Génère le PDF d'une facture — arrhes ou solde — pour un Invoice donné.
 # Format conforme aux obligations françaises de facturation d'acompte :
 #   - la facture d'arrhes ne facture QUE le montant encaissé (TTC) + sa TVA propre ;
@@ -29,6 +27,7 @@ class InvoicePdf
     @invoice = invoice
     @booking = invoice.booking
     @doc     = Prawn::Document.new(margin: 50, page_size: "A4")
+    PdfFonts.register(@doc)
   end
 
   def render
@@ -51,10 +50,10 @@ class InvoicePdf
   private
 
   def company_header
-    @doc.font "Helvetica", style: :bold, size: 18
+    @doc.font PdfFonts::FAMILY, style: :bold, size: 18
     @doc.fill_color STONE_900
     @doc.text "Chalet Mont Rose"
-    @doc.font "Helvetica", style: :normal, size: 9
+    @doc.font PdfFonts::FAMILY, style: :normal, size: 9
     @doc.fill_color STONE_500
     @doc.text ENV["COMPANY_ADDRESS"] if ENV["COMPANY_ADDRESS"].present?
     @doc.text ENV["COMPANY_EMAIL"]   if ENV["COMPANY_EMAIL"].present?

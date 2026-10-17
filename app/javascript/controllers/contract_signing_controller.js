@@ -1,10 +1,11 @@
 import { Controller } from "@hotwired/stimulus"
+import SignaturePad from "signature_pad"
 
 // Orchestre la page de signature électronique :
-//   - tracking du scroll du contrat (active le bloc signature en bas)
-//   - signature_pad sur le canvas (lib UMD chargée via CDN)
-//   - validation côté client : scrollé + OTP saisi + tracé + case cochée
-//   - sérialise le tracé en base64 PNG dans un champ hidden à la soumission
+//   - suivi du défilement du contrat (active le bloc signature en bas)
+//   - signature_pad sur le canvas (lib embarquée dans vendor/javascript)
+//   - validation côté client : défilé + code saisi + tracé + case cochée
+//   - sérialise le tracé en PNG base64 dans un champ caché à la soumission
 export default class extends Controller {
   static targets = [
     "document", "scrollHint", "scrollOk", "signBlock",
@@ -12,18 +13,13 @@ export default class extends Controller {
     "otpHidden", "signatureHidden", "acceptedHidden", "form"
   ]
 
-  static values = { otpSent: Boolean }
-
   connect() {
     this.scrolledToEnd = false
-    this.signaturePadReady = false
     this._setupSignaturePad()
     this._onResize = this._setupCanvasSize.bind(this)
     window.addEventListener("resize", this._onResize)
 
-    // On force toujours le scroll pour valider la lecture du contrat —
-    // l'OTP est envoyé automatiquement à l'ouverture mais ne suffit pas
-    // à débloquer la signature.
+    // Le défilement jusqu'en bas reste obligatoire pour valider la lecture du contrat.
     this._checkInitialScroll()
     this.refresh()
   }
@@ -32,7 +28,7 @@ export default class extends Controller {
     window.removeEventListener("resize", this._onResize)
   }
 
-  // --- Scroll tracking ----------------------------------------------------
+  // --- Suivi du défilement -------------------------------------------------
 
   onScroll() {
     const el = this.documentTarget
@@ -55,57 +51,49 @@ export default class extends Controller {
     this.refresh()
   }
 
-  // --- Signature pad ------------------------------------------------------
+  // --- Tracé de signature ---------------------------------------------------
 
   _setupSignaturePad() {
-    if (typeof window.SignaturePad === "undefined") {
-      console.error("[contract-signing] SignaturePad SDK non chargé")
-      return
-    }
-    this.pad = new window.SignaturePad(this.canvasTarget, {
+    this.pad = new SignaturePad(this.canvasTarget, {
       backgroundColor: "rgba(0,0,0,0)",
       penColor: "#1c1917",
       minWidth: 0.8,
       maxWidth: 2.4,
     })
     this.pad.addEventListener("endStroke", () => this.refresh())
-    this.signaturePadReady = true
   }
 
   _setupCanvasSize() {
-    if (!this.signaturePadReady) return
     const canvas = this.canvasTarget
     const ratio = Math.max(window.devicePixelRatio || 1, 1)
-    const data = this.pad?.toData() || []
+    const data = this.pad.toData() || []
     canvas.width  = canvas.offsetWidth  * ratio
     canvas.height = canvas.offsetHeight * ratio
-    const ctx = canvas.getContext("2d")
-    ctx.scale(ratio, ratio)
+    canvas.getContext("2d").scale(ratio, ratio)
     this.pad.clear()
     if (data.length) this.pad.fromData(data)
   }
 
   clearCanvas() {
-    this.pad?.clear()
+    this.pad.clear()
     this.refresh()
   }
 
-  // --- Validation & soumission --------------------------------------------
+  // --- Validation et soumission --------------------------------------------
 
   refresh() {
-    const hasSignature = this.pad && !this.pad.isEmpty()
+    const hasSignature = !this.pad.isEmpty()
     const hasOtp       = this.otpTarget.value.trim().match(/^\d{6}$/) != null
     const hasAccepted  = this.acceptedTarget.checked
     const ready        = this.scrolledToEnd && hasSignature && hasOtp && hasAccepted
 
     this.submitBtnTarget.disabled = !ready
 
-    // Sync les champs hidden pour POST
+    // Synchronise les champs cachés envoyés au serveur.
     this.otpHiddenTarget.value       = this.otpTarget.value.trim()
     this.signatureHiddenTarget.value = hasSignature ? this.pad.toDataURL("image/png") : ""
     this.acceptedHiddenTarget.value  = hasAccepted ? "1" : "0"
 
-    // Message d'aide contextualisé
     let hint = ""
     if (!this.scrolledToEnd)       hint = "Faites défiler le contrat jusqu'en bas."
     else if (!hasSignature)        hint = "Dessinez votre signature dans le cadre."

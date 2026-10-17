@@ -18,64 +18,89 @@ class ReservationsSigningTest < ActionDispatch::IntegrationTest
     ActionMailer::Base.deliveries.clear
   end
 
-  test "GET /reservations/:token/contract renders the signing page when contract is sent" do
-    get contract_reservation_url(@booking.token)
-    assert_response :success
-    assert_match "Contrat de location", response.body
-    # Le signer figé apparaît bien
-    assert_match "Léa", response.body
+  def sign!(code, image: FAKE_PNG_BIG, accepted: "1")
+    post sign_contract_reservation_url(@booking.token),
+         params: { otp_code: code, signature_image: image, accepted: accepted }
   end
 
-  test "GET /reservations/:token/contract auto-sends an OTP on first visit" do
-    assert_difference("ActionMailer::Base.deliveries.size", 1) do
-      get contract_reservation_url(@booking.token)
-    end
-    assert @contract.reload.otp_digest.present?
-  end
-
-  test "GET /reservations/:token/contract does NOT re-send OTP if one is still valid" do
-    @contract.generate_otp!
+  test "GET /reservations/:token/contract renders the signing page without any side effect" do
     assert_no_difference("ActionMailer::Base.deliveries.size") do
       get contract_reservation_url(@booking.token)
     end
+    assert_response :success
+    assert_match "Contrat de location", response.body
+    assert_match "Léa", response.body
+    assert_nil @contract.reload.otp_digest, "aucun code n'est généré sur un simple affichage"
+    assert_select "form[action=?] button", request_otp_reservation_path(@booking.token), text: /Recevoir mon code/
+    assert_no_match "cdn.jsdelivr.net", response.body, "signature_pad est embarquée, pas chargée depuis un CDN"
+  end
+
+  test "POST request_otp generates a digest, sends the code and counts the send" do
+    assert_difference("ActionMailer::Base.deliveries.size", 1) do
+      post request_otp_reservation_url(@booking.token)
+    end
+    @contract.reload
+    assert @contract.otp_digest.present?
+    assert_equal 1, @contract.otp_sends_count
+    assert_redirected_to contract_reservation_path(@booking.token)
+
+    get contract_reservation_url(@booking.token)
+    assert_select "button", text: /Renvoyer le code/
+  end
+
+  test "request_otp is rate limited per contract link" do
+    3.times { post request_otp_reservation_url(@booking.token) }
+    assert_no_difference("ActionMailer::Base.deliveries.size") do
+      post request_otp_reservation_url(@booking.token)
+    end
+    assert_redirected_to contract_reservation_path(@booking.token)
+    assert_match "Trop de demandes", flash[:alert]
+  end
+
+  test "too many code sends lock the contract" do
+    Contract::OTP_MAX_SENDS.times { @contract.generate_otp! }
+    assert @contract.otp_locked?
+    assert_no_difference("ActionMailer::Base.deliveries.size") do
+      post request_otp_reservation_url(@booking.token)
+    end
+    get contract_reservation_url(@booking.token)
+    assert_select "[data-contract-locked]"
+  end
+
+  test "wrong codes keep counting even after a new code is sent (lock not bypassable)" do
+    @contract.generate_otp!
+    4.times { sign!("000000") }
+    assert_equal 4, @contract.reload.otp_attempts
+    @contract.generate_otp! # renvoi : le compteur d'essais ne repart pas à zéro
+    assert_equal 4, @contract.reload.otp_attempts
+    sign!("000000")
+    assert @contract.reload.otp_locked?
+    assert_not @contract.status_signed?
+  end
+
+  test "a cancelled contract cannot be signed nor receive a code" do
+    @contract.update!(status: :cancelled)
+    assert_no_difference("ActionMailer::Base.deliveries.size") do
+      post request_otp_reservation_url(@booking.token)
+    end
+    assert_redirected_to reservation_path(@booking.token)
+    sign!("123456")
+    assert_redirected_to reservation_path(@booking.token)
+    assert_not @contract.reload.status_signed?
   end
 
   test "POST sign_contract rejects an OTP that is not 6 digits" do
     @contract.generate_otp!
-    post sign_contract_reservation_url(@booking.token),
-         params: { otp_code: "abc12", signature_image: FAKE_PNG_BIG, accepted: "1" }
+    sign!("abc12")
     assert_response :unprocessable_entity
     assert_not @contract.reload.status_signed?
   end
 
   test "POST sign_contract rejects a too-small signature image (empty canvas)" do
     code = @contract.generate_otp!
-    post sign_contract_reservation_url(@booking.token),
-         params: { otp_code: code, signature_image: FAKE_PNG_TINY, accepted: "1" }
+    sign!(code, image: FAKE_PNG_TINY)
     assert_response :unprocessable_entity
     assert_not @contract.reload.status_signed?
-  end
-
-  test "successful signing also emails the signed PDF to the client" do
-    code = @contract.generate_otp!
-    assert_difference("ActionMailer::Base.deliveries.size", 1) do
-      post sign_contract_reservation_url(@booking.token),
-           params: { otp_code: code, signature_image: FAKE_PNG_BIG, accepted: "1" }
-    end
-    mail = ActionMailer::Base.deliveries.last
-    assert_equal [ @booking.email ], mail.to
-    assert_match "contrat signé", mail.subject.downcase
-    # PDF attaché
-    assert mail.attachments.any? { |a| a.filename.start_with?("contrat-signe-") }
-  end
-
-  test "POST request_otp generates a digest + sends an email with a 6-digit code" do
-    assert_difference("ActionMailer::Base.deliveries.size", 1) do
-      post request_otp_reservation_url(@booking.token)
-    end
-    @contract.reload
-    assert @contract.otp_digest.present?
-    assert_redirected_to contract_reservation_path(@booking.token)
   end
 
   test "POST sign_contract rejects without OTP" do
@@ -87,58 +112,73 @@ class ReservationsSigningTest < ActionDispatch::IntegrationTest
 
   test "POST sign_contract rejects with wrong OTP and increments attempts" do
     @contract.generate_otp!
-    post sign_contract_reservation_url(@booking.token),
-         params: { otp_code: "000000", signature_image: FAKE_PNG_BIG, accepted: "1" }
+    sign!("000000")
     assert_response :unprocessable_entity
     assert_equal 1, @contract.reload.otp_attempts
     assert_not @contract.status_signed?
   end
 
-  test "POST sign_contract with valid OTP signs the contract, freezes it, records proof and generates PDF" do
-    code = @contract.generate_otp!
-    post sign_contract_reservation_url(@booking.token),
-         params: { otp_code: code, signature_image: FAKE_PNG_BIG, accepted: "1" }
-    assert_redirected_to contract_reservation_path(@booking.token)
-    @contract.reload
-    assert @contract.status_signed?
-    assert_not_nil @contract.signed_at
-    assert @contract.signed_ip.present?
-    assert @contract.document_hash.present?
-    assert_equal 64, @contract.document_hash.length, "hash SHA-256 hex (64 chars)"
-    # Digest OTP purgé après signature.
-    assert_nil @contract.otp_digest
-    # PDF généré.
-    assert @contract.signed_pdf.attached?
-    # Texte haché gelé en base, avec la version du template.
-    assert_equal ContractTemplate::VERSION, @contract.template_version
-    assert_equal @contract.compute_document_hash(@contract.canonical_text), @contract.document_hash
-    assert @contract.integrity_ok?
-  end
-
-  test "once signed, the frozen text survives later changes to the booking" do
-    code = @contract.generate_otp!
-    post sign_contract_reservation_url(@booking.token),
-         params: { otp_code: code, signature_image: FAKE_PNG_BIG, accepted: "1" }
-    @contract.reload
-    frozen = @contract.canonical_text
-
-    @booking.update_columns(total_price_cents: 999_999, deposit_cents: 1)
-    assert_equal frozen, @contract.reload.contract_text
-    assert @contract.integrity_ok?
-  end
-
   test "POST sign_contract refuses if the checkbox isn't ticked" do
     code = @contract.generate_otp!
-    post sign_contract_reservation_url(@booking.token),
-         params: { otp_code: code, signature_image: FAKE_PNG_BIG, accepted: "0" }
+    sign!(code, accepted: "0")
     assert_response :unprocessable_entity
     assert_not @contract.reload.status_signed?
   end
 
   test "signature_image must be a data URL image" do
     code = @contract.generate_otp!
-    post sign_contract_reservation_url(@booking.token),
-         params: { otp_code: code, signature_image: "not a data url", accepted: "1" }
+    sign!(code, image: "not a data url")
     assert_response :unprocessable_entity
+  end
+
+  test "POST sign_contract with valid OTP signs, freezes the text, records proof and enqueues the PDF job" do
+    code = @contract.generate_otp!
+    assert_enqueued_with(job: GenerateSignedContractPdfJob) do
+      sign!(code)
+    end
+    assert_redirected_to contract_reservation_path(@booking.token)
+    @contract.reload
+    assert @contract.status_signed?
+    assert_not_nil @contract.signed_at
+    assert @contract.signed_ip.present?
+    assert_equal 64, @contract.document_hash.length, "hash SHA-256 hex (64 chars)"
+    assert_nil @contract.otp_digest, "digest OTP purgé après signature"
+    assert_equal ContractTemplate::VERSION, @contract.template_version
+    assert_equal @contract.compute_document_hash(@contract.canonical_text), @contract.document_hash
+    assert @contract.integrity_ok?
+    assert_not @contract.signed_pdf.attached?, "le PDF est produit par le job, pas dans la requête"
+
+    # La page signée indique que le PDF arrive.
+    get contract_reservation_url(@booking.token)
+    assert_select "[data-pdf-pending]"
+  end
+
+  test "the background job attaches the PDF and emails it to the client, once" do
+    code = @contract.generate_otp!
+    perform_enqueued_jobs do
+      sign!(code)
+    end
+    @contract.reload
+    assert @contract.signed_pdf.attached?
+    mail = ActionMailer::Base.deliveries.last
+    assert_equal [ @booking.email ], mail.to
+    assert_match "contrat signé", mail.subject.downcase
+    assert mail.attachments.any? { |a| a.filename.start_with?("contrat-signe-") }
+
+    # Rejouer le job (nouvelle tentative) ne renvoie pas l'email.
+    assert_no_difference("ActionMailer::Base.deliveries.size") do
+      GenerateSignedContractPdfJob.perform_now(@contract)
+    end
+  end
+
+  test "once signed, the frozen text survives later changes to the booking" do
+    code = @contract.generate_otp!
+    sign!(code)
+    @contract.reload
+    frozen = @contract.canonical_text
+
+    @booking.update_columns(total_price_cents: 999_999, deposit_cents: 1)
+    assert_equal frozen, @contract.reload.contract_text
+    assert @contract.integrity_ok?
   end
 end

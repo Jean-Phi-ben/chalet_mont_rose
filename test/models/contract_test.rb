@@ -50,6 +50,20 @@ class ContractTest < ActiveSupport::TestCase
     assert @contract.otp_locked?
   end
 
+  test "generate_otp! counts sends, keeps the attempts counter, and locks after OTP_MAX_SENDS" do
+    @contract.update_columns(otp_attempts: 3)
+    @contract.generate_otp!
+    assert_equal 3, @contract.otp_attempts, "un renvoi ne rouvre pas les essais"
+    assert_equal 1, @contract.otp_sends_count
+
+    (Contract::OTP_MAX_SENDS - 1).times { @contract.generate_otp! }
+    assert @contract.otp_locked?
+
+    @contract.unlock_otp!
+    assert_not @contract.otp_locked?
+    assert_equal [ 0, 0, nil ], [ @contract.otp_attempts, @contract.otp_sends_count, @contract.otp_digest ]
+  end
+
   test "compute_document_hash is stable and changes with content" do
     txt = ContractTemplate.canonical_text(@booking, @contract)
     h1 = @contract.compute_document_hash(txt)

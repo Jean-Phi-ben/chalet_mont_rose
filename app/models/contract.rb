@@ -21,20 +21,28 @@ class Contract < ApplicationRecord
 
   OTP_LENGTH       = 6
   OTP_TTL          = 15.minutes
-  OTP_MAX_ATTEMPTS = 5
+  OTP_MAX_ATTEMPTS = 5   # codes faux saisis, toutes générations confondues
+  OTP_MAX_SENDS    = 5   # codes envoyés
 
   before_save :prevent_change_after_signature, if: -> { status_signed_was_persisted? && !destroyed? }
 
   # Génère et stocke un nouvel OTP. Renvoie le code en clair (à envoyer par
   # email immédiatement) — la DB ne conserve que le digest bcrypt.
+  # Le compteur d'essais n'est PAS remis à zéro : renvoyer un code ne rouvre
+  # pas 5 essais (sinon le verrou serait contournable à l'infini).
   def generate_otp!
     plain = SecureRandom.random_number(10**OTP_LENGTH).to_s.rjust(OTP_LENGTH, "0")
     update!(
-      otp_digest:    BCrypt::Password.create(plain),
-      otp_sent_at:   Time.current,
-      otp_attempts:  0
+      otp_digest:      BCrypt::Password.create(plain),
+      otp_sent_at:     Time.current,
+      otp_sends_count: otp_sends_count.to_i + 1
     )
     plain
+  end
+
+  # Déblocage par l'admin après verrouillage (compteurs remis à zéro, code purgé).
+  def unlock_otp!
+    update!(otp_attempts: 0, otp_sends_count: 0, otp_digest: nil, otp_sent_at: nil)
   end
 
   def otp_valid?(code)
@@ -50,7 +58,12 @@ class Contract < ApplicationRecord
   end
 
   def otp_locked?
-    otp_attempts.to_i >= OTP_MAX_ATTEMPTS
+    otp_attempts.to_i >= OTP_MAX_ATTEMPTS || otp_sends_count.to_i >= OTP_MAX_SENDS
+  end
+
+  # Un code valide est en circulation (envoyé et non expiré).
+  def otp_pending?
+    otp_digest.present? && !otp_expired?
   end
 
   def signable?

@@ -18,6 +18,12 @@ class ContractPdfTest < ActiveSupport::TestCase
     assert pdf.start_with?("%PDF"), "doit produire un PDF"
   end
 
+  test "renders names outside Windows-1252 thanks to the embedded TrueType font" do
+    @contract.update!(signer_first_name: "Zoë Łukasz", signer_last_name: "Øyvind Ćwikła")
+    @booking.update_columns(first_name: "Zoë Łukasz", last_name: "Øyvind Ćwikła")
+    assert_nothing_raised { ContractPdf.render(@contract.reload) }
+  end
+
   test "a signed contract is rendered from its frozen text, never recomputed" do
     text = ContractTemplate.canonical_text(@booking, @contract)
     @contract.update_columns(status: Contract.statuses[:signed], signed_at: Time.current,

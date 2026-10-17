@@ -23,7 +23,7 @@
           <i class="fa-solid fa-file-arrow-down"></i> Télécharger le PDF signé
         <% end %>
       <% else %>
-        <p class="text-xs text-stone-400 mt-3">Le PDF est en cours de génération, recharge la page dans un instant.</p>
+        <p class="text-xs text-stone-400 mt-3" data-pdf-pending>Le PDF signé est en préparation : il vous sera envoyé par email et sera téléchargeable ici dans quelques instants (rechargez la page).</p>
       <% end %>
     </div>
 
@@ -31,16 +31,22 @@
     <div class="mt-6 bg-white border border-stone-200 rounded-2xl p-6 text-xs text-stone-500 leading-relaxed">
       <p class="text-[10px] text-stone-400 uppercase tracking-widest mb-2">Dossier de preuve</p>
       <p>Signé par <strong class="text-stone-700"><%= @contract.signer_full_name %></strong> le <%= I18n.l(@contract.signed_at, format: :long) rescue @contract.signed_at %>.</p>
-      <p>Validé par double authentification email (code OTP à 6 chiffres, à usage unique).</p>
+      <p>Validé par un code à usage unique envoyé par email.</p>
       <p>IP du signataire : <code><%= @contract.signed_ip %></code></p>
       <p class="break-all">Empreinte SHA-256 : <code class="text-[10px]"><%= @contract.document_hash %></code></p>
     </div>
 
+  <% elsif @contract.otp_locked? %>
+    <%# === Verrouillé : trop de codes faux ou de demandes de code === %>
+    <div class="bg-red-50 border border-red-200 text-red-800 rounded-2xl p-6 text-center" data-contract-locked>
+      <i class="fa-solid fa-lock text-3xl mb-2"></i>
+      <p class="font-medium">Signature verrouillée</p>
+      <p class="text-sm mt-1">Trop de tentatives ont été enregistrées. Contactez le propriétaire pour débloquer la signature.</p>
+    </div>
+
   <% else %>
     <%# === Workflow de signature === %>
-    <div data-controller="contract-signing"
-         data-contract-signing-otp-sent-value="<%= @contract.otp_sent_at.present? && !@contract.otp_expired? %>"
-         class="space-y-6">
+    <div data-controller="contract-signing" class="space-y-6">
 
       <%# Bloc contrat scrollable %>
       <div class="bg-white border border-stone-200 rounded-2xl p-6 sm:p-10">
@@ -104,12 +110,18 @@
                    data-action="input->contract-signing#refresh"
                    placeholder="000000" autocomplete="one-time-code"
                    class="font-mono tracking-[0.4em] text-lg w-48 border border-stone-300 rounded-lg px-3 py-2 focus:outline-none focus:border-stone-900">
-            <%= button_to "Renvoyer le code", request_otp_reservation_path(@booking.token), method: :post,
-                  data: { "contract-signing-target": "requestOtpBtn" },
-                  form: { class: "inline-block" },
+            <%= button_to (@contract.otp_pending? ? "Renvoyer le code" : "Recevoir mon code par email"),
+                  request_otp_reservation_path(@booking.token), method: :post,
+                  form: { class: "inline-block", data: { turbo: false } },
                   class: "text-xs uppercase tracking-widest border border-stone-300 text-stone-700 px-4 py-2 rounded-lg hover:bg-stone-50 transition cursor-pointer" %>
           </div>
-          <p class="text-[11px] text-stone-400 mt-1">Code envoyé automatiquement à l'email indiqué. Valable <%= Contract::OTP_TTL.in_minutes.to_i %> minutes, à usage unique.</p>
+          <p class="text-[11px] text-stone-400 mt-1">
+            <% if @contract.otp_pending? %>
+              Un code a été envoyé à <%= @contract.signer_email %>. Il est valable <%= Contract::OTP_TTL.in_minutes.to_i %> minutes, à usage unique.
+            <% else %>
+              Le code sera envoyé à <%= @contract.signer_email %>. Il est valable <%= Contract::OTP_TTL.in_minutes.to_i %> minutes, à usage unique.
+            <% end %>
+          </p>
         </div>
 
         <%# Engagement %>
@@ -121,7 +133,7 @@
                  class="mt-1 h-4 w-4 rounded border-stone-300 text-stone-900 focus:ring-stone-900">
           <span class="text-sm text-stone-700 leading-relaxed">
             Je déclare avoir lu, compris et accepté l'intégralité du contrat de location ci-dessus, et reconnais que ma signature
-            électronique a la même valeur juridique qu'une signature manuscrite, conformément à l'esprit du règlement eIDAS (UE 910/2014).
+            électronique simple, au sens du règlement eIDAS (UE) n° 910/2014, m'engage juridiquement.
           </span>
         </label>
 
@@ -150,4 +162,3 @@
   </div>
 </div>
 
-<%= javascript_include_tag "https://cdn.jsdelivr.net/npm/signature_pad@5/dist/signature_pad.umd.min.js", nonce: true %>

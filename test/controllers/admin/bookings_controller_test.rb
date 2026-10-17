@@ -424,4 +424,19 @@ class Admin::BookingsControllerTest < ActionDispatch::IntegrationTest
     get admin_booking_url(@booking)
     assert_select "[data-contract-status=signed]", text: /Intégrité non vérifiable/
   end
+
+  test "a locked signature is flagged and can be unlocked by the admin" do
+    SendContractJob.perform_now(@booking)
+    contract = @booking.reload.contract
+    contract.update_columns(otp_attempts: Contract::OTP_MAX_ATTEMPTS)
+
+    get admin_booking_url(@booking)
+    assert_select "[data-contract-locked]"
+    assert_select "form[action=?]", unlock_contract_admin_booking_path(@booking)
+
+    patch unlock_contract_admin_booking_url(@booking)
+    assert_redirected_to admin_booking_path(@booking)
+    assert_not contract.reload.otp_locked?
+    assert_equal 0, contract.otp_attempts
+  end
 end

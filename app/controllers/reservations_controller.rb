@@ -2,6 +2,13 @@ class ReservationsController < ApplicationController
   allow_unauthenticated_access only: %i[create show contract request_otp sign_contract signed_contract_pdf]
 
   before_action :load_booking_and_contract, only: %i[contract request_otp sign_contract signed_contract_pdf]
+  before_action :require_signable_contract, only: %i[request_otp sign_contract]
+
+  # Limites par lien de contrat : 3 envois de code et 10 tentatives de signature par quart d'heure.
+  rate_limit to: 3,  within: 15.minutes, only: :request_otp,  by: -> { params[:token] },
+             with: -> { redirect_to contract_reservation_path(params[:token]), alert: "Trop de demandes de code : réessayez dans quelques minutes." }
+  rate_limit to: 10, within: 15.minutes, only: :sign_contract, by: -> { params[:token] },
+             with: -> { redirect_to contract_reservation_path(params[:token]), alert: "Trop de tentatives : réessayez dans quelques minutes." }
 
   def create
     @booking = Booking.new(booking_params)
@@ -35,30 +42,14 @@ class ReservationsController < ApplicationController
     @booking = Booking.find_by!(token: params[:token])
   end
 
-  # Page de signature électronique simple (SES).
-  # Le client doit scroller, saisir l'OTP reçu par email, dessiner sa signature
-  # et accepter pour pouvoir signer. L'OTP est envoyé automatiquement à la
-  # première ouverture de la page (ou si l'ancien est expiré/déjà consommé).
+  # Page de signature électronique simple (SES). Aucun effet de bord : le code
+  # n'est envoyé que sur demande explicite (POST request_otp), jamais sur un GET
+  # (préchargement Turbo, antivirus qui suivent les liens…).
   def contract
-    return if @contract.status_signed?
-    return if @contract.otp_locked?
-    return if @contract.otp_digest.present? && !@contract.otp_expired?
-
-    code = @contract.generate_otp!
-    BookingMailer.dispatch(:contract_otp, @booking, otp_code: code)
-    flash.now[:notice] = "Un code à 6 chiffres vient de vous être envoyé par email."
   end
 
   # POST /reservations/:token/contract/otp — envoie le code OTP par email.
   def request_otp
-    if @contract.status_signed?
-      redirect_to contract_reservation_path(@contract_token), notice: "Ce contrat est déjà signé." and return
-    end
-    if @contract.otp_locked?
-      redirect_to contract_reservation_path(@contract_token),
-                  alert: "Trop de tentatives. Contactez le propriétaire." and return
-    end
-
     code = @contract.generate_otp!
     BookingMailer.dispatch(:contract_otp, @booking, otp_code: code)
     redirect_to contract_reservation_path(@contract_token),
@@ -67,14 +58,6 @@ class ReservationsController < ApplicationController
 
   # POST /reservations/:token/contract/sign — valide l'OTP et finalise.
   def sign_contract
-    if @contract.status_signed?
-      redirect_to contract_reservation_path(@contract_token), notice: "Ce contrat est déjà signé." and return
-    end
-    if @contract.otp_locked?
-      redirect_to contract_reservation_path(@contract_token),
-                  alert: "Trop de tentatives. Contactez le propriétaire." and return
-    end
-
     code  = params[:otp_code].to_s.strip
     image = params[:signature_image].to_s
     accepted = params[:accepted].to_s == "1"
@@ -106,11 +89,12 @@ class ReservationsController < ApplicationController
       @contract.update_columns(document_hash: @contract.compute_document_hash(canonical_text))
     end
 
-    GenerateSignedContractPdfJob.perform_now(@contract)
-    # Envoi du PDF signé au client (mailer + EmailLog).
-    BookingMailer.dispatch(:signed_contract, @booking) if @contract.signed_pdf.attached?
+    # PDF et email en arrière-plan : la signature est acquise, un incident de
+    # génération ne doit pas afficher d'erreur au client (le job se relance).
+    GenerateSignedContractPdfJob.perform_later(@contract)
 
-    redirect_to contract_reservation_path(@contract_token), notice: "Contrat signé avec succès. Une copie vous a été envoyée par email."
+    redirect_to contract_reservation_path(@contract_token),
+                notice: "Contrat signé avec succès. Une copie signée vous sera envoyée par email dans quelques instants."
   end
 
   # GET /reservations/:token/contract/pdf — téléchargement du PDF signé.
@@ -132,6 +116,18 @@ class ReservationsController < ApplicationController
     if @contract.blank?
       redirect_to reservation_path(@booking.token),
                   alert: "Le contrat n'est pas encore disponible." and return
+    end
+  end
+
+  # Envoi de code et signature : uniquement un contrat envoyé, non signé, non verrouillé.
+  def require_signable_contract
+    if @contract.status_signed?
+      redirect_to contract_reservation_path(@contract_token), notice: "Ce contrat est déjà signé."
+    elsif @contract.otp_locked?
+      redirect_to contract_reservation_path(@contract_token),
+                  alert: "Signature verrouillée après trop de tentatives : contactez le propriétaire pour la débloquer."
+    elsif !@contract.status_sent?
+      redirect_to reservation_path(@booking.token), alert: "Ce contrat n'est pas (ou plus) proposé à la signature."
     end
   end
 
