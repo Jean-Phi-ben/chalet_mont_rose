@@ -226,7 +226,7 @@
         <% end %>
       <% else %>
         <% lock_reason = if @booking.invoicing_archived?
-                          "Facturation archivée"
+                          "Facturation verrouillée"
                         elsif @booking.past_stay?
                           "Séjour passé"
                         else

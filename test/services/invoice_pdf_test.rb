@@ -13,7 +13,7 @@ class InvoicePdfTest < ActiveSupport::TestCase
   end
 
   test "both invoices render with a client name outside Windows-1252" do
-    @booking.invoices.each do |invoice|
+    @booking.invoices.reload.each do |invoice|
       pdf = nil
       assert_nothing_raised { pdf = InvoicePdf.render(invoice) }
       assert pdf.start_with?("%PDF")

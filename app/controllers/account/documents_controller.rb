@@ -1,5 +1,5 @@
 class Account::DocumentsController < Account::BaseController
-  # Documents du chalet (CGU, livret) — lecture seule pour tout client connecté.
+  # Documents du chalet (conditions générales de location, livret) — lecture seule pour tout client connecté.
   def index
     @documents = Document.order(:kind)
   end

@@ -23,10 +23,10 @@
         </div>
         <% if document.file.attached? %>
           <%= link_to account_document_path(document), class: "shrink-0 inline-flex items-center gap-2 text-sm text-stone-700 hover:text-stone-900 underline" do %>
-            <i class="fa-solid fa-download"></i> Ouvrir
+            <i class="fa-solid fa-download"></i> Télécharger
           <% end %>
         <% else %>
-          <span class="shrink-0 text-xs text-stone-400">indisponible</span>
+          <span class="shrink-0 text-xs text-stone-500">Indisponible</span>
         <% end %>
       </div>
     <% end %>

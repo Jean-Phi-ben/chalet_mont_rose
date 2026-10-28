@@ -12,8 +12,8 @@
 
     <%= form_with model: @client, url: account_profile_path, method: :patch, class: "space-y-5" do |f| %>
       <div>
-        <label class="block text-[11px] text-stone-400 uppercase tracking-widest mb-1.5">Email (connexion Google)</label>
-        <input type="email" value="<%= current_email %>" disabled
+        <label for="account-email" class="block text-[11px] text-stone-500 uppercase tracking-widest mb-1.5">Email de connexion</label>
+        <input type="email" id="account-email" value="<%= current_email %>" disabled
                class="w-full bg-stone-100 border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-500 cursor-not-allowed">
       </div>
 

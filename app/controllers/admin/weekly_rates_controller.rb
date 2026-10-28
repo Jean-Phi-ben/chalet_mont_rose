@@ -59,7 +59,7 @@ class Admin::WeeklyRatesController < Admin::BaseController
     price = params[:price_euros].to_f
 
     if from.nil? || to.nil? || price <= 0 || to < from
-      flash.now[:alert] = "Paramètres invalides : vérifie les dates et le prix."
+      flash.now[:alert] = "Paramètres invalides : vérifiez les dates et le prix."
       return render :bulk_edit, status: :unprocessable_entity
     end
 

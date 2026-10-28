@@ -144,11 +144,15 @@ export default class extends Controller {
   async fetchQuote() {
     const guests = this.hasGuestsTarget ? parseInt(this.guestsTarget.value || "1", 10) : 1
     const url = `${this.quoteUrlValue}?check_in=${this.checkIn}&check_out=${this.checkOut}&guests=${guests}`
+    // Une seule requête en vol : une réponse ancienne ne doit pas écraser la dernière sélection.
+    this._quoteAbort?.abort()
+    this._quoteAbort = new AbortController()
     let data
     try {
-      const res = await fetch(url, { headers: { Accept: "application/json" } })
+      const res = await fetch(url, { headers: { Accept: "application/json" }, signal: this._quoteAbort.signal })
       data = await res.json()
-    } catch (_e) {
+    } catch (e) {
+      if (e.name === "AbortError") return
       return this.showMessage("Impossible de calculer le tarif. Réessayez.")
     }
 
@@ -229,7 +233,9 @@ export default class extends Controller {
       samedi_requis: "Les arrivées et départs se font le samedi.",
       semaine_commencee: "La semaine en cours a déjà commencé : arrivée possible à partir du prochain samedi.",
       ordre_invalide: "La date de départ doit suivre l'arrivée.",
-      semaine_non_tarifee: "Une ou plusieurs semaines ne sont pas disponibles."
+      semaine_non_tarifee: "Une ou plusieurs semaines ne sont pas ouvertes à la réservation.",
+      semaine_indisponible: "Cette semaine est déjà réservée.",
+      dates_manquantes: "Choisissez vos dates d'arrivée et de départ."
     }[code] || "Période indisponible."
   }
 }

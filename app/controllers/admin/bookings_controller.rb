@@ -4,7 +4,7 @@ class Admin::BookingsController < Admin::BaseController
   # Emails transactionnels renvoyables depuis la fiche réservation :
   #   - confirmation     : facture arrhes + lien contrat + lien caution
   #   - signed_contract  : PDF du contrat signé
-  #   - balance_reminder : rappel J-10 + facture solde + contrat signé + CGU/livret
+  #   - balance_reminder : rappel de solde + facture solde + contrat signé + conditions/livret
   RESENDABLE_MAILER_ACTIONS = %w[confirmation signed_contract balance_reminder].freeze
 
   def index

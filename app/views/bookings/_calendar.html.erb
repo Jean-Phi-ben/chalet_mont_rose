@@ -13,7 +13,9 @@
         </button>
       </div>
       <div class="grid grid-cols-7 gap-1 text-center text-[11px] uppercase tracking-widest text-stone-400">
-        <% %w[L M M J V S D].each do |d| %><div><%= d %></div><% end %>
+        <% { "L" => "lundi", "M" => "mardi", "Me" => "mercredi", "J" => "jeudi", "V" => "vendredi", "S" => "samedi", "D" => "dimanche" }.each do |short, full| %>
+          <div><abbr title="<%= full %>" class="no-underline"><%= short[0] %></abbr></div>
+        <% end %>
       </div>
     </div>
 

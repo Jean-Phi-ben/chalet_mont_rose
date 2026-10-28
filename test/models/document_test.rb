@@ -10,7 +10,7 @@ class DocumentTest < ActiveSupport::TestCase
   test "kind_label returns the humanized label" do
     cgu = Document.new(kind: :cgu, title: "x")
     livret = Document.new(kind: :livret, title: "x")
-    assert_equal "Conditions générales", cgu.kind_label
+    assert_equal "Conditions générales de location", cgu.kind_label
     assert_equal "Livret du chalet", livret.kind_label
   end
 end

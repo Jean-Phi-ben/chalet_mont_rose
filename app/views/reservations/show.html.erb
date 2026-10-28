@@ -4,7 +4,7 @@
      "pending"   => { label: "En attente de validation", cls: "bg-amber-50 text-amber-700 border-amber-200",
                       msg: "Votre demande a bien été enregistrée. Le propriétaire la validera prochainement et vous recevrez un email de confirmation." },
      "confirmed" => { label: "Confirmée", cls: "bg-emerald-50 text-emerald-700 border-emerald-200",
-                      msg: "Votre réservation est confirmée. Consultez l'email de confirmation pour la facture des arrhes, le contrat et la caution." },
+                      msg: "Votre réservation est confirmée. L'email de confirmation contient la facture des arrhes et le lien de signature du contrat ; le solde et la caution vous seront demandés avant l'arrivée." },
      "rejected"  => { label: "Refusée", cls: "bg-rose-50 text-rose-700 border-rose-200",
                       msg: "Cette demande n'a pas pu être retenue. N'hésitez pas à proposer d'autres dates." },
      "cancelled" => { label: "Annulée", cls: "bg-stone-100 text-stone-600 border-stone-200",
@@ -17,7 +17,7 @@
 
   <div class="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 space-y-6">
     <div class="flex items-center justify-between gap-4">
-      <span>Bonjour <strong><%= @booking.first_name %></strong></span>
+      <span>Bonjour <strong><%= @booking.first_name %></strong>,</span>
       <span class="text-xs uppercase tracking-widest px-3 py-1 rounded-full border <%= status[:cls] %>">
         <%= status[:label] %>
       </span>
@@ -55,7 +55,21 @@
     </dl>
   </div>
 
-  <p class="text-xs text-stone-400 mt-4 text-center">
+  <% if @booking.confirmed? && (contract = @booking.contract) %>
+    <div class="mt-4 bg-white border border-stone-200 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-3" data-contract-link>
+      <% if contract.status_signed? %>
+        <p class="text-sm text-emerald-700"><i class="fa-solid fa-circle-check mr-1"></i> Contrat signé le <%= fr_date(contract.signed_at.to_date) %></p>
+        <% if contract.signed_pdf.attached? %>
+          <%= link_to "Télécharger le contrat signé", signed_contract_pdf_reservation_path(@booking.token), class: "text-sm text-stone-700 underline hover:text-stone-900" %>
+        <% end %>
+      <% elsif contract.status_sent? %>
+        <p class="text-sm text-amber-700"><i class="fa-solid fa-pen-nib mr-1"></i> Contrat de location à signer</p>
+        <%= link_to "Signer le contrat", contract_reservation_path(@booking.token), class: "bg-stone-900 text-white px-4 py-2 rounded-lg text-sm hover:bg-stone-800 transition" %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <p class="text-xs text-stone-500 mt-4 text-center">
     Conservez ce lien : il vous permet de suivre votre demande à tout moment.
   </p>
 

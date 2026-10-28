@@ -15,6 +15,25 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?]", reservations_path
   end
 
+  test "home is accessible: main landmark, skip link, calendar days as labelled buttons, no stale wording" do
+    get root_path
+    assert_select "main#main-content"
+    assert_select "a[href='#main-content']", text: "Aller au contenu"
+    assert_select "[data-calendar-month] button[aria-label][data-calendar-target=day]", minimum: 28
+    assert_select "[data-calendar-month] button[disabled][aria-label]", minimum: 1 # jours passés
+    assert_select "#reservation-modal label[for]", minimum: 6
+    %w[6\ sdb Reçues double\ authentification Mont\ Blanc\ ] .each { |stale| assert_no_match stale.delete("\\"), response.body }
+  end
+
+  test "home renders the full calendar with a bounded number of SQL queries" do
+    WeeklyRate.create!(week_start: Date.current.next_occurring(:saturday), price_cents: 100_000)
+    queries = 0
+    counter = ->(*, payload) { queries += 1 unless payload[:name] == "SCHEMA" || payload[:sql].start_with?("BEGIN", "COMMIT", "SAVEPOINT", "RELEASE") }
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") { get root_path }
+    assert_response :success
+    assert_operator queries, :<, 60, "≈ 3 requêtes par mois affiché (tarifs, bloqués, transitions), pas une par jour"
+  end
+
   test "legal pages are public and linked from the footer" do
     get root_path
     assert_select "footer a[href=?]", privacy_path

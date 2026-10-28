@@ -89,7 +89,7 @@ class Admin::BookingsControllerTest < ActionDispatch::IntegrationTest
     travel_back
     get archived_admin_bookings_url
     assert_response :success
-    assert_match "Archives", response.body
+    assert_match(/[Ss]éjours passés/, response.body)
     assert_match "Jean Dupont", response.body
   end
 

@@ -221,7 +221,7 @@ class AccountFlowTest < ActionDispatch::IntegrationTest
     # Visiteur non connecté : socle grand public + connexion, aucune catégorie admin.
     get root_path
     assert_response :success
-    assert_match "Grand public", response.body
+    assert_match "Le chalet", response.body
     assert_match "Se connecter", response.body
     assert_no_match(/Administration/, response.body)
     assert_no_match(/Mes réservations/, response.body)

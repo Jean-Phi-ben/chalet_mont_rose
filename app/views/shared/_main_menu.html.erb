@@ -1,5 +1,5 @@
 <%# Menu unifié, rendu dans le dropdown desktop et le menu mobile.
-    Socle « Grand public » toujours présent ; + pages espace client si connecté ;
+    Socle « Le chalet » (pages publiques) toujours présent ; + pages espace client si connecté ;
     + catégorie « Administration » si admin. %>
 <% item = "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-stone-700 hover:bg-stone-50 transition" %>
 <% cat  = "px-3 pt-3 pb-1 text-[10px] text-stone-400 uppercase tracking-widest" %>
@@ -11,8 +11,8 @@
   </div>
 <% end %>
 
-<%# ───── Catégorie : Grand public ───── %>
-<p class="<%= cat %>">Grand public</p>
+<%# ───── Catégorie : Le chalet (pages publiques) ───── %>
+<p class="<%= cat %>">Le chalet</p>
 <%= link_to root_path, class: item do %>
   <i class="fa-solid fa-house w-4 text-center opacity-70"></i> Accueil
 <% end %>

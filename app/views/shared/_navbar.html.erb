@@ -12,7 +12,7 @@
         Chalet Mont Rose
       </span>
       <span class="mt-1.5 text-[9px] sm:text-[10px] tracking-[0.3em] uppercase text-stone-400 whitespace-nowrap">
-        Saint-Gervais le Bettex
+        Le Bettex · Saint-Gervais-les-Bains
       </span>
     <% end %>
 
@@ -30,15 +30,15 @@
            data-action="click@window->usermenu#closeOnOutside keydown.esc@window->usermenu#close">
         <button type="button"
                 class="inline-flex items-center justify-center gap-2 rounded-full px-3 h-11 text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition"
-                aria-haspopup="menu" aria-expanded="false"
+                aria-haspopup="menu" aria-expanded="false" aria-label="Menu du compte" aria-controls="usermenu-panel"
                 data-usermenu-target="button"
                 data-action="click->usermenu#toggle">
           <i class="fa-solid fa-house-chimney text-xl"></i>
           <i class="fa-solid fa-chevron-down text-xs opacity-60 transition-transform" data-usermenu-target="chevron"></i>
         </button>
 
-        <div class="hidden absolute right-0 mt-2 w-64 max-h-[80vh] overflow-y-auto bg-white shadow-lg rounded-xl border border-stone-100 p-2 z-50"
-             role="menu" data-usermenu-target="menu">
+        <div id="usermenu-panel" class="hidden absolute right-0 mt-2 w-64 max-h-[80vh] overflow-y-auto bg-white shadow-lg rounded-xl border border-stone-100 p-2 z-50"
+             data-usermenu-target="menu">
           <%= render "shared/main_menu", show_admin: local_assigns.fetch(:show_admin, true) %>
         </div>
       </div>

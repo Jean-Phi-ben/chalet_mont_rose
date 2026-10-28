@@ -21,6 +21,17 @@ class Pricing
     rate_for(date)&.nightly_cents
   end
 
+  # { date => prix par nuit } pour chaque jour de [from, to] en UNE requête
+  # (le calendrier affiche ~400 jours : une requête par jour serait prohibitif).
+  def self.nightly_cents_by_date(from, to)
+    first_week = week_start_for(from)
+    by_week = WeeklyRate.where(week_start: first_week..to).index_by(&:week_start)
+    (from..to).each_with_object({}) do |date, hash|
+      rate = by_week[week_start_for(date)]
+      hash[date] = rate&.nightly_cents
+    end
+  end
+
   # Liste des samedis (week_start) couverts par la période [check_in, check_out).
   def self.weeks_between(check_in, check_out)
     weeks = []

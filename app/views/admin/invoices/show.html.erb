@@ -49,7 +49,7 @@
           <% end %>
         </div>
         <% chip_label = if invoice.payment_received?
-                         invoice.kind_deposit? ? "Reçues" : "Reçu"
+                         "Payée"
                        else
                          "En attente"
                        end %>
@@ -89,7 +89,7 @@
         <%= render "admin/invoices/payment_date_dialog", invoice: invoice,
               url: mark_received_admin_invoice_path(invoice),
               title: "Confirmer le paiement", submit_label: "Confirmer le paiement",
-              trigger_label: tag.i(class: "fa-solid fa-check mr-1") + "#{invoice.label} reçues",
+              trigger_label: tag.i(class: "fa-solid fa-check mr-1") + (invoice.kind_deposit? ? "Arrhes reçues" : "Solde reçu"),
               trigger_class: "block w-full text-center bg-stone-900 text-white py-2.5 rounded-xl text-sm uppercase tracking-widest hover:bg-stone-800 transition cursor-pointer" %>
       <% end %>
     </div>

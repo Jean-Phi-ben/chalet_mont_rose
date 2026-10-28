@@ -5,7 +5,7 @@
     <i class="fa-solid fa-arrow-left mr-1"></i> Toutes les réservations
   <% end %>
   <h1 class="text-2xl font-serif text-stone-900 tracking-wide mt-2" style="font-family: 'Playfair Display', serif;">Nouvelle réservation</h1>
-  <p class="text-sm text-stone-500 mt-1">Saisie manuelle d'une demande reçue hors ligne. Cliquez « Choisir les dates » pour ouvrir le calendrier (samedi → samedi).</p>
+  <p class="text-sm text-stone-500 mt-1">Saisie manuelle d'une demande reçue hors ligne. Cliquez sur « Choisir les dates » pour ouvrir le calendrier (samedi → samedi).</p>
 </div>
 
 <div data-controller="calendar" data-calendar-quote-url-value="<%= calendar_quote_path %>">
@@ -100,13 +100,13 @@
       </div>
 
       <div>
-        <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Adresse (optionnel)</label>
+        <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Adresse (facultative)</label>
         <%= f.text_area :address, rows: 2, autocomplete: "street-address",
               class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition resize-none" %>
       </div>
 
       <div>
-        <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Message (optionnel)</label>
+        <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Message (facultatif)</label>
         <%= f.text_area :message, rows: 3,
               class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition resize-none" %>
       </div>
