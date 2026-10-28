@@ -30,6 +30,10 @@ class ReservationsSigningTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match "Contrat de location", response.body
     assert_match "Léa", response.body
+    # Les 9 sections rendues sont celles du texte canonique (même source).
+    assert_select "[data-contract-section]", 9
+    assert_match "Version du contrat : #{ContractTemplate::VERSION}", response.body
+    assert_match "article 1590 du Code civil", response.body
     assert_nil @contract.reload.otp_digest, "aucun code n'est généré sur un simple affichage"
     assert_select "form[action=?] button", request_otp_reservation_path(@booking.token), text: /Recevoir mon code/
     assert_no_match "cdn.jsdelivr.net", response.body, "signature_pad est embarquée, pas chargée depuis un CDN"

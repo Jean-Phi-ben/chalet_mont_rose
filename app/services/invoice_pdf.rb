@@ -17,7 +17,7 @@ class InvoicePdf
 
   # À incrémenter à chaque changement de mise en page : force la régénération des
   # PDF non verrouillés (entre dans l'empreinte calculée par GenerateInvoiceJob).
-  LAYOUT_VERSION = 2
+  LAYOUT_VERSION = 3
 
   def self.render(invoice)
     new(invoice).render
@@ -52,16 +52,16 @@ class InvoicePdf
   def company_header
     @doc.font PdfFonts::FAMILY, style: :bold, size: 18
     @doc.fill_color STONE_900
-    @doc.text "Chalet Mont Rose"
+    @doc.text CompanyIdentity.legal_name
     @doc.font PdfFonts::FAMILY, style: :normal, size: 9
     @doc.fill_color STONE_500
-    @doc.text ENV["COMPANY_ADDRESS"] if ENV["COMPANY_ADDRESS"].present?
-    @doc.text ENV["COMPANY_EMAIL"]   if ENV["COMPANY_EMAIL"].present?
-    siret = ENV["COMPANY_SIRET"]
-    vat_no = ENV["COMPANY_VAT_NUMBER"]
+    @doc.text CompanyIdentity.address if CompanyIdentity.address.present?
+    @doc.text "#{CompanyIdentity.email} · #{CompanyIdentity.phone}"
     extras = []
-    extras << "SIRET : #{siret}"             if siret.present?
-    extras << "TVA intracom. : #{vat_no}"    if vat_no.present?
+    extras << "Capital social : #{CompanyIdentity.capital}" if CompanyIdentity.capital.present?
+    extras << "RCS #{CompanyIdentity.rcs}"                   if CompanyIdentity.rcs.present?
+    extras << "SIRET : #{CompanyIdentity.siret}"             if CompanyIdentity.siret.present?
+    extras << "TVA intracom. : #{CompanyIdentity.vat_number}" if CompanyIdentity.vat_number.present?
     @doc.text extras.join(" · ") if extras.any?
     @doc.fill_color STONE_900
     @doc.move_down 24
@@ -211,8 +211,6 @@ class InvoicePdf
   def legal_mentions
     @doc.font_size 8
     @doc.fill_color STONE_500
-    capital = ENV["COMPANY_CAPITAL"]
-    @doc.text "Capital social : #{capital}" if capital.present?
     @doc.text "TVA acquittée sur les encaissements (art. 269 du CGI). Pas d'escompte pour paiement anticipé. Référence à indiquer lors du virement : #{@invoice.number}."
     if @invoice.kind_deposit?
       @doc.text "Arrhes (art. 1590 du Code civil) : leur perte par le client, ou leur restitution au double par le propriétaire, libère du contrat."

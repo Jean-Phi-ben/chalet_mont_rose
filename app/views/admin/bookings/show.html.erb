@@ -127,7 +127,7 @@
     <% end %>
 
     <div class="border-t border-stone-100 pt-5 text-xs text-stone-400">
-      <p>Reçue le <%= l(@booking.created_at, format: :short) rescue @booking.created_at.to_s %> · Suivi client : <%= link_to reservation_path(@booking.token), reservation_path(@booking.token), class: "text-stone-600 hover:text-stone-900 underline", target: "_blank" %></p>
+      <p>Reçue le <%= l(@booking.created_at, format: :short) %> · Suivi client : <%= link_to reservation_path(@booking.token), reservation_path(@booking.token), class: "text-stone-600 hover:text-stone-900 underline", target: "_blank" %></p>
     </div>
     </div>
 
@@ -169,7 +169,7 @@
               </div>
               <div class="shrink-0 text-right">
                 <p class="text-[11px] text-stone-400 whitespace-nowrap">
-                  <%= l(log.sent_at, format: :short) rescue log.sent_at.strftime("%d/%m %H:%M") %>
+                  <%= l(log.sent_at, format: :short) %>
                 </p>
                 <%= link_to "Voir", admin_email_log_path(log), class: "text-[11px] uppercase tracking-widest text-stone-700 hover:text-stone-900" %>
               </div>
@@ -211,7 +211,7 @@
                 <% end %>
               </div>
               <div class="shrink-0 text-right">
-                <p class="text-[11px] text-stone-400 whitespace-nowrap"><%= I18n.l(planned.scheduled_for, format: :short) rescue planned.scheduled_for.to_s %></p>
+                <p class="text-[11px] text-stone-400 whitespace-nowrap"><%= I18n.l(planned.scheduled_for, format: :short) %></p>
               </div>
             </li>
           <% end %>

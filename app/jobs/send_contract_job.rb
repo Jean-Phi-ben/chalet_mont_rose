@@ -6,6 +6,9 @@ class SendContractJob < ApplicationJob
 
   def perform(booking)
     return if booking.contract&.status_signed?
+    unless ContractTemplate.ready?
+      raise "coordonnées de la société incomplètes (#{CompanyIdentity.missing.join(', ')}) : contrat non généré"
+    end
 
     contract = booking.contract || booking.build_contract
     contract.assign_attributes(

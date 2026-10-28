@@ -1,20 +1,13 @@
-# Texte canonique du contrat de location, utilisé à la fois pour :
-#   - le rendu HTML de la page de signature ;
-#   - le rendu PDF post-signature ;
-#   - le calcul du hash SHA-256 (preuve d'intégrité — cf. eIDAS).
+# Texte du contrat de location saisonnière, source unique pour :
+#   - la page de signature (le partial HTML rend `sections`) ;
+#   - le PDF signé et le hash SHA-256 (`canonical_text`, gelé à la signature).
 #
-# Toutes les sections sont en français et figées dans le code. Pour modifier le
-# contrat, on ajuste ici et on incrémente VERSION (les contrats déjà signés
-# conservent leur ancien hash, prouvant qu'ils ont vu cette version).
+# Toute modification du texte doit incrémenter VERSION : les contrats déjà signés
+# conservent leur texte gelé (Contract#canonical_text) et leur hash.
 class ContractTemplate
-  VERSION = "1.1".freeze
+  VERSION = "1.2".freeze
 
-  COMPANY = {
-    name:     "Chalet Mont Rose",
-    address:  ENV["COMPANY_ADDRESS"].presence  || "56 rue de Passy, 75016 Paris",
-    siret:    ENV["COMPANY_SIRET"].presence    || "n.c.",
-    email:    ENV["COMPANY_EMAIL"].presence    || "chaletmontrose74@gmail.com"
-  }.freeze
+  Section = Struct.new(:number, :title, :body, keyword_init: true)
 
   PROPERTY = {
     name:                 "Chalet Mont Rose",
@@ -30,12 +23,14 @@ class ContractTemplate
     living_area_sqm:      260,
     rooms_count:          10,
     max_occupants:        12,
+    check_in_time:        "16 h",
+    check_out_time:       "10 h",
     description: [
       "Séjour avec cheminée",
       "Cuisine équipée ouverte sur la salle à manger, cellier",
       "5 chambres spacieuses (3 chambres doubles avec lits 180 × 200, 1 chambre avec lits jumeaux, 1 dortoir avec 4 lits simples)",
       "6 salles de bain (dont 2 avec baignoires), 5 WC (dont 3 indépendants)",
-      "Salle cinéma (projecteur laser et écran)",
+      "Salle de cinéma (projecteur laser et écran)",
       "Mezzanine avec TV, bureau et salle de jeux pour enfants",
       "Sauna",
       "Bain nordique",
@@ -44,129 +39,150 @@ class ContractTemplate
     ].freeze
   }.freeze
 
-  # Renvoie le texte canonique (utilisé pour le hash et le PDF).
-  # Sections : (1..9). Toute modification d'une section change le hash.
-  def self.canonical_text(booking, contract)
-    [
-      "CONTRAT DE LOCATION SAISONNIÈRE — #{COMPANY[:name]}",
-      "Version du contrat : #{VERSION}",
-      "",
-      section_parties(contract),
-      section_object,
-      section_premises,
-      section_period(booking),
-      section_price(booking),
-      section_caution,
-      section_obligations,
-      section_cancellation,
-      section_jurisdiction
-    ].join("\n\n")
-  end
+  class << self
+    # La société doit être identifiable pour engager un contrat.
+    def ready?
+      CompanyIdentity.ready?
+    end
 
-  def self.section_parties(contract)
-    <<~TXT
-      1. PARTIES
-      Bailleur : #{COMPANY[:name]} — #{COMPANY[:address]} — SIRET #{COMPANY[:siret]} (« le Bailleur »).
-      Locataire : #{contract.signer_first_name} #{contract.signer_last_name}, demeurant #{contract.signer_address.presence || 'à compléter'},
-      email #{contract.signer_email}, téléphone #{contract.signer_phone.presence || 'n.c.'} (« le Locataire »).
-    TXT
-  end
+    # Texte canonique (hash + PDF). Déterministe : même entrée → même texte.
+    def canonical_text(booking, contract)
+      lines = [ "CONTRAT DE LOCATION SAISONNIÈRE — #{CompanyIdentity.legal_name}", "Version du contrat : #{VERSION}", "" ]
+      sections(booking, contract).each do |section|
+        lines << "#{section.number}. #{section.title.upcase}" << section.body.strip << ""
+      end
+      lines.join("\n")
+    end
 
-  def self.section_object
-    <<~TXT
-      2. OBJET
-      Le présent contrat a pour objet la location, à usage exclusivement saisonnier et d'habitation, du logement meublé désigné à l'article 3 ci-après (« le Logement »).
-      Toute sous-location, cession ou usage commercial est strictement interdit.
-    TXT
-  end
+    def sections(booking, contract)
+      [
+        Section.new(number: 1, title: "Parties",                                   body: parties(contract)),
+        Section.new(number: 2, title: "Objet",                                     body: object),
+        Section.new(number: 3, title: "Désignation et consistance du logement",    body: premises),
+        Section.new(number: 4, title: "Durée et occupation",                       body: period(booking)),
+        Section.new(number: 5, title: "Prix et paiement",                          body: price(booking)),
+        Section.new(number: 6, title: "Caution (empreinte bancaire)",              body: caution(booking)),
+        Section.new(number: 7, title: "Obligations du Locataire",                  body: obligations),
+        Section.new(number: 8, title: "Annulation",                                body: cancellation),
+        Section.new(number: 9, title: "Médiation, litiges et droit applicable",    body: jurisdiction)
+      ]
+    end
 
-  def self.section_premises
-    desc_lines = PROPERTY[:description].map { |item| "  • #{item}" }.join("\n")
-    <<~TXT
-      3. DÉSIGNATION ET CONSISTANCE DU LOGEMENT
-      Nom         : #{PROPERTY[:name]}
-      Adresse     : #{PROPERTY[:address]}
-      Code postal : #{PROPERTY[:postal_code]}
-      Ville       : #{PROPERTY[:city]}
-      Code porte  : #{PROPERTY[:door_code]}
-      Étages      : #{PROPERTY[:floors]}
-      Parking     : #{PROPERTY[:parking]}
+    private
 
-      Type d'habitat              : #{PROPERTY[:habitat_type]}
-      Régime juridique            : #{PROPERTY[:legal_regime]}
-      Période de construction     : #{PROPERTY[:construction_period]}
-      Surface habitable           : #{PROPERTY[:living_area_sqm]} m²
-      Nombre de pièces            : #{PROPERTY[:rooms_count]}
-      Capacité maximale d'accueil : #{PROPERTY[:max_occupants]} personnes
+    def parties(contract)
+      c = CompanyIdentity
+      bailleur = [ "#{c.legal_name}, #{c.address}", "SIRET #{c.siret}" ]
+      bailleur << "RCS #{c.rcs}" if c.rcs.present?
+      bailleur << "représentée par #{c.representative}" if c.representative.present?
+      bailleur << "email #{c.email}, téléphone #{c.phone}"
+      <<~TXT
+        Bailleur : #{bailleur.join(', ')} (« le Bailleur »).
+        Locataire : #{contract.signer_first_name} #{contract.signer_last_name}, demeurant #{contract.signer_address.presence || '[adresse à compléter]'}, email #{contract.signer_email}, téléphone #{contract.signer_phone.presence || 'non communiqué'} (« le Locataire »).
+      TXT
+    end
 
-      Description du bien loué — chalet de montagne comprenant :
-      #{desc_lines}
-    TXT
-  end
+    def object
+      <<~TXT
+        Le présent contrat a pour objet la location, à usage exclusivement saisonnier et d'habitation, du logement meublé désigné à l'article 3 ci-après (« le Logement »).
+        Toute sous-location, cession ou usage commercial est strictement interdit.
+      TXT
+    end
 
-  def self.section_period(booking)
-    <<~TXT
-      4. DURÉE & OCCUPATION
-      Arrivée : #{I18n.l(booking.check_in, format: :long) rescue booking.check_in}.
-      Départ  : #{I18n.l(booking.check_out, format: :long) rescue booking.check_out}.
-      Durée   : #{booking.weeks} semaine(s), soit #{booking.nights} nuit(s).
-      Nombre de voyageurs pour le présent séjour : #{booking.guests_count || 'à préciser'} personne(s), dans la limite de la capacité maximale du Logement (#{PROPERTY[:max_occupants]}).
-      Toute arrivée s'effectue le samedi à partir de 16 h, départ le samedi suivant avant 10 h, sauf accord écrit du Bailleur.
-    TXT
-  end
+    def premises
+      p = PROPERTY
+      desc_lines = p[:description].map { |item| "  • #{item}" }.join("\n")
+      <<~TXT
+        Nom : #{p[:name]}
+        Adresse : #{p[:address]}, #{p[:postal_code]} #{p[:city]}
+        Code porte : #{p[:door_code]}
+        Étages : #{p[:floors]}
+        Parking : #{p[:parking]}
+        Type d'habitat : #{p[:habitat_type]}
+        Régime juridique : #{p[:legal_regime]}
+        Période de construction : #{p[:construction_period]}
+        Surface habitable : #{p[:living_area_sqm]} m²
+        Nombre de pièces : #{p[:rooms_count]}
+        Capacité maximale d'accueil : #{p[:max_occupants]} personnes
 
-  def self.section_price(booking)
-    deposit = booking.deposit_cents.to_i
-    total   = booking.total_price_cents.to_i
-    <<~TXT
-      5. PRIX & PAIEMENT
-      Montant total du séjour : #{format_eur(total)} TTC, taxe de séjour incluse.
-      Acompte (arrhes) : #{format_eur(deposit)}, à verser dans les 7 jours suivant la signature.
-      Solde : #{format_eur(total - deposit)} à régler au plus tard 10 jours avant l'arrivée.
-      Le paiement s'effectue par virement bancaire sur le compte indiqué sur la facture.
-    TXT
-  end
+        Description du bien loué — chalet de montagne comprenant :
+        #{desc_lines}
+      TXT
+    end
 
-  def self.section_caution
-    <<~TXT
-      6. CAUTION (EMPREINTE BANCAIRE)
-      Une caution est demandée par empreinte bancaire dématérialisée via le prestataire Swikly.
-      Aucun montant n'est prélevé : il s'agit d'une pré-autorisation, libérée à la fin du séjour si aucun dégât ni manquement n'est constaté.
-      Le lien Swikly sera transmis avec le rappel du solde, 10 jours avant l'arrivée.
-    TXT
-  end
+    def period(booking)
+      p = PROPERTY
+      guests = booking.guests_count
+      <<~TXT
+        Arrivée : #{date_full(booking.check_in)} à partir de #{p[:check_in_time]}.
+        Départ : #{date_full(booking.check_out)} avant #{p[:check_out_time]}.
+        Durée : #{plural(booking.weeks, 'semaine')}, soit #{plural(booking.nights, 'nuit')}.
+        Nombre de voyageurs pour le présent séjour : #{guests ? plural(guests, 'personne') : 'à préciser'}, dans la limite de la capacité maximale du Logement (#{p[:max_occupants]} personnes).
+        Les horaires d'arrivée et de départ ne peuvent être modifiés que par accord écrit du Bailleur.
+      TXT
+    end
 
-  def self.section_obligations
-    <<~TXT
-      7. OBLIGATIONS DU LOCATAIRE
-      Le Locataire s'engage à occuper le Logement en « bon père de famille », à respecter la capacité maximale de #{PROPERTY[:max_occupants]} personnes,
-      à ne pas fumer à l'intérieur, à respecter le voisinage, et à laisser les lieux propres au départ.
-      Le ménage de sortie est inclus dans le forfait ménage facturé, sauf détérioration manifeste.
-      Le Locataire déclare disposer d'une assurance villégiature couvrant les risques locatifs durant son séjour.
-    TXT
-  end
+    def price(booking)
+      total   = booking.total_price_cents.to_i
+      deposit = booking.deposit_cents.to_i
+      <<~TXT
+        Hébergement : #{eur(booking.accommodation_cents)} TTC (TVA #{Booking::VAT_RATES[:accommodation].to_i} % incluse).
+        Frais de ménage : #{eur(booking.cleaning_fee_cents)} TTC (TVA #{Booking::VAT_RATES[:cleaning].to_i} % incluse).
+        Taxe de séjour : #{eur(booking.tourist_tax_cents)} (#{plural(booking.guests_count.to_i, 'voyageur')} × #{plural(booking.nights, 'nuit')}), reversée à la commune.
+        Montant total du séjour : #{eur(total)} TTC.
+        Arrhes : #{eur(deposit)} (#{booking.deposit_percent_label}), à régler par virement dans les #{Invoice::DEPOSIT_DUE_DAYS} jours suivant l'émission de la facture d'arrhes.
+        Solde : #{eur(total - deposit)}, à régler par virement au plus tard #{Invoice::BALANCE_DUE_DAYS} jours avant l'arrivée ; la facture de solde est adressée au Locataire #{Invoice::BALANCE_REMINDER_DAYS} jours avant l'arrivée.
+        Les coordonnées bancaires figurent sur chaque facture.
+      TXT
+    end
 
-  def self.section_cancellation
-    <<~TXT
-      8. ANNULATION
-      En cas d'annulation par le Locataire :
-        - jusqu'à 30 jours avant l'arrivée : les arrhes sont conservées par le Bailleur (article 1590 du Code civil) ;
-        - moins de 30 jours avant l'arrivée : la totalité du séjour reste due.
-      En cas d'annulation par le Bailleur : restitution intégrale des sommes versées, le cas échéant doublement des arrhes selon les conditions de l'article 1590 du Code civil.
-      En cas de force majeure dûment justifiée, les parties s'efforceront de reporter le séjour sans pénalité.
-    TXT
-  end
+    def caution(booking)
+      <<~TXT
+        Une caution de #{eur(Caution.amount_for(booking))} est demandée sous forme d'empreinte bancaire dématérialisée (pré-autorisation, aucun montant prélevé) via le prestataire Swikly.
+        Le lien de dépôt est transmis avec la facture de solde, #{Invoice::BALANCE_REMINDER_DAYS} jours avant l'arrivée.
+        L'empreinte est libérée au plus tard #{SwiklyProvider.hold_days} jours après le départ si aucun dégât ni manquement n'est constaté ; à défaut, le Bailleur peut y prélever le coût justifié des réparations ou remplacements, dans la limite de la caution.
+      TXT
+    end
 
-  def self.section_jurisdiction
-    <<~TXT
-      9. LITIGES & DROIT APPLICABLE
-      Le présent contrat est régi par le droit français.
-      Avant toute action judiciaire, les parties s'engagent à rechercher une solution amiable.
-      À défaut, tout litige relève de la juridiction des tribunaux du ressort du lieu de situation du Logement.
-    TXT
-  end
+    def obligations
+      <<~TXT
+        Le Locataire s'engage à occuper le Logement raisonnablement et à l'usage exclusif d'habitation, à respecter la capacité maximale de #{PROPERTY[:max_occupants]} personnes, à ne pas fumer à l'intérieur, à respecter le voisinage et à laisser les lieux propres au départ.
+        Un état des lieux et un inventaire sont établis à l'arrivée et au départ ; toute dégradation ou perte est signalée au Bailleur sans délai.
+        Le ménage de sortie est compris dans les frais de ménage facturés, sauf détérioration manifeste.
+        Le Locataire déclare disposer d'une assurance villégiature couvrant les risques locatifs durant son séjour.
+      TXT
+    end
 
-  def self.format_eur(cents)
-    "#{format('%.2f', cents.to_i / 100.0).tr('.', ',')} €"
+    def cancellation
+      <<~TXT
+        Les sommes versées à la réservation constituent des arrhes au sens de l'article 1590 du Code civil.
+        Annulation par le Locataire : les arrhes restent acquises au Bailleur ; toute autre somme déjà versée est remboursée.
+        Annulation par le Bailleur : le Bailleur restitue au Locataire le double des arrhes.
+        En cas de force majeure dûment justifiée, les parties s'efforcent de reporter le séjour sans pénalité.
+      TXT
+    end
+
+    def jurisdiction
+      c = CompanyIdentity
+      mediator = [ c.mediator_name.presence || "[médiateur à désigner]", c.mediator_address.presence, c.mediator_url.presence ].compact.join(", ")
+      <<~TXT
+        Le présent contrat est régi par le droit français.
+        En cas de différend, le Locataire adresse d'abord une réclamation écrite au Bailleur. À défaut de réponse satisfaisante dans un délai de 60 jours, il peut recourir gratuitement au médiateur de la consommation (articles L611-1 et suivants du Code de la consommation) : #{mediator}.
+        À défaut de règlement amiable, le litige relève des juridictions compétentes selon les règles du Code de procédure civile.
+      TXT
+    end
+
+    def date_full(date)
+      I18n.l(date, format: :full, locale: :fr)
+    end
+
+    def plural(count, word)
+      "#{count} #{word}#{'s' if count.to_i > 1}"
+    end
+
+    def eur(cents)
+      ActiveSupport::NumberHelper.number_to_currency(cents.to_i / 100.0, unit: "€", separator: ",", delimiter: " ",
+                                                      format: "%n %u", precision: 2)
+    end
   end
 end

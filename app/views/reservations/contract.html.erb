@@ -15,7 +15,7 @@
     <%# === État final : contrat signé === %>
     <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl p-6 text-center">
       <i class="fa-solid fa-circle-check text-3xl mb-2"></i>
-      <p class="font-medium">Contrat signé le <%= I18n.l(@contract.signed_at, format: :long) rescue @contract.signed_at %></p>
+      <p class="font-medium">Contrat signé le <%= I18n.l(@contract.signed_at, format: :long) %></p>
       <p class="text-sm mt-1">Une copie signée vous a été envoyée par email — vous pouvez aussi la télécharger ci-dessous.</p>
       <% if @contract.signed_pdf.attached? %>
         <%= link_to signed_contract_pdf_reservation_path(@booking.token),
@@ -30,7 +30,7 @@
     <%# Dossier de preuves visible côté client aussi %>
     <div class="mt-6 bg-white border border-stone-200 rounded-2xl p-6 text-xs text-stone-500 leading-relaxed">
       <p class="text-[10px] text-stone-400 uppercase tracking-widest mb-2">Dossier de preuve</p>
-      <p>Signé par <strong class="text-stone-700"><%= @contract.signer_full_name %></strong> le <%= I18n.l(@contract.signed_at, format: :long) rescue @contract.signed_at %>.</p>
+      <p>Signé par <strong class="text-stone-700"><%= @contract.signer_full_name %></strong> le <%= I18n.l(@contract.signed_at, format: :long) %>.</p>
       <p>Validé par un code à usage unique envoyé par email.</p>
       <p>IP du signataire : <code><%= @contract.signed_ip %></code></p>
       <p class="break-all">Empreinte SHA-256 : <code class="text-[10px]"><%= @contract.document_hash %></code></p>

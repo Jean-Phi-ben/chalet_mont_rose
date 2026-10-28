@@ -114,6 +114,6 @@ class ContractPdf
 
   def fr(time)
     return "—" if time.blank?
-    I18n.l(time, format: :long) rescue time.strftime("%d/%m/%Y %H:%M")
+    I18n.l(time, format: :long)
   end
 end

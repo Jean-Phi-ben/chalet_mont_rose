@@ -11,6 +11,10 @@ ENV["RAILS_ENV"] ||= "test"
 # variable déjà présente → les emails de test ci-dessous sont bien admins.
 ENV["ADMIN_EMAILS"] = "admin@example.com,patron@example.com"
 
+# Identité société minimale : le contrat refuse de se générer sans adresse ni SIRET.
+ENV["COMPANY_ADDRESS"] ||= "2417 route de Cupelin, 74170 Saint-Gervais-les-Bains"
+ENV["COMPANY_SIRET"]   ||= "000 000 000 00000"
+
 require_relative "../config/environment"
 require "rails/test_help"
 require_relative "test_helpers/session_test_helper"

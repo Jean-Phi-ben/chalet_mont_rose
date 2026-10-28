@@ -153,7 +153,6 @@ class Admin::InvoicesControllerTest < ActionDispatch::IntegrationTest
     assert_match "Total séjour", response.body
     # Une colonne TVA avec les taux par catégorie ; la taxe de séjour est hors champ.
     assert_match "10 %", response.body
-    assert_match "20 %", response.body
     assert_match "non soumise", response.body
     assert_match "hébergement + ménage", response.body  # libellé du total TVA
     # Vue consolidée : arrhes facturées toujours déduites + solde avec sa date limite.

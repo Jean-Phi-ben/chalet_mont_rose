@@ -7,7 +7,7 @@ Vous trouverez en pièce jointe le PDF officiel, comprenant votre signature et l
 
 Arrivée : <%= fr_date_full(@booking.check_in) %>
 Départ  : <%= fr_date_full(@booking.check_out) %>
-Signé le: <%= l(@signed_at, format: :long) rescue @signed_at %>
+Signé le : <%= l(@signed_at, format: :long) %>
 
 Référence d'intégrité (SHA-256) : <%= @hash %>
 

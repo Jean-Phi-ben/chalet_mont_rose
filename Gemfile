@@ -77,3 +77,5 @@ gem "font-awesome-sass"
 gem "prawn"
 gem "prawn-table"
 gem "faraday"
+
+gem "rails-i18n", "~> 8.0"

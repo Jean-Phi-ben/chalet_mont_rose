@@ -5,7 +5,7 @@
     <i class="fa-solid fa-arrow-left mr-1"></i> Retour au journal
   <% end %>
   <h1 class="text-2xl font-serif text-stone-900 tracking-wide mt-2" style="font-family: 'Playfair Display', serif;"><%= @email_log.subject %></h1>
-  <p class="text-sm text-stone-500 mt-1"><%= @email_log.label %> · envoyé le <%= l(@email_log.sent_at, format: :long) rescue @email_log.sent_at %></p>
+  <p class="text-sm text-stone-500 mt-1"><%= @email_log.label %> · envoyé le <%= l(@email_log.sent_at, format: :long) %></p>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">

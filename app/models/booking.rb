@@ -4,7 +4,9 @@ class Booking < ApplicationRecord
   EMAIL_FORMAT = /\A[^@\s]+@[^@\s]+\.[^@\s.]{2,}\z/i
 
   # Taux de TVA par catégorie de ligne (location meublée de tourisme + prestations).
-  VAT_RATES = { accommodation: 10.0, cleaning: 20.0, tourist_tax: 0.0 }.freeze
+  # Le ménage, prestation accessoire à l'hébergement en meublé de tourisme, suit son
+  # taux (10 %). La taxe de séjour est hors champ de la TVA.
+  VAT_RATES = { accommodation: 10.0, cleaning: 10.0, tourist_tax: 0.0 }.freeze
 
   belongs_to :user, optional: true
   belongs_to :client, optional: true

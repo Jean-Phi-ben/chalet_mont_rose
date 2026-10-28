@@ -32,7 +32,7 @@
 
     <div class="text-xs text-stone-400 bg-stone-50 border border-stone-100 rounded-lg p-3">
       <strong>TVA</strong> : appliquée par catégorie de ligne sur les factures<br>
-      Hébergement <strong>10 %</strong> · Frais de ménage <strong>20 %</strong> · Taxe de séjour <strong>0 %</strong>
+      Hébergement <strong><%= Booking::VAT_RATES[:accommodation].to_i %> %</strong> · Frais de ménage <strong><%= Booking::VAT_RATES[:cleaning].to_i %> %</strong> · Taxe de séjour <strong>non soumise</strong>
     </div>
 
     <div class="pt-2">

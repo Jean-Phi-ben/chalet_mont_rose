@@ -10,11 +10,11 @@
 <table cellpadding="6" style="border-collapse: collapse; font-family: Arial, sans-serif; color:#1c1917; margin: 16px 0;">
   <tr><td><strong>Arrivée</strong></td><td><%= fr_date_full(@booking.check_in) %></td></tr>
   <tr><td><strong>Départ</strong></td><td><%= fr_date_full(@booking.check_out) %></td></tr>
-  <tr><td><strong>Signé le</strong></td><td><%= l(@signed_at, format: :long) rescue @signed_at %></td></tr>
+  <tr><td><strong>Signé le</strong></td><td><%= l(@signed_at, format: :long) %></td></tr>
 </table>
 
 <p style="font-size: 13px; color:#78716c; margin-top: 24px;">
-  Conservez ce document jusqu'à la fin de votre séjour.<br>
+  Conservez précieusement ce document.<br>
   Référence d'intégrité (SHA-256) : <code style="font-size: 10px;"><%= @hash %></code>
 </p>
 
