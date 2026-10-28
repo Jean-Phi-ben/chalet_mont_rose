@@ -15,13 +15,10 @@ Caution demandée : <%= money(@caution.amount_cents) %> (empreinte bancaire via 
 Lien : <%= @caution_url %>
 <% end %>
 
-3. Documents joints
-- Facture de solde (PDF)
-<% if @booking.contract&.signed_pdf&.attached? %>- Contrat signé (PDF)
-<% end %>- Conditions générales (CGU)
-- Livret du chalet
-
-Suivi : <%= @reservation_url %>
+<% if @attached.any? %><%= @caution_url ? 3 : 2 %>. Documents joints
+<% @attached.each do |label| %>- <%= label %>
+<% end %>
+<% end %>Suivi : <%= @reservation_url %>
 
 À très bientôt,
 Chalet Mont Rose

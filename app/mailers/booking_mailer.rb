@@ -3,9 +3,15 @@ class BookingMailer < ApplicationMailer
   def new_request_to_owner(booking)
     @booking = booking
     owner = ENV["MAILER_OWNER_EMAIL"].presence || ENV["MAILER_FROM"].presence
-    mail to: owner,
-         reply_to: booking.email,
-         subject: "Nouvelle demande de réservation — #{booking.full_name}"
+    message = mail(to: owner, reply_to: booking.email,
+                   subject: "Nouvelle demande de réservation — #{booking.full_name}")
+    if owner.blank?
+      # Pas de destinataire configuré : on journalise au lieu de lever (le client,
+      # lui, reçoit son accusé de réception). Le bandeau admin signale le réglage manquant.
+      Rails.logger.error "[BookingMailer] MAILER_OWNER_EMAIL / MAILER_FROM absents : notification propriétaire non envoyée (booking=#{booking.id})"
+      message.perform_deliveries = false
+    end
+    message
   end
 
   # Accusé de réception envoyé au client.
@@ -19,7 +25,7 @@ class BookingMailer < ApplicationMailer
   def rejected(booking)
     @booking = booking
     mail to: booking.email,
-         subject: "Votre demande de réservation — Chalet Mont Rose"
+         subject: "Votre demande de réservation n'a pas pu être retenue — Chalet Mont Rose"
   end
 
   # Email de confirmation : facture d'arrhes en PJ + lien signature contrat.
@@ -38,24 +44,27 @@ class BookingMailer < ApplicationMailer
          subject: "Votre réservation est confirmée — Chalet Mont Rose"
   end
 
-  # Rappel automatique J-BALANCE_REMINDER_DAYS : solde + caution + livret.
-  # Pièces jointes : facture de solde + contrat signé + CGU + livret.
-  # Le lien Swikly de dépôt de caution est inclus dans le corps de l'email.
-  # Admin en CC.
+  # Rappel automatique Invoice::BALANCE_REMINDER_DAYS jours avant l'arrivée :
+  # solde + caution + documents. Pièces jointes (seulement celles qui existent,
+  # listées dans @attached) : facture de solde, contrat signé, conditions, livret.
+  # Le lien Swikly de dépôt de caution est inclus dans le corps. Propriétaire en CC.
   def balance_reminder(booking)
     @booking         = booking
-    @balance_amount  = Invoice.balance_amount_for(booking)
     @balance_invoice = booking.balance_invoice
-    @due_date        = booking.check_in - (ENV["BALANCE_REMINDER_DAYS"].presence&.to_i || 10)
+    @balance_amount  = @balance_invoice&.amount_cents || Invoice.balance_amount_for(booking)
+    @due_date        = @balance_invoice&.due_on || (booking.check_in - Invoice::BALANCE_DUE_DAYS)
     @reservation_url = reservation_url(@booking.token)
     @caution         = booking.caution
     @caution_url     = @caution&.depositable? ? @caution.deposit_url : nil
+    @attached        = []
 
-    attach_pdf(@balance_invoice&.pdf,            "facture-solde-#{@balance_invoice&.number}.pdf") if @balance_invoice
-    attach_pdf(booking.contract&.signed_pdf,     "contrat-signe-#{booking.token}.pdf")
+    attach_pdf(@balance_invoice&.pdf,        "facture-solde-#{@balance_invoice&.number}.pdf", "Facture de solde (PDF)") if @balance_invoice
+    attach_pdf(booking.contract&.signed_pdf, "contrat-signe-#{booking.token}.pdf",            "Contrat de location signé (PDF)")
     Document.find_each do |doc|
       next unless doc.file.attached?
+
       attachments[doc.file.filename.to_s] = doc.file.download
+      @attached << doc.title
     end
 
     cc = ENV["MAILER_OWNER_EMAIL"].presence
@@ -91,8 +100,10 @@ class BookingMailer < ApplicationMailer
 
   private
 
-  def attach_pdf(active_storage_attachment, filename)
+  def attach_pdf(active_storage_attachment, filename, label = nil)
     return unless active_storage_attachment&.attached?
+
     attachments[filename] = active_storage_attachment.download
+    @attached << label if label && @attached
   end
 end

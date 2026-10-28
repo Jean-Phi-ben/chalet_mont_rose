@@ -48,8 +48,9 @@ class EmailLog < ApplicationRecord
     %w[BookingMailer contract_otp]              => "Code de signature (OTP)",
     %w[BookingMailer signed_contract]           => "Contrat signé (PDF)",
     %w[BookingMailer rejected]                  => "Demande refusée",
-    %w[BookingMailer balance_reminder]          => "Rappel solde J-10 (facture solde + caution + livret)",
-    %w[PasswordsMailer reset]                   => "Réinitialisation mot de passe"
+    %w[BookingMailer balance_reminder]          => "Rappel solde (facture solde + caution + livret)",
+    %w[UserMailer reset]                        => "Réinitialisation mot de passe",
+    %w[UserMailer verification]                 => "Vérification de l'adresse email"
   }.freeze
 
   def label

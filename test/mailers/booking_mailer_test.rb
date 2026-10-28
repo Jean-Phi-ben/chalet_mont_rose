@@ -26,11 +26,28 @@ class BookingMailerTest < ActionMailer::TestCase
     assert_match @booking.token, mail.body.encoded
   end
 
-  test "rejected targets the client and references the period" do
+  test "rejected targets the client with a subject distinct from the acknowledgement" do
     mail = BookingMailer.rejected(@booking)
     assert_equal [ "client@example.com" ], mail.to
-    assert_match "Chalet Mont Rose", mail.subject
+    assert_match "n'a pas pu être retenue", mail.subject
+    assert_not_equal BookingMailer.acknowledgement_to_client(@booking).subject, mail.subject
     assert_match "Jean", mail.body.encoded
+  end
+
+  test "new_request_to_owner without any owner address is skipped, not raised" do
+    with_env("MAILER_OWNER_EMAIL", nil) do
+      with_env("MAILER_FROM", nil) do
+        mail = BookingMailer.new_request_to_owner(@booking)
+        assert_not mail.perform_deliveries
+        assert_no_emails { mail.deliver_now }
+      end
+    end
+  end
+
+  test "every email carries the company footer" do
+    mail = BookingMailer.acknowledgement_to_client(@booking)
+    assert_match "Chalet Mont Rose SARL", mail.html_part.body.decoded
+    assert_match "route de Cupelin", mail.text_part.body.decoded
   end
 
   test "confirmation attaches the deposit invoice PDF and includes the contract signing link only" do

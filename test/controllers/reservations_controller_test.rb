@@ -37,10 +37,14 @@ class ReservationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to reservation_path(booking.token)
   end
 
-  test "create notifies the owner and acknowledges the client" do
-    assert_emails 2 do
+  test "create enqueues the owner notification and the client acknowledgement" do
+    assert_enqueued_jobs 2, only: DeliverBookingEmailJob do
       post reservations_url, params: { booking: booking_params }
     end
+    assert_emails 2 do
+      perform_enqueued_jobs(only: DeliverBookingEmailJob)
+    end
+    assert_equal 2, EmailLog.where(booking: Booking.last).count, "chaque envoi est journalisé"
   end
 
   test "create rejects a period without rates and persists nothing" do

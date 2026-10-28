@@ -213,7 +213,7 @@ class AccountFlowTest < ActionDispatch::IntegrationTest
       get account_root_path
 
       assert_select "[data-invoice-status=paid]", text: /Payée le 22 avril 2026/
-      assert_select "[data-invoice-status=awaiting]", text: /au plus tard le 27 mai 2026/  # J-10 du 6 juin
+      assert_select "[data-invoice-status=awaiting]", text: /au plus tard le 3 juin 2026/  # J-3 du 6 juin
     end
   end
 

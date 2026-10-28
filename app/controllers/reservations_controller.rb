@@ -26,8 +26,10 @@ class ReservationsController < ApplicationController
     @booking.deposit_cents       = quote[:deposit_cents]
 
     if @booking.save
-      BookingMailer.dispatch(:new_request_to_owner, @booking)
-      BookingMailer.dispatch(:acknowledgement_to_client, @booking)
+      # Emails en arrière-plan : une panne SMTP ne doit pas renvoyer une erreur au
+      # client alors que sa demande est enregistrée (le job se relance).
+      DeliverBookingEmailJob.perform_later(:new_request_to_owner, @booking)
+      DeliverBookingEmailJob.perform_later(:acknowledgement_to_client, @booking)
       redirect_to reservation_path(@booking.token),
                   notice: "Votre demande a bien été envoyée. Nous vous répondrons rapidement.",
                   status: :see_other

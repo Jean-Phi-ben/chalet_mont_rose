@@ -1,1 +1,5 @@
 <%= yield %>
+
+--
+<%= ENV["COMPANY_LEGAL_NAME"].presence || "Chalet Mont Rose SARL" %> · 2417 route de Cupelin, 74170 Saint-Gervais-les-Bains
+<%= ENV["COMPANY_PHONE"].presence || "+33 6 89 06 40 57" %> · <%= ENV["COMPANY_EMAIL"].presence || "chaletmontrose74@gmail.com" %>

@@ -7,7 +7,8 @@
   (arrivée le <strong><%= fr_date_full(@booking.check_in) %></strong>).
 </p>
 
-<h3 style="font-family: Georgia, serif; color:#1c1917; margin-top: 24px;">1. Règlement du solde</h3>
+<% step = 0 %>
+<h3 style="font-family: Georgia, serif; color:#1c1917; margin-top: 24px;"><%= step += 1 %>. Règlement du solde</h3>
 <p>
   Il vous reste à régler le <strong>solde de <%= money(@balance_amount) %></strong>
   par virement bancaire, <strong>au plus tard le <%= fr_date_full(@due_date) %></strong>.
@@ -15,7 +16,7 @@
 </p>
 
 <% if @caution_url %>
-  <h3 style="font-family: Georgia, serif; color:#1c1917; margin-top: 28px;">2. Dépôt de la caution</h3>
+  <h3 style="font-family: Georgia, serif; color:#1c1917; margin-top: 28px;"><%= step += 1 %>. Dépôt de la caution</h3>
   <p>
     Une caution de <strong><%= money(@caution.amount_cents) %></strong> est demandée.
     Aucun montant n'est prélevé : il s'agit d'une <strong>empreinte bancaire</strong> via notre prestataire Swikly,
@@ -33,15 +34,14 @@
   </p>
 <% end %>
 
-<h3 style="font-family: Georgia, serif; color:#1c1917; margin-top: 28px;">3. Documents joints</h3>
-<ul style="font-family: Arial, sans-serif; color:#1c1917;">
-  <li>Facture de solde (PDF)</li>
-  <% if @booking.contract&.signed_pdf&.attached? %>
-    <li>Contrat de location signé (PDF)</li>
-  <% end %>
-  <li>Conditions générales (CGU)</li>
-  <li>Livret du chalet (informations pratiques pour votre arrivée)</li>
-</ul>
+<% if @attached.any? %>
+  <h3 style="font-family: Georgia, serif; color:#1c1917; margin-top: 28px;"><%= step += 1 %>. Documents joints</h3>
+  <ul style="font-family: Arial, sans-serif; color:#1c1917;">
+    <% @attached.each do |label| %>
+      <li><%= label %></li>
+    <% end %>
+  </ul>
+<% end %>
 
 <p>Nous restons à votre disposition pour toute question.</p>
 

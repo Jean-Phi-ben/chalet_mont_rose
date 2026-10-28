@@ -116,9 +116,9 @@ class Admin::InvoicesControllerTest < ActionDispatch::IntegrationTest
     get admin_invoice_url(@deposit)
     assert_select "[data-issued-on]", text: "Facture du #{ApplicationController.helpers.fr_date(@deposit.issued_on)}"
     assert_select "dialog input[type=date][max]", false
-    # Non payée : date limite affichée (arrhes J+7 de l'émission ; solde J-10 de l'arrivée).
+    # Non payée : date limite affichée (arrhes J+7 de l'émission ; solde J-3 de l'arrivée).
     assert_select "[data-due-on]", text: /au plus tard le #{ApplicationController.helpers.fr_date(@deposit.due_on)}/
-    assert_select "[data-due-on]", text: /au plus tard le 24 décembre 2025/
+    assert_select "[data-due-on]", text: /au plus tard le 31 décembre 2025/
     assert_select "dialog form[action=?] input[type=date][name='invoice[received_on]'][value=?]",
                   mark_received_admin_invoice_path(@deposit), Date.current.iso8601
 

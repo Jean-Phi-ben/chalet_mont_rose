@@ -1,8 +1,10 @@
 # Façade autour de l'API Swikly V2 pour la caution (Security Deposit).
 # Doc : https://api.sandbox.swikly.com/v1 (sandbox) — la modélisation expose
 # des Requests avec différentes "Operations" (deposit, no-show, payment).
-# Tant que SWIKLY_API_KEY ou SWIKLY_ACCOUNT_ID n'est pas renseigné, on bascule
-# en mode stub pour pouvoir tester localement sans appeler Swikly.
+# Hors production (dev, test, staging), sans SWIKLY_API_KEY / SWIKLY_ACCOUNT_ID on
+# bascule en mode stub (aucun appel réseau, lien factice). En production, des
+# identifiants manquants lèvent une erreur : on n'envoie jamais un lien factice
+# à un vrai client.
 class SwiklyProvider
   RequestResult = Struct.new(:provider_request_id, :deposit_url, keyword_init: true)
 
@@ -19,8 +21,23 @@ class SwiklyProvider
     ENV["SWIKLY_API_KEY"].present? && ENV["SWIKLY_ACCOUNT_ID"].present?
   end
 
+  # Le stub n'est acceptable qu'en dehors de la production réelle.
+  def self.stub_allowed?
+    !Rails.env.production? || ENV["STAGING"].present?
+  end
+
+  # Sandbox Swikly seulement si demandé explicitement (SWIKLY_TEST_MODE=true) en
+  # production ; hors production, sandbox par défaut.
   def self.test_mode?
-    ENV["SWIKLY_TEST_MODE"].to_s.downcase != "false"
+    value = ENV["SWIKLY_TEST_MODE"].to_s.downcase
+    return value == "true" if Rails.env.production?
+
+    value != "false"
+  end
+
+  # Jours de maintien de l'empreinte après le départ (dégâts constatés après l'état des lieux).
+  def self.hold_days
+    (ENV["CAUTION_HOLD_DAYS"].presence || "7").to_i
   end
 
   def self.api_base
@@ -29,7 +46,10 @@ class SwiklyProvider
   end
 
   def self.create_request(booking)
-    enabled? ? new.create_request(booking) : stub_create(booking)
+    return new.create_request(booking) if enabled?
+    return stub_create(booking) if stub_allowed?
+
+    raise Error, "Swikly non configuré en production (SWIKLY_API_KEY / SWIKLY_ACCOUNT_ID manquants)"
   end
 
   # Vérifie l'authenticité d'un webhook Swikly.
@@ -110,8 +130,8 @@ class SwiklyProvider
       phoneNumber: format_phone(booking.phone),
       deposit: {
         startDate: booking.check_in.iso8601,
-        endDate:   booking.check_out.iso8601,
-        amount:    caution_amount_cents(booking)
+        endDate:   (booking.check_out + self.class.hold_days).iso8601,
+        amount:    Caution.amount_for(booking)
       },
       callbacks: {
         requestSecured: callback_url
@@ -139,12 +159,6 @@ class SwiklyProvider
 
   def redirect_url
     ENV["SWIKLY_REDIRECT_URL"].presence
-  end
-
-  def caution_amount_cents(booking)
-    explicit = ENV["CAUTION_AMOUNT"].to_i
-    return explicit * 100 if explicit.positive?
-    ((booking.total_price_cents.to_i * 0.30).round).clamp(50_000, 200_000)
   end
 
   def extract_message(body)

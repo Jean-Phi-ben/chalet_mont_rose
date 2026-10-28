@@ -34,6 +34,21 @@ class CreateCautionJobTest < ActiveJob::TestCase
     assert_equal 60_000, @booking.reload.caution.amount_cents
   end
 
+  test "does not create a second Swikly request while one is pending (unless forced)" do
+    CreateCautionJob.perform_now(@booking)
+    first_id = @booking.reload.caution.provider_request_id
+    CreateCautionJob.perform_now(@booking)
+    assert_equal first_id, @booking.reload.caution.provider_request_id
+    CreateCautionJob.perform_now(@booking, force: true)
+    assert_not_nil @booking.reload.caution.requested_at
+  end
+
+  test "Caution.amount_for is the single source for the job and the provider payload" do
+    assert_equal 60_000, Caution.amount_for(@booking)
+    payload = SwiklyProvider.new.send(:payload_for, @booking)
+    assert_equal 60_000, payload[:deposit][:amount]
+  end
+
   test "doesn't overwrite an accepted caution" do
     CreateCautionJob.perform_now(@booking)
     @booking.caution.update!(status: :accepted, accepted_at: Time.current)

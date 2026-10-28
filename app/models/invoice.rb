@@ -10,9 +10,10 @@ class Invoice < ApplicationRecord
   enum :kind,   { deposit: 0, balance: 1 }, prefix: :kind
   enum :status, { awaiting: 0, received: 1 }, prefix: :payment
 
-  # Délais de règlement (repris sur le PDF et dans l'espace client).
-  DEPOSIT_DUE_DAYS = 7   # arrhes à régler dans les 7 jours suivant l'émission
-  BALANCE_DUE_DAYS = 10  # solde dû J-10 du séjour
+  # Délais de règlement (repris sur le PDF, dans les emails et l'espace client).
+  DEPOSIT_DUE_DAYS       = 7   # arrhes à régler dans les 7 jours suivant l'émission
+  BALANCE_DUE_DAYS       = 3   # solde dû au plus tard 3 jours avant l'arrivée
+  BALANCE_REMINDER_DAYS  = 10  # rappel de solde (facture + caution + livret) envoyé 10 jours avant l'arrivée
 
   validates :number,       presence: true, uniqueness: true
   validates :issued_on,    presence: true
@@ -46,7 +47,7 @@ class Invoice < ApplicationRecord
     kind_deposit? ? "Arrhes" : "Solde"
   end
 
-  # Date limite de règlement : arrhes à J+7 de l'émission, solde à J-10 de l'arrivée.
+  # Date limite de règlement : arrhes à J+7 de l'émission, solde à J-3 de l'arrivée.
   def due_on
     kind_deposit? ? issued_on + DEPOSIT_DUE_DAYS : booking.check_in - BALANCE_DUE_DAYS
   end

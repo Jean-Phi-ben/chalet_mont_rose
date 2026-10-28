@@ -1,35 +1,42 @@
-# Tâche quotidienne (Solid Queue recurring) : envoie au client le rappel
-# du solde à J-BALANCE_REMINDER_DAYS avant l'arrivée, avec CGU + livret +
-# facture de solde + contrat signé en pièces jointes, admin en CC.
+# Tâche quotidienne (Solid Queue recurring) : envoie au client le rappel du
+# solde Invoice::BALANCE_REMINDER_DAYS jours avant l'arrivée, avec facture de
+# solde, contrat signé, conditions et livret en pièces jointes, propriétaire en CC.
 #
-# Anti-doublon : on stocke balance_reminder_sent_at sur la facture de solde
-# et on n'envoie qu'une seule fois par réservation.
+# Fenêtre glissante [aujourd'hui, J+BALANCE_REMINDER_DAYS] : un jour sans
+# exécution ou une réservation confirmée tardivement sont rattrapés au passage
+# suivant. Anti-doublon : balance_reminder_sent_at sur la facture de solde.
 class BalanceReminderJob < ApplicationJob
   queue_as :default
 
   def perform(target_date: nil)
-    days   = (ENV["BALANCE_REMINDER_DAYS"].presence || "10").to_i
-    target = target_date || (Date.current + days)
+    horizon = target_date || (Date.current + Invoice::BALANCE_REMINDER_DAYS)
 
-    bookings_to_remind(target).find_each do |booking|
+    bookings_to_remind(horizon).find_each do |booking|
       next if already_reminded?(booking)
-      # On crée la caution Swikly à ce moment-là (J-10) pour que son lien soit
-      # inclus dans le mail de rappel. Si l'API échoue, on continue quand
-      # même : l'email part avec ce qu'on a (le lien sera juste manquant).
-      begin
-        CreateCautionJob.perform_now(booking)
-      rescue SwiklyProvider::Error => e
-        Rails.logger.warn "[BalanceReminderJob] caution booking=#{booking.id} : #{e.message}"
-      end
-      BookingMailer.dispatch(:balance_reminder, booking)
-      booking.balance_invoice&.update!(balance_reminder_sent_at: Time.current)
+
+      remind(booking)
+    rescue StandardError => e
+      # Une réservation en erreur (SMTP, Swikly…) ne doit pas bloquer les suivantes.
+      Rails.logger.error "[BalanceReminderJob] booking=#{booking.id} : #{e.class} #{e.message}"
     end
   end
 
   private
 
-  def bookings_to_remind(target)
-    Booking.where(status: :confirmed, check_in: target)
+  def remind(booking)
+    # La caution Swikly est créée à ce moment-là pour que son lien figure dans
+    # le rappel. Si le prestataire échoue, l'email part sans le lien.
+    begin
+      CreateCautionJob.perform_now(booking)
+    rescue SwiklyProvider::Error => e
+      Rails.logger.warn "[BalanceReminderJob] caution booking=#{booking.id} : #{e.message}"
+    end
+    BookingMailer.dispatch(:balance_reminder, booking)
+    booking.balance_invoice&.update!(balance_reminder_sent_at: Time.current)
+  end
+
+  def bookings_to_remind(horizon)
+    Booking.where(status: :confirmed, check_in: Date.current..horizon)
   end
 
   # Déjà envoyé ? On regarde le marqueur ou bien si le solde est déjà reçu.
@@ -37,6 +44,7 @@ class BalanceReminderJob < ApplicationJob
     inv = booking.balance_invoice
     return true unless inv
     return true if inv.payment_received?
+
     inv.balance_reminder_sent_at.present?
   end
 end

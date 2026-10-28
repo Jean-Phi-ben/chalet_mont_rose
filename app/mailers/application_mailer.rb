@@ -1,7 +1,8 @@
 class ApplicationMailer < ActionMailer::Base
   helper ApplicationHelper
   helper MoneyHelper
-  default from: -> { ENV["MAILER_FROM"].presence || "Chalet Mont Rose <noreply@example.com>" }
+  # En production, MAILER_FROM est obligatoire (cf. config/initializers/mailer_config.rb).
+  default from: -> { ENV["MAILER_FROM"].presence || "Chalet Mont Rose <dev@chaletmontrose.localhost>" }
   layout "mailer"
 
   # API simple : construit le mail, l'envoie en synchrone, puis crée l'EmailLog.

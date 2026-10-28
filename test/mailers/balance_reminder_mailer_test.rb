@@ -24,7 +24,8 @@ class BalanceReminderMailerTest < ActionMailer::TestCase
   end
 
   test "includes the caution deposit link when a depositable caution exists" do
-    CreateCautionJob.perform_now(@booking)   # crée une Caution :pending avec deposit_url
+    CreateCautionJob.perform_now(@booking)   # crée une Caution :pending (lien de test, non déposable)
+    @booking.caution.update!(deposit_url: "https://swikly.example/deposit/abc") # lien réel simulé
     mail = BookingMailer.balance_reminder(@booking)
     html = mail.html_part.body.decoded
     assert_match "Déposer la caution", html
@@ -44,5 +45,18 @@ class BalanceReminderMailerTest < ActionMailer::TestCase
     assert_includes filenames, "cgu.pdf"
     assert_includes filenames, "livret.pdf"
     assert(filenames.any? { |f| f.start_with?("facture-solde-") })
+    html = mail.html_part.body.decoded
+    assert_match "CGU 2026", html
+    assert_match "Livret", html
+  end
+
+  test "only lists documents that are really attached" do
+    mail = BookingMailer.balance_reminder(@booking)
+    html = mail.html_part.body.decoded
+    assert_match "Facture de solde (PDF)", html
+    assert_no_match "Contrat de location signé", html, "pas de contrat signé → pas annoncé"
+    assert_no_match "Livret", html
+    # Échéance = J-3 de l'arrivée (4 juillet → 1er juillet).
+    assert_match "1 juillet 2026", html
   end
 end

@@ -58,12 +58,12 @@ class InvoiceTest < ActiveSupport::TestCase
     assert_equal "CMR-#{year}-0002", numbers.last
   end
 
-  test "due_on: deposit 7 days after issue, balance 10 days before arrival" do
+  test "due_on: deposit 7 days after issue, balance 3 days before arrival" do
     deposit = @booking.invoices.create!(kind: :deposit, amount_cents: 66_000, issued_on: Date.new(2025, 11, 20))
     balance = @booking.invoices.create!(kind: :balance, amount_cents: 248_560, issued_on: Date.new(2025, 11, 20))
 
     assert_equal Date.new(2025, 11, 27), deposit.due_on
-    assert_equal Date.new(2025, 12, 24), balance.due_on  # arrivée le 3 janvier 2026
+    assert_equal Date.new(2025, 12, 31), balance.due_on  # arrivée le 3 janvier 2026
 
     assert deposit.overdue?(Date.new(2025, 11, 28))
     assert_not deposit.overdue?(Date.new(2025, 11, 27))

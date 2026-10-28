@@ -51,7 +51,7 @@
         <% chip_label = if invoice.payment_received?
                          invoice.kind_deposit? ? "Reçues" : "Reçu"
                        else
-                         invoice.kind_deposit? ? "En attente" : "À J-10"
+                         "En attente"
                        end %>
         <%= payment_status_chip(invoice.payment_received?, chip_label) %>
       </div>

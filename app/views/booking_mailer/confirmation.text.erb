@@ -20,7 +20,7 @@ Signez électroniquement le contrat de location :
 <%= @contract_url %>
 <% end %>
 
-Le solde et la caution vous seront demandés 10 jours avant votre arrivée
+Le solde et la caution vous seront demandés <%= Invoice::BALANCE_REMINDER_DAYS %> jours avant votre arrivée
 dans un email séparé contenant la facture de solde, le livret du chalet et
 le lien pour déposer la caution.
 

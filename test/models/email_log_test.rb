@@ -4,7 +4,7 @@ class EmailLogTest < ActiveSupport::TestCase
   test "label maps mailer/action to a human string" do
     log = EmailLog.new(mailer: "BookingMailer", action: "balance_reminder",
                        to_addresses: "x@y.com", sent_at: Time.current)
-    assert_equal "Rappel solde J-10 (facture solde + caution + livret)", log.label
+    assert_equal "Rappel solde (facture solde + caution + livret)", log.label
   end
 
   test "label falls back to Mailer#action when unknown" do

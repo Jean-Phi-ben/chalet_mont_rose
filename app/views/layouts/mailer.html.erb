@@ -1,13 +1,17 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <style>
-      /* Email styles need to be inline */
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Chalet Mont Rose</title>
   </head>
 
-  <body>
+  <body style="font-family: Arial, sans-serif; color:#1c1917; line-height:1.5;">
     <%= yield %>
+
+    <p style="margin-top: 32px; padding-top: 12px; border-top: 1px solid #e7e5e4; font-size: 12px; color:#78716c;">
+      <%= ENV["COMPANY_LEGAL_NAME"].presence || "Chalet Mont Rose SARL" %> · 2417 route de Cupelin, 74170 Saint-Gervais-les-Bains<br>
+      <%= ENV["COMPANY_PHONE"].presence || "+33 6 89 06 40 57" %> · <%= ENV["COMPANY_EMAIL"].presence || "chaletmontrose74@gmail.com" %>
+    </p>
   </body>
 </html>

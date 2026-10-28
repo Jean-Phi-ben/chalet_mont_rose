@@ -1,30 +1,25 @@
-# Crée (ou re-crée) la demande de caution Swikly pour un booking confirmé.
+# Crée la demande de caution Swikly pour un booking confirmé.
+# Idempotent : une demande déjà en attente avec son lien n'est pas recréée
+# (sinon chaque rappel manuel multiplierait les liens actifs). `force: true`
+# pour en émettre une nouvelle malgré tout.
 class CreateCautionJob < ApplicationJob
   queue_as :default
 
-  def perform(booking)
+  def perform(booking, force: false)
+    caution = booking.caution
     # Une caution déjà acceptée/capturée/libérée ne doit pas être réémise.
-    return if booking.caution && !booking.caution.status_pending?
+    return if caution && !caution.status_pending?
+    return if caution&.deposit_url.present? && !force
 
-    caution = booking.caution || booking.build_caution
-    result  = SwiklyProvider.create_request(booking)
+    caution ||= booking.build_caution
+    result    = SwiklyProvider.create_request(booking)
 
     caution.update!(
       provider_request_id: result.provider_request_id,
       deposit_url:         result.deposit_url,
-      amount_cents:        caution_amount_cents(booking),
+      amount_cents:        Caution.amount_for(booking),
       status:              :pending,
       requested_at:        Time.current
     )
-  end
-
-  private
-
-  def caution_amount_cents(booking)
-    explicit = ENV["CAUTION_AMOUNT"].to_i
-    return explicit * 100 if explicit.positive?
-
-    # Fallback : 30 % du séjour, dans une fourchette 500–2000 €.
-    ((booking.total_price_cents.to_i * 0.30).round).clamp(50_000, 200_000)
   end
 end

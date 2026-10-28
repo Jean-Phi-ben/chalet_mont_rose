@@ -10,7 +10,9 @@ module CompanySettingsHelper
     "COMPANY_SIRET"          => "SIRET",
     "COMPANY_VAT_NUMBER"     => "n° de TVA",
     "COMPANY_CAPITAL"        => "capital social",
-    "COMPANY_EMAIL"          => "email"
+    "COMPANY_EMAIL"          => "email",
+    "MAILER_FROM"            => "expéditeur des emails (MAILER_FROM)",
+    "MAILER_OWNER_EMAIL"     => "adresse du propriétaire pour les notifications (MAILER_OWNER_EMAIL)"
   }.freeze
 
   # Libellés des réglages absents, dans l'ordre ci-dessus ([] si tout est configuré).
