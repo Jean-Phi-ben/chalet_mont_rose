@@ -6,6 +6,9 @@ production:
   balance_reminder:
     class: BalanceReminderJob
     schedule: "every day at 8am"
+  purge_old_data:
+    class: PurgeOldDataJob
+    schedule: "every month on the 1st at 4am"
 
 development: {}
 test: {}

@@ -18,7 +18,7 @@ class ReservationsControllerTest < ActionDispatch::IntegrationTest
     {
       check_in: @check_in, check_out: @check_out,
       first_name: "Jean", last_name: "Dupont",
-      email: "jean@example.com", guests_count: 4
+      email: "jean@example.com", guests_count: 4, terms_accepted: "1"
     }.merge(overrides)
   end
 
@@ -34,7 +34,36 @@ class ReservationsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 14_560, booking.tourist_tax_cents        # 260 × 4 voy. × 14 nuits
     assert_equal 314_560, booking.total_price_cents
     assert_equal 66_000, booking.deposit_cents            # 30 % de l'hébergement
+    assert_not_nil booking.terms_accepted_at
+    assert_equal Booking::TERMS_VERSION, booking.terms_version
     assert_redirected_to reservation_path(booking.token)
+  end
+
+  test "create refuses a request without accepting the terms, keeping the input in the reopened modal" do
+    assert_no_difference "Booking.count" do
+      post reservations_url, params: { booking: booking_params(terms_accepted: "0", message: "Avec un chien") }
+    end
+    assert_response :unprocessable_entity
+    assert_select "body[data-modal-open-value=true]"
+    assert_select "[data-reservation-error]", text: /Conditions générales/
+    assert_select "#reservation-modal input[name='booking[first_name]'][value=Jean]"
+    assert_select "#reservation-modal textarea[name='booking[message]']", text: "Avec un chien"
+    assert_select "#reservation-modal input[name='booking[check_in]'][value='2026-01-03']"
+  end
+
+  test "create ignores robots that fill the honeypot" do
+    assert_no_difference "Booking.count" do
+      post reservations_url, params: { booking: booking_params, website: "http://spam.example" }
+    end
+    assert_response :see_other
+  end
+
+  test "create is rate limited per IP" do
+    5.times { post reservations_url, params: { booking: booking_params(email: "r#{_1}@example.com") } }
+    assert_no_difference "Booking.count" do
+      post reservations_url, params: { booking: booking_params }
+    end
+    assert_match "Trop de demandes", flash[:alert]
   end
 
   test "create enqueues the owner notification and the client acknowledgement" do
@@ -53,7 +82,8 @@ class ReservationsControllerTest < ActionDispatch::IntegrationTest
         booking: booking_params(check_in: Date.new(2026, 2, 7), check_out: Date.new(2026, 2, 14))
       }
     end
-    assert_redirected_to root_path(anchor: "disponibilites")
+    assert_response :unprocessable_entity
+    assert_select "[data-reservation-error]", text: /ne sont pas ouvertes/
   end
 
   test "create rejects a week that has already started" do
@@ -61,8 +91,8 @@ class ReservationsControllerTest < ActionDispatch::IntegrationTest
     assert_no_difference "Booking.count" do
       post reservations_url, params: { booking: booking_params }
     end
-    assert_redirected_to root_path(anchor: "disponibilites")
-    assert_match "pas disponible", flash[:calendar_alert]
+    assert_response :unprocessable_entity
+    assert_select "[data-reservation-error]", text: /déjà commencé/
   end
 
   test "show finds a booking by token" do

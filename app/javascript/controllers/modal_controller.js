@@ -2,9 +2,12 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["root", "dialog", "backdrop"]
+  static values  = { open: Boolean }
 
   connect() {
     this._onKey = (e) => { if (e.key === "Escape") this.close() }
+    // Accueil re-rendu après une demande invalide : la modale se rouvre avec la saisie.
+    if (this.openValue) requestAnimationFrame(() => this.open())
   }
 
   open(event) {

@@ -1,0 +1,47 @@
+<% content_for :title, "Mentions légales — Chalet Mont Rose" %>
+<% content_for :description, "Mentions légales du site chaletmontrose.fr : éditeur, hébergeur, propriété intellectuelle." %>
+
+<article class="max-w-3xl mx-auto bg-white border border-stone-200 rounded-2xl p-6 sm:p-10 text-sm leading-relaxed text-stone-600
+                [&_h2]:font-serif [&_h2]:text-lg [&_h2]:text-stone-900 [&_h2]:mt-8 [&_h2]:mb-3 [&_p]:mb-3 [&_a]:underline [&_strong]:text-stone-800">
+  <h1 class="text-2xl font-serif text-stone-900 tracking-wide mb-1">Mentions légales</h1>
+  <p class="text-xs text-stone-400 mb-6">Loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN).</p>
+
+  <h2>Éditeur du site</h2>
+  <p>
+    <strong><%= CompanyIdentity.legal_name %></strong><% if CompanyIdentity.capital.present? %>, au capital de <%= CompanyIdentity.capital %><% end %><br>
+    Siège social : <%= CompanyIdentity.address.presence || "[À COMPLÉTER]" %><br>
+    <% if CompanyIdentity.rcs.present? %>RCS <%= CompanyIdentity.rcs %> · <% end %>SIRET <%= CompanyIdentity.siret.presence || "[À COMPLÉTER]" %><% if CompanyIdentity.vat_number.present? %> · TVA intracommunautaire <%= CompanyIdentity.vat_number %><% end %><br>
+    Directeur de la publication : <%= CompanyIdentity.representative.presence || "[À COMPLÉTER — gérant de la société]" %><br>
+    Contact : <!--email_off--><a href="mailto:<%= CompanyIdentity.email %>"><%= CompanyIdentity.email %></a><!--/email_off--> · <%= CompanyIdentity.phone %>
+  </p>
+
+  <h2>Activité</h2>
+  <p>
+    Location saisonnière d'un meublé de tourisme situé 2417 route de Cupelin, 74170 Saint-Gervais-les-Bains.
+    <% if ENV["TOURISM_REGISTRATION_NUMBER"].present? %>Numéro d'enregistrement du meublé de tourisme : <%= ENV["TOURISM_REGISTRATION_NUMBER"] %>.<% end %>
+  </p>
+
+  <h2>Hébergement</h2>
+  <p>
+    Le site est hébergé sur un serveur privé de l'éditeur situé en France ; il est diffusé via Cloudflare, Inc.
+    (101 Townsend St, San Francisco, CA 94107, États-Unis), qui assure l'acheminement sécurisé des pages.
+    <% if ENV["HOSTING_PROVIDER"].present? %><%= ENV["HOSTING_PROVIDER"] %><% end %>
+  </p>
+
+  <h2>Médiation de la consommation</h2>
+  <p>
+    Conformément aux articles L611-1 et suivants du Code de la consommation, tout client peut recourir gratuitement à un
+    médiateur de la consommation en vue de la résolution amiable d'un litige après réclamation écrite restée sans réponse
+    satisfaisante : <strong><%= CompanyIdentity.mediator_name.presence || "[À COMPLÉTER — médiateur désigné]" %></strong><% if CompanyIdentity.mediator_address.present? %>, <%= CompanyIdentity.mediator_address %><% end %><% if CompanyIdentity.mediator_url.present? %>, <a href="<%= CompanyIdentity.mediator_url %>" target="_blank" rel="noopener"><%= CompanyIdentity.mediator_url %></a><% end %>.
+    Plateforme européenne de règlement en ligne des litiges : <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener">ec.europa.eu/consumers/odr</a>.
+  </p>
+
+  <h2>Propriété intellectuelle</h2>
+  <p>
+    L'ensemble du site (textes, photographies, plans, logo) est la propriété de l'éditeur. Toute reproduction ou
+    représentation, totale ou partielle, sans autorisation écrite préalable est interdite.
+  </p>
+
+  <h2>Données personnelles</h2>
+  <p>Voir la <%= link_to "politique de confidentialité", privacy_path %>.</p>
+</article>

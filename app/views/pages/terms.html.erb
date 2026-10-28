@@ -1,0 +1,63 @@
+<% content_for :title, "Conditions générales de location — Chalet Mont Rose" %>
+<% content_for :description, "Conditions générales de location du Chalet Mont Rose : réservation, arrhes, solde, caution, annulation, séjour." %>
+
+<article class="max-w-3xl mx-auto bg-white border border-stone-200 rounded-2xl p-6 sm:p-10 text-sm leading-relaxed text-stone-600
+                [&_h2]:font-serif [&_h2]:text-lg [&_h2]:text-stone-900 [&_h2]:mt-8 [&_h2]:mb-3 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1 [&_a]:underline [&_strong]:text-stone-800">
+  <h1 class="text-2xl font-serif text-stone-900 tracking-wide mb-1">Conditions générales de location</h1>
+  <p class="text-xs text-stone-400 mb-6">Version <%= Booking::TERMS_VERSION %> · <%= CompanyIdentity.legal_name %></p>
+
+  <p>
+    Les présentes conditions s'appliquent à toute location du Chalet Mont Rose (2417 route de Cupelin,
+    74170 Saint-Gervais-les-Bains), meublé de tourisme loué à la semaine, du samedi au samedi, pour
+    <%= ContractTemplate::PROPERTY[:max_occupants] %> personnes au maximum. Elles sont complétées par le contrat de
+    location signé électroniquement pour chaque séjour, qui prévaut en cas de divergence.
+  </p>
+
+  <h2>1. Demande et confirmation</h2>
+  <p>
+    La demande de réservation déposée sur le site n'engage pas le Bailleur. La réservation est confirmée par email,
+    accompagnée de la facture des arrhes et du contrat de location à signer électroniquement.
+  </p>
+
+  <h2>2. Prix et paiement</h2>
+  <ul>
+    <li>Le prix comprend l'hébergement, les frais de ménage et la taxe de séjour ; il est indiqué toutes taxes comprises.</li>
+    <li>Des <strong>arrhes</strong> (<%= deposit_rate_label %> du prix de l'hébergement par défaut) sont réglées par virement dans les <%= Invoice::DEPOSIT_DUE_DAYS %> jours suivant l'émission de la facture d'arrhes.</li>
+    <li>Le <strong>solde</strong> est réglé par virement au plus tard <%= Invoice::BALANCE_DUE_DAYS %> jours avant l'arrivée ; la facture de solde est adressée <%= Invoice::BALANCE_REMINDER_DAYS %> jours avant l'arrivée.</li>
+    <li>Aucun escompte pour paiement anticipé. En cas de retard, indemnité forfaitaire de recouvrement de 40 € et pénalités au taux légal (clients professionnels).</li>
+  </ul>
+
+  <h2>3. Caution</h2>
+  <p>
+    Une caution (empreinte bancaire sans prélèvement, via le prestataire Swikly) est demandée avant l'arrivée. Son montant
+    figure au contrat. Elle est libérée au plus tard <%= SwiklyProvider.hold_days %> jours après le départ, déduction faite,
+    le cas échéant, du coût justifié des dégradations ou pertes constatées.
+  </p>
+
+  <h2>4. Annulation</h2>
+  <p>
+    Les sommes versées à la réservation sont des <strong>arrhes</strong> au sens de l'article 1590 du Code civil :
+    si le locataire annule, les arrhes restent acquises au Bailleur et toute autre somme versée est remboursée ;
+    si le Bailleur annule, il restitue le double des arrhes. En cas de force majeure dûment justifiée, les parties
+    s'efforcent de reporter le séjour sans pénalité.
+  </p>
+
+  <h2>5. Séjour</h2>
+  <ul>
+    <li>Arrivée le samedi à partir de <%= ContractTemplate::PROPERTY[:check_in_time] %>, départ le samedi avant <%= ContractTemplate::PROPERTY[:check_out_time] %>, sauf accord écrit.</li>
+    <li>Le logement est réservé à l'usage d'habitation des personnes déclarées, dans la limite de <%= ContractTemplate::PROPERTY[:max_occupants] %> personnes ; sous-location et usage commercial interdits ; chalet non-fumeur.</li>
+    <li>Un état des lieux et un inventaire sont établis à l'arrivée et au départ. Le locataire déclare disposer d'une assurance villégiature.</li>
+    <li>Le ménage de sortie est compris dans les frais de ménage, sauf détérioration manifeste.</li>
+  </ul>
+
+  <h2>6. Médiation et litiges</h2>
+  <p>
+    Droit français. En cas de différend, le locataire adresse une réclamation écrite au Bailleur ; à défaut de réponse
+    satisfaisante sous 60 jours, il peut saisir gratuitement le médiateur de la consommation :
+    <strong><%= CompanyIdentity.mediator_name.presence || "[À COMPLÉTER — médiateur désigné]" %></strong><% if CompanyIdentity.mediator_url.present? %> (<a href="<%= CompanyIdentity.mediator_url %>" target="_blank" rel="noopener"><%= CompanyIdentity.mediator_url %></a>)<% end %>.
+    À défaut d'accord amiable, les juridictions compétentes sont déterminées selon le Code de procédure civile.
+  </p>
+
+  <h2>7. Données personnelles</h2>
+  <p>Les données du locataire sont traitées conformément à la <%= link_to "politique de confidentialité", privacy_path %>.</p>
+</article>

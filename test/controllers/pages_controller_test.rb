@@ -15,6 +15,33 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?]", reservations_path
   end
 
+  test "legal pages are public and linked from the footer" do
+    get root_path
+    assert_select "footer a[href=?]", privacy_path
+    assert_select "footer a[href=?]", legal_path
+    assert_select "footer a[href=?]", terms_path
+
+    get legal_path
+    assert_response :success
+    assert_select "h1", "Mentions légales"
+    assert_match CompanyIdentity.legal_name, response.body
+    assert_match "Médiation de la consommation", response.body
+
+    get terms_path
+    assert_response :success
+    assert_select "h1", "Conditions générales de location"
+    assert_match "article 1590 du Code civil", response.body
+    assert_match Booking::TERMS_VERSION, response.body
+  end
+
+  test "the reservation form carries the terms checkbox, the privacy notice and the honeypot" do
+    get root_path
+    assert_select "#reservation-modal input[type=checkbox][name='booking[terms_accepted]'][required]"
+    assert_select "#reservation-modal a[href=?]", terms_path
+    assert_select "#reservation-modal a[href=?]", privacy_path
+    assert_select "#reservation-modal input[name=website]"
+  end
+
   test "privacy policy is public and linked from the home page footer" do
     get root_path
     assert_select "footer a[href=?]", privacy_path

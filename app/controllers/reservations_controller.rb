@@ -1,4 +1,5 @@
 class ReservationsController < ApplicationController
+  include HomePage
   allow_unauthenticated_access only: %i[create show contract request_otp sign_contract signed_contract_pdf]
 
   before_action :load_booking_and_contract, only: %i[contract request_otp sign_contract signed_contract_pdf]
@@ -10,13 +11,33 @@ class ReservationsController < ApplicationController
   rate_limit to: 10, within: 15.minutes, only: :sign_contract, by: -> { params[:token] },
              with: -> { redirect_to contract_reservation_path(params[:token]), alert: "Trop de tentatives : réessayez dans quelques minutes." }
 
+  # Anti-abus de la demande publique : 5 demandes / 10 min par adresse IP, et un
+  # champ piège (« website ») invisible pour un humain, rempli par les robots.
+  rate_limit to: 5, within: 10.minutes, only: :create,
+             with: -> { redirect_to root_path(anchor: "disponibilites"), alert: "Trop de demandes envoyées : réessayez dans quelques minutes." }
+
+  QUOTE_REASONS = {
+    "samedi_requis"        => "les arrivées et départs se font le samedi.",
+    "semaine_commencee"    => "la semaine en cours a déjà commencé : arrivée possible à partir du prochain samedi.",
+    "ordre_invalide"       => "la date de départ doit suivre l'arrivée.",
+    "semaine_non_tarifee"  => "une ou plusieurs semaines ne sont pas ouvertes à la réservation.",
+    "semaine_indisponible" => "cette semaine est déjà réservée.",
+    "dates_manquantes"     => "choisissez vos dates d'arrivée et de départ."
+  }.freeze
+
   def create
+    if params[:website].present? # robot : on fait comme si tout allait bien, sans rien créer
+      redirect_to root_path, notice: "Votre demande a bien été envoyée.", status: :see_other and return
+    end
+
     @booking = Booking.new(booking_params)
+    @booking.terms_accepted = params.dig(:booking, :terms_accepted)
     quote = Pricing.quote(@booking.check_in, @booking.check_out,
                           guests_count: @booking.guests_count.to_i, earliest_check_in: Date.current)
 
     unless quote[:bookable]
-      redirect_to root_path(anchor: "disponibilites"), flash: { calendar_alert: "La période sélectionnée n'est pas disponible." } and return
+      reason = QUOTE_REASONS.fetch(quote[:reason].to_s, "cette période n'est pas disponible.")
+      return render_home_with_error("Période non disponible : #{reason}")
     end
 
     @booking.accommodation_cents = quote[:accommodation_cents]
@@ -25,7 +46,7 @@ class ReservationsController < ApplicationController
     @booking.total_price_cents   = quote[:total_cents]
     @booking.deposit_cents       = quote[:deposit_cents]
 
-    if @booking.save
+    if @booking.save(context: :public_create)
       # Emails en arrière-plan : une panne SMTP ne doit pas renvoyer une erreur au
       # client alors que sa demande est enregistrée (le job se relance).
       DeliverBookingEmailJob.perform_later(:new_request_to_owner, @booking)
@@ -34,9 +55,7 @@ class ReservationsController < ApplicationController
                   notice: "Votre demande a bien été envoyée. Nous vous répondrons rapidement.",
                   status: :see_other
     else
-      redirect_to root_path(anchor: "disponibilites"),
-                  flash: { calendar_alert: @booking.errors.full_messages.to_sentence },
-                  status: :see_other
+      render_home_with_error(@booking.errors.full_messages.to_sentence)
     end
   end
 
@@ -110,6 +129,15 @@ class ReservationsController < ApplicationController
   end
 
   private
+
+  # Accueil re-rendu (422) : la saisie reste dans le formulaire, la modale est
+  # rouverte et le message s'affiche dedans (cf. layout : data-modal-open-value).
+  def render_home_with_error(message)
+    prepare_home
+    @open_reservation_modal = true
+    @reservation_error = message
+    render "pages/home", status: :unprocessable_entity
+  end
 
   def load_booking_and_contract
     @booking  = Booking.find_by!(token: params[:token])

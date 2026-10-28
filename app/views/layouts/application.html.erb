@@ -43,7 +43,7 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body class="bg-stone-50 overflow-x-hidden" data-controller="modal">
+  <body class="bg-stone-50 overflow-x-hidden" data-controller="modal" data-modal-open-value="<%= @open_reservation_modal ? "true" : "false" %>">
     <%= render "shared/navbar" %>
     <%= render "shared/flashes" %>
 
@@ -56,7 +56,11 @@
     <footer class="border-t border-stone-200 mt-8">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-stone-400">
         <p>© <%= Date.current.year %> Chalet Mont Rose · Le Bettex, Saint-Gervais-les-Bains</p>
-        <%= link_to "Politique de confidentialité", privacy_path, class: "hover:text-stone-700 underline-offset-2 hover:underline" %>
+        <nav class="flex flex-wrap gap-x-4 gap-y-1" aria-label="Pages légales">
+          <%= link_to "Mentions légales", legal_path, class: "hover:text-stone-700 underline-offset-2 hover:underline" %>
+          <%= link_to "Conditions générales de location", terms_path, class: "hover:text-stone-700 underline-offset-2 hover:underline" %>
+          <%= link_to "Politique de confidentialité", privacy_path, class: "hover:text-stone-700 underline-offset-2 hover:underline" %>
+        </nav>
       </div>
     </footer>
   </body>

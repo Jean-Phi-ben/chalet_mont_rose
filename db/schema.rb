@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_18_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_28_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -66,6 +66,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_120000) do
     t.text "message"
     t.string "phone"
     t.integer "status", default: 0, null: false
+    t.datetime "terms_accepted_at"
+    t.string "terms_version"
     t.string "token", null: false
     t.integer "total_price_cents"
     t.integer "tourist_tax_cents", default: 0, null: false

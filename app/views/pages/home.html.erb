@@ -557,7 +557,10 @@
           </button>
         </div>
 
-        <%= form_with url: reservations_path, method: :post, scope: :booking, class: "px-6 sm:px-8 py-6 space-y-5" do |f| %>
+        <%= form_with model: @booking, url: reservations_path, method: :post, scope: :booking, class: "px-6 sm:px-8 py-6 space-y-5" do |f| %>
+          <% if @reservation_error.present? %>
+            <p role="alert" data-reservation-error class="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3"><%= @reservation_error %></p>
+          <% end %>
           <!-- Bouton unique de choix des dates -->
           <div>
             <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Dates (samedi → samedi)</label>
@@ -629,16 +632,31 @@
           </div>
 
           <div>
-            <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Adresse (optionnel)</label>
+            <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Adresse (facultative)</label>
             <%= f.text_area :address, rows: 2, autocomplete: "street-address",
                   class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition resize-none" %>
           </div>
 
           <div>
-            <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Message (optionnel)</label>
+            <label class="block text-[10px] text-stone-400 uppercase tracking-widest mb-1.5">Message (facultatif)</label>
             <%= f.text_area :message, rows: 3,
                   class: "w-full border border-stone-200 rounded-lg px-3 py-2.5 text-sm text-stone-700 focus:outline-none focus:border-stone-900 transition resize-none" %>
           </div>
+
+          <%# Champ piège anti-robots : invisible, doit rester vide. %>
+          <div class="hidden" aria-hidden="true">
+            <label for="website">Site web</label>
+            <input type="text" name="website" id="website" tabindex="-1" autocomplete="off">
+          </div>
+
+          <label class="flex items-start gap-3 text-sm text-stone-700 cursor-pointer">
+            <%= f.check_box :terms_accepted, { required: true, class: "mt-1 h-4 w-4 rounded border-stone-300 text-stone-900 focus:ring-stone-900" }, "1", "0" %>
+            <span>J'ai lu et j'accepte les <%= link_to "conditions générales de location", terms_path, target: "_blank", rel: "noopener", class: "underline hover:text-stone-900" %>.</span>
+          </label>
+          <p class="text-[11px] text-stone-500 leading-relaxed">
+            Les informations saisies sont traitées par <%= CompanyIdentity.legal_name %> pour répondre à votre demande et, si elle est confirmée, exécuter le contrat de location.
+            Vous disposez d'un droit d'accès, de rectification et d'effacement : voir la <%= link_to "politique de confidentialité", privacy_path, target: "_blank", rel: "noopener", class: "underline" %>.
+          </p>
 
           <div class="pt-2 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3">
             <button type="button"

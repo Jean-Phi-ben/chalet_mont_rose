@@ -24,6 +24,13 @@ class Booking < ApplicationRecord
   # Champ virtuel : l'adresse vit sur le Client (synchronisée à la sauvegarde).
   attr_accessor :address
 
+  # Conditions générales de location : version acceptée par le client à la demande
+  # (page /conditions-generales). À incrémenter quand le texte change.
+  TERMS_VERSION = "2026-10".freeze
+  attr_accessor :terms_accepted
+  validates :terms_accepted, acceptance: true, on: :public_create
+  before_validation :record_terms_acceptance, on: :public_create
+
   before_save :sync_client
 
   enum :status, { pending: 0, confirmed: 1, rejected: 2, cancelled: 3 }, default: :pending
@@ -254,6 +261,13 @@ class Booking < ApplicationRecord
   end
 
   private
+
+  def record_terms_acceptance
+    return unless ActiveModel::Type::Boolean.new.cast(terms_accepted)
+
+    self.terms_accepted_at ||= Time.current
+    self.terms_version     ||= TERMS_VERSION
+  end
 
   def refuse_destroy_unless_deletable
     return if deletable?

@@ -2,6 +2,8 @@ Rails.application.routes.draw do
   root to: "pages#home"
   # Politique de confidentialité (exigée par Google pour publier l'écran de consentement OAuth).
   get "confidentialite", to: "pages#privacy", as: :privacy
+  get "mentions-legales",       to: "pages#legal", as: :legal
+  get "conditions-generales",   to: "pages#terms", as: :terms
 
   # Fichiers pour les robots (moteurs de recherche et IA), avec un cache court.
   get "robots.txt",  to: "seo#robots",  format: false, defaults: { format: :text }

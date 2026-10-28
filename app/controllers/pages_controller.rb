@@ -1,12 +1,18 @@
 class PagesController < ApplicationController
-  allow_unauthenticated_access only: %i[home privacy]
+  include HomePage
+  allow_unauthenticated_access only: %i[home privacy legal terms]
 
   def home
-    cheapest_cents = WeeklyRate.single_week_bookable.minimum(:price_cents)
-    @cheapest_week_price = cheapest_cents && (cheapest_cents / 100.0).round
+    prepare_home
   end
 
   def privacy
+  end
+
+  def legal
+  end
+
+  def terms
   end
 
   private

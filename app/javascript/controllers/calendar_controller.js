@@ -11,6 +11,19 @@ export default class extends Controller {
   connect() {
     this.checkIn = null
     this.checkOut = null
+    this._restoreSelection()
+  }
+
+  // Après un re-rendu serveur (demande invalide), les dates saisies sont dans les
+  // champs cachés : on les reprend et on recalcule le devis.
+  _restoreSelection() {
+    if (!this.hasCheckInTarget || !this.hasCheckOutTarget) return
+    const checkIn = this.checkInTarget.value, checkOut = this.checkOutTarget.value
+    if (!checkIn || !checkOut) return
+    this.checkIn = checkIn
+    this.checkOut = checkOut
+    this.paint()
+    this.fetchQuote()
   }
 
   // --- Sélecteur de dates (overlay au-dessus de la modale) ---
