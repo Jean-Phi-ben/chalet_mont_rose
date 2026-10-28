@@ -60,9 +60,10 @@ class TouristTaxPeriodTest < ActiveSupport::TestCase
     )
 
     seasons_years = TouristTaxPeriod.completed_periods.map { |p| [ p.season, p.year ] }
-    # On part de l'année de la 1re réservation (2025) ⇒ été 2025 (clos 30 sept 2025)
-    # et hiver 2025 (clos 30 avr 2026) sont les deux périodes passées attendues.
-    assert_equal [ [ "summer", 2025 ], [ "winter", 2025 ] ], seasons_years
+    # On part de l'hiver précédant la 1re réservation (une arrivée de janvier à avril
+    # relève de l'hiver de l'année d'avant) : hiver 2024 (clos 30 avr 2025), été 2025
+    # (clos 30 sept 2025) et hiver 2025 (clos 30 avr 2026).
+    assert_equal [ [ "winter", 2024 ], [ "summer", 2025 ], [ "winter", 2025 ] ], seasons_years
     # été 2026 n'est PAS encore clos (on est le 30 mai 2026).
     refute_includes seasons_years, [ "summer", 2026 ]
   end

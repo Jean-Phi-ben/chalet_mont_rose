@@ -33,9 +33,10 @@ class Admin::WeeklyRatesController < Admin::BaseController
         format.html { redirect_to admin_weekly_rates_path, notice: "Tarif mis à jour." }
       end
     else
-      @weekly_rate.reload
+      # Valeur saisie invalide : la ligne est re-rendue avec le message d'erreur
+      # (le prix enregistré reste inchangé en base).
       respond_to do |format|
-        format.turbo_stream { render :update }
+        format.turbo_stream { render :update, status: :unprocessable_entity }
         format.html { render :edit, status: :unprocessable_entity }
       end
     end

@@ -6,7 +6,7 @@ class Admin::BookingsControllerTest < ActionDispatch::IntegrationTest
 
   setup do
     travel_to Date.new(2025, 12, 1)
-    @admin = User.create!(email_address: "admin@example.com", password: "motdepasse", admin: true)
+    @admin = User.create!(email_address: "admin@example.com", password: "motdepasse")
     sign_in_as(@admin)
 
     WeeklyRate.create!(week_start: Date.new(2026, 1, 3),  price_cents: 100_000)

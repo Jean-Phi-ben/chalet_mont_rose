@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_28_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_28_110000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -47,7 +47,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_100000) do
     t.datetime "created_at", null: false
     t.integer "tourist_tax_per_person_per_night_cents", default: 260, null: false
     t.datetime "updated_at", null: false
-    t.decimal "vat_rate_percent", precision: 5, scale: 2, default: "10.0", null: false
   end
 
   create_table "bookings", force: :cascade do |t|
@@ -210,7 +209,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_28_100000) do
   end
 
   create_table "users", force: :cascade do |t|
-    t.boolean "admin"
     t.datetime "created_at", null: false
     t.string "email_address", null: false
     t.datetime "email_verified_at"

@@ -2,7 +2,7 @@ class Admin::DashboardController < Admin::BaseController
   RECEIVED_INVOICES_LIMIT = 10
 
   def index
-    @weekly_rates_count = WeeklyRate.count
+    authorize :dashboard
     @notes = Note.active.sorted
     @note  = Note.new
 

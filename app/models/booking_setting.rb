@@ -4,7 +4,6 @@
 class BookingSetting < ApplicationRecord
   validates :cleaning_fee_cents, numericality: { greater_than_or_equal_to: 0, only_integer: true }
   validates :tourist_tax_per_person_per_night_cents, numericality: { greater_than_or_equal_to: 0, only_integer: true }
-  validates :vat_rate_percent, numericality: { greater_than_or_equal_to: 0, less_than: 100 }
 
   def self.current
     first || create!

@@ -6,7 +6,6 @@ import CarouselController from "controllers/carousel_controller"
 import ContractSigningController from "controllers/contract_signing_controller"
 import DepositPercentController from "controllers/deposit_percent_controller"
 import DialogController from "controllers/dialog_controller"
-import DropdownController from "controllers/dropdown_controller"
 import FlashController from "controllers/flash_controller"
 import MapController      from "controllers/map_controller"
 import ModalController    from "controllers/modal_controller"
@@ -21,7 +20,6 @@ application.register("carousel", CarouselController)
 application.register("contract-signing", ContractSigningController)
 application.register("deposit-percent", DepositPercentController)
 application.register("dialog", DialogController)
-application.register("dropdown", DropdownController)
 application.register("flash",    FlashController)
 application.register("map",      MapController)
 application.register("modal",    ModalController)

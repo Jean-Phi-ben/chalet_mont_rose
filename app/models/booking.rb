@@ -42,8 +42,6 @@ class Booking < ApplicationRecord
   validate :dates_must_be_saturdays
   validate :check_out_after_check_in
 
-  scope :blocking, -> { where(status: :confirmed) }
-
   validate :no_overlap_with_other_confirmed, if: -> { confirmed? && check_in && check_out }
 
   # Jours entièrement bloqués (nuits intermédiaires d'une réservation existante).

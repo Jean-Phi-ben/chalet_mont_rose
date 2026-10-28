@@ -152,7 +152,7 @@ class Admin::BookingsController < Admin::BaseController
     end
 
     BookingMailer.dispatch(action.to_sym, @booking)
-    redirect_to admin_booking_path(@booking), notice: "Email « #{action.humanize} » renvoyé."
+    redirect_to admin_booking_path(@booking), notice: "Email « #{EmailLog::LABELS.fetch([ "BookingMailer", action ], action)} » renvoyé."
   rescue StandardError => e
     redirect_to admin_booking_path(@booking), alert: "Échec du renvoi : #{e.message}"
   end

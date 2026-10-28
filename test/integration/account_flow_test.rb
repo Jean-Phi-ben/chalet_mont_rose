@@ -245,7 +245,7 @@ class AccountFlowTest < ActionDispatch::IntegrationTest
   end
 
   test "aucun lien vers l'admin n'apparaît dans l'espace client, même pour un admin connecté" do
-    admin = User.create!(email_address: "patron@example.com", password: "motdepasse", admin: true)
+    admin = User.create!(email_address: "patron@example.com", password: "motdepasse")
     sign_in_as(admin)
 
     get account_root_path

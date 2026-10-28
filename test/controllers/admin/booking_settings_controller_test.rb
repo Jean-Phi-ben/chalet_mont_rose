@@ -2,7 +2,7 @@ require "test_helper"
 
 class Admin::BookingSettingsControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @admin = User.create!(email_address: "admin@example.com", password: "motdepasse", admin: true)
+    @admin = User.create!(email_address: "admin@example.com", password: "motdepasse")
     sign_in_as(@admin)
   end
 

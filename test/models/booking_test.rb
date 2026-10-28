@@ -79,8 +79,8 @@ class BookingTest < ActiveSupport::TestCase
   test "blocking scope returns only confirmed bookings" do
     pending = Booking.create!(valid_attributes)
     confirmed = Booking.create!(valid_attributes(email: "autre@example.com", status: :confirmed))
-    assert_includes Booking.blocking, confirmed
-    assert_not_includes Booking.blocking, pending
+    assert_includes Booking.confirmed, confirmed
+    assert_not_includes Booking.confirmed, pending
   end
 
   test "rejects confirmation when overlapping another confirmed booking" do

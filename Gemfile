@@ -41,8 +41,6 @@ gem "image_processing", "~> 1.2"
 
 gem "pundit"
 gem "omniauth-google-oauth2"
-gem "omniauth-facebook"
-gem "omniauth-apple"
 gem "omniauth-rails_csrf_protection" # protège la phase de requête OmniAuth (POST + CSRF)
 gem "dotenv-rails"
 group :development, :test do

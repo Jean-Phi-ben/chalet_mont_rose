@@ -3,7 +3,7 @@ require "test_helper"
 class Admin::DashboardControllerTest < ActionDispatch::IntegrationTest
   setup do
     travel_to Date.new(2025, 12, 1)
-    sign_in_as(User.create!(email_address: "admin@example.com", password: "motdepasse", admin: true))
+    sign_in_as(User.create!(email_address: "admin@example.com", password: "motdepasse"))
 
     @pending = Booking.create!(
       check_in: Date.new(2026, 2, 7), check_out: Date.new(2026, 2, 14),

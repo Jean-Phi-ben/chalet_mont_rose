@@ -104,9 +104,15 @@ Clés notables :
 |-----|-------|
 | `GMAIL_SMTP_USERNAME`, `GMAIL_SMTP_APP_PASSWORD` | Envoi d'emails via Gmail SMTP (mot de passe d'application) |
 | `MAILER_FROM`, `MAILER_OWNER_EMAIL` | Expéditeur et destinataire propriétaire |
-| `SWIKLY_*`, `CAUTION_AMOUNT` | Caution en ligne |
-| `COMPANY_*` | Mentions légales / RIB sur les PDF de factures |
-| `*_CLIENT_ID` / `*_SECRET` | OmniAuth (Google / Facebook / Apple) |
+| `SWIKLY_*`, `CAUTION_AMOUNT`, `CAUTION_HOLD_DAYS` | Caution en ligne (en production, sans clés : aucune caution demandée) |
+| `COMPANY_*` | Identité de la société : contrat, factures (RIB), mentions légales, emails |
+| `MEDIATOR_*`, `HOSTING_PROVIDER`, `TOURISM_REGISTRATION_NUMBER` | Mentions légales et CGL (médiateur de la consommation…) |
+| `ADMIN_EMAILS` | Liste blanche des administrateurs |
+| `DEPOSIT_RATE` | Part d'arrhes (0.30 par défaut) |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Connexion Google (OmniAuth) |
+| `STAGING` | Instance de pré-production : emails non envoyés, Swikly en test, HTTPS non forcé |
+
+> `MAILER_FROM` est **obligatoire en production** : sans lui, l'application refuse de démarrer.
 
 > `config/master.key` (déchiffrement des credentials Rails) est **gitignoré**. En production, la clé est fournie via `RAILS_MASTER_KEY`.
 

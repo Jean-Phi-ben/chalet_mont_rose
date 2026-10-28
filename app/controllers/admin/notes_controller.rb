@@ -2,11 +2,13 @@ class Admin::NotesController < Admin::BaseController
   before_action :set_note, only: %i[update destroy toggle archive unarchive]
 
   def archived
+    authorize Note
     @notes = Note.archived.order(archived_at: :desc)
   end
 
   def create
     @note = Note.new(note_params)
+    authorize @note
     if @note.save
       redirect_to admin_root_path, notice: "Note ajoutée."
     else
@@ -15,6 +17,7 @@ class Admin::NotesController < Admin::BaseController
   end
 
   def update
+    authorize @note
     if @note.update(note_params)
       redirect_back fallback_location: admin_root_path, notice: "Note mise à jour."
     else
@@ -24,21 +27,25 @@ class Admin::NotesController < Admin::BaseController
 
   # Coche / décoche la tâche depuis la liste.
   def toggle
+    authorize @note
     @note.update(done: !@note.done?)
     redirect_to admin_root_path
   end
 
   def archive
+    authorize @note
     @note.archive!
     redirect_back fallback_location: admin_root_path, notice: "Note archivée."
   end
 
   def unarchive
+    authorize @note
     @note.unarchive!
     redirect_back fallback_location: archived_admin_notes_path, notice: "Note rétablie."
   end
 
   def destroy
+    authorize @note
     @note.destroy
     redirect_back fallback_location: archived_admin_notes_path, notice: "Note supprimée."
   end

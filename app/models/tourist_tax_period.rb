@@ -38,7 +38,7 @@ class TouristTaxPeriod < ApplicationRecord
                        .having("COUNT(DISTINCT kind) = 2")
                        .pluck(:booking_id)
 
-    Booking
+    Booking.confirmed
       .where(id: fully_paid_ids)
       .where(check_in: range)
       .sum(:tourist_tax_cents)
@@ -53,8 +53,9 @@ class TouristTaxPeriod < ApplicationRecord
     today    = Date.current
     periods  = []
 
-    (earliest.year..today.year).each do |y|
-      periods << find_or_initialize_by(season: "summer", year: y) if today > Date.new(y, 9, 30)
+    # L'hiver commence en octobre : une arrivée de janvier à avril relève de l'hiver de l'année précédente.
+    ((earliest.year - 1)..today.year).each do |y|
+      periods << find_or_initialize_by(season: "summer", year: y) if y >= earliest.year && today > Date.new(y, 9, 30)
       periods << find_or_initialize_by(season: "winter", year: y) if today > Date.new(y + 1, 4, 30)
     end
 
