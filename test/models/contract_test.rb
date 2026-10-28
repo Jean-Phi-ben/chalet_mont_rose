@@ -94,6 +94,14 @@ class ContractTest < ActiveSupport::TestCase
     assert_not @contract.reload.integrity_ok?, "sans texte gelé, l'intégrité n'est pas vérifiable"
   end
 
+  test "document hash does not depend on the application time zone" do
+    text = ContractTemplate.canonical_text(@booking, @contract)
+    @contract.update_columns(signed_at: Time.utc(2026, 10, 17, 7, 4, 0), signed_ip: "1.2.3.4", signed_user_agent: "UA")
+    in_paris = Time.use_zone("Europe/Paris") { @contract.reload.compute_document_hash(text) }
+    in_utc   = Time.use_zone("UTC")          { @contract.reload.compute_document_hash(text) }
+    assert_equal in_utc, in_paris
+  end
+
   test "freezing : cannot modify a signed contract" do
     @contract.update!(
       status: :signed, signed_at: Time.current,

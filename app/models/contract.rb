@@ -80,7 +80,7 @@ class Contract < ApplicationRecord
       signer:        { first_name: signer_first_name, last_name: signer_last_name,
                        email:      signer_email,       phone:    signer_phone,
                        address:    signer_address },
-      signed_at:     signed_at&.iso8601,
+      signed_at:     signed_at&.utc&.iso8601, # en UTC : le hash ne dépend pas du fuseau de l'application
       signed_ip:     signed_ip,
       signed_ua:     signed_user_agent
     }
