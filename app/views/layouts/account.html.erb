@@ -19,9 +19,9 @@
   </head>
 
   <body class="bg-stone-50 min-h-screen flex flex-col">
-    <%# Même en-tête que le site public (logo, menu maison, burger) : retour au site en un clic.
-        Sans la rubrique Administration : l'espace client ne lie jamais vers /admin. %>
-    <%= render "shared/navbar", show_admin: false %>
+    <%# Même en-tête que le site public (logo, menu maison, burger) : retour au site en un clic,
+        et rubrique Administration pour les comptes administrateurs. %>
+    <%= render "shared/navbar" %>
 
     <%# Onglets de l'espace client (la déconnexion est dans le menu maison / burger). %>
     <div class="bg-white border-b border-stone-200">

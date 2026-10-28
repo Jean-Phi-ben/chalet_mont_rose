@@ -31,8 +31,7 @@
   <% end %>
 <% end %>
 
-<%# show_admin: false dans l'espace client, cloisonné de l'admin. %>
-<% if authenticated? && Current.user.admin? && local_assigns.fetch(:show_admin, true) %>
+<% if authenticated? && Current.user.admin? %>
   <%# ───── Catégorie : Administration (admin uniquement) ───── %>
   <p class="<%= cat %> mt-1 border-t border-stone-100">Administration</p>
   <%= link_to admin_root_path, class: item do %>

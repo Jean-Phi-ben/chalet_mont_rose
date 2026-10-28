@@ -244,13 +244,19 @@ class AccountFlowTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", admin_weekly_rates_path
   end
 
-  test "aucun lien vers l'admin n'apparaît dans l'espace client, même pour un admin connecté" do
-    admin = User.create!(email_address: "patron@example.com", password: "motdepasse")
-    sign_in_as(admin)
+  test "dans l'espace client, le menu propose l'Administration à un admin et jamais à un client" do
+    sign_in_as(users(:one)) # client ordinaire
+    [ account_root_path, account_profile_path, account_documents_path ].each do |path|
+      get path
+      assert_response :success
+      assert_select "a[href=?]", admin_root_path, false, "un client ne voit pas l'admin (#{path})"
+    end
 
+    sign_out
+    sign_in_as(User.create!(email_address: "patron@example.com", password: "motdepasse"))
     get account_root_path
-    assert_response :success
-    assert_select "a[href='/admin']", false, "l'espace client ne doit jamais lier vers /admin"
-    assert_no_match(/Dashboard Admin/i, response.body)
+    assert_select "#usermenu-panel a[href=?]", admin_root_path       # menu maison
+    assert_select "#mobile-menu a[href=?]", admin_bookings_path      # burger
+    assert_match "Administration", response.body
   end
 end

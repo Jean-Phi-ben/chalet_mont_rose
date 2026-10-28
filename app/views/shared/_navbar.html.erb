@@ -39,7 +39,7 @@
 
         <div id="usermenu-panel" class="hidden absolute right-0 mt-2 w-64 max-h-[80vh] overflow-y-auto bg-white shadow-lg rounded-xl border border-stone-100 p-2 z-50"
              data-usermenu-target="menu">
-          <%= render "shared/main_menu", show_admin: local_assigns.fetch(:show_admin, true) %>
+          <%= render "shared/main_menu" %>
         </div>
       </div>
 
@@ -72,7 +72,7 @@
          class="block px-3 py-3 rounded-lg text-sm tracking-[0.2em] uppercase text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition">Contact</a>
 
       <div class="my-2 border-t border-stone-100"></div>
-      <%= render "shared/main_menu", show_admin: local_assigns.fetch(:show_admin, true) %>
+      <%= render "shared/main_menu" %>
     </div>
   </div>
 </nav>
