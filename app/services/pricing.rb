@@ -2,7 +2,8 @@
 # Tous les montants sont en centimes.
 class Pricing
   def self.deposit_rate
-    (ENV["DEPOSIT_RATE"] || "0.30").to_f
+    # `.presence` : une variable définie mais vide ne doit pas donner 0 € d'arrhes.
+    (ENV["DEPOSIT_RATE"].presence || "0.30").to_f
   end
 
   # Samedi de début de la semaine contenant `date` (samedi le plus proche, <= date).

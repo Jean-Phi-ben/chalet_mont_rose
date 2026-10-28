@@ -15,16 +15,4 @@ class BookingPolicy < ApplicationPolicy
   # Jamais une réservation confirmée, facturée ou au contrat signé.
   def destroy?           = admin? && record.is_a?(Booking) && !record.confirmed? && record.deletable?
   def archive_invoicing? = admin? && record.is_a?(Booking) && !record.invoicing_archived? && record.balance_invoice&.payment_received?
-
-  class Scope < ApplicationPolicy::Scope
-    def resolve
-      user&.admin? ? scope.all : scope.none
-    end
-  end
-
-  private
-
-  def admin?
-    user&.admin?
-  end
 end

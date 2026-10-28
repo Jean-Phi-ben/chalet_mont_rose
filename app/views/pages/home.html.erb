@@ -16,7 +16,7 @@
    "et le ménage dans la semaine si nécessaire."],
   ["Comment réserver ?",
    "Le chalet se loue à la semaine, du samedi au samedi. Choisissez vos dates dans le calendrier et envoyez une demande, sans paiement immédiat : " \
-   "des arrhes de 30 % de l'hébergement sont demandées à la confirmation. Les frais de ménage de fin de séjour et la taxe de séjour s'ajoutent au tarif."]
+   "des arrhes de #{deposit_rate_label} de l'hébergement sont demandées à la confirmation. Les frais de ménage de fin de séjour et la taxe de séjour s'ajoutent au tarif."]
 ] %>
 
 <% content_for :head do %>
@@ -472,7 +472,7 @@
             <span class="font-medium text-stone-900" data-calendar-target="total"></span>
           </div>
           <div class="flex justify-between text-sm text-stone-500 border-t border-stone-100 pt-3">
-            <span>Arrhes (30 %)</span>
+            <span>Arrhes (<%= deposit_rate_label %>)</span>
             <span data-calendar-target="deposit"></span>
           </div>
         </div>
@@ -589,7 +589,7 @@
               <span>Total</span><span data-calendar-target="recapTotal"></span>
             </div>
             <div class="flex justify-between text-xs text-stone-500">
-              <span>Arrhes (30 % de l'hébergement)</span><span data-calendar-target="recapDeposit"></span>
+              <span>Arrhes (<%= deposit_rate_label %> de l'hébergement)</span><span data-calendar-target="recapDeposit"></span>
             </div>
           </div>
 

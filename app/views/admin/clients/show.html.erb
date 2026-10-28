@@ -1,11 +1,5 @@
 <% content_for :title, "#{@client.full_name} — Admin" %>
 
-<% status_styles = {
-  "pending"   => "bg-amber-50 text-amber-700 border-amber-200",
-  "confirmed" => "bg-emerald-50 text-emerald-700 border-emerald-200",
-  "rejected"  => "bg-rose-50 text-rose-700 border-rose-200",
-  "cancelled" => "bg-stone-100 text-stone-600 border-stone-200"
-} %>
 
 <div class="mb-6">
   <%= link_to admin_bookings_path, class: "text-xs text-stone-400 hover:text-stone-700" do %>
@@ -68,7 +62,7 @@
                 <td class="px-5 py-3 text-stone-700"><%= fr_date(b.check_in) %> <span class="text-stone-400">→</span> <%= fr_date(b.check_out) %></td>
                 <td class="px-5 py-3 text-stone-800 font-medium"><%= money(b.total_price_cents) %></td>
                 <td class="px-5 py-3">
-                  <span class="text-[11px] uppercase tracking-widest px-2.5 py-0.5 rounded-full border <%= status_styles[b.status] %>"><%= b.status %></span>
+                  <%= booking_status_badge(b) %>
                 </td>
                 <td class="px-5 py-3 text-right">
                   <%= link_to "Voir", admin_booking_path(b), class: "text-xs text-stone-700 hover:text-stone-900 uppercase tracking-widest" %>

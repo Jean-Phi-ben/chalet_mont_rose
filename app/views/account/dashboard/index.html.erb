@@ -14,14 +14,6 @@
 <% else %>
   <div class="space-y-5">
     <% @bookings.each do |booking| %>
-      <%
-        badge = case booking.status
-                when "confirmed" then ["Confirmée", "bg-emerald-50 text-emerald-700 border-emerald-200"]
-                when "pending"   then ["En attente de validation", "bg-amber-50 text-amber-700 border-amber-200"]
-                when "rejected"  then ["Refusée", "bg-red-50 text-red-700 border-red-200"]
-                else                  ["Annulée", "bg-stone-100 text-stone-500 border-stone-200"]
-                end
-      %>
       <div class="bg-white border border-stone-200 rounded-2xl p-6">
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -30,7 +22,7 @@
             </p>
             <p class="text-sm text-stone-500 mt-0.5"><%= pluralize(booking.nights, "nuit") %> · <%= money(booking.total_price_cents) %></p>
           </div>
-          <span class="text-xs px-3 py-1 rounded-full border <%= badge[1] %>"><%= badge[0] %></span>
+          <%= booking_status_badge(booking, long: true, size: :lg) %>
         </div>
 
         <% if booking.confirmed? %>

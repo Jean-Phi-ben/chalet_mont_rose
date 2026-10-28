@@ -63,8 +63,9 @@ class Admin::WeeklyRatesController < Admin::BaseController
       return render :bulk_edit, status: :unprocessable_entity
     end
 
-    count = apply_bulk(from, to, (price * 100).round)
-    redirect_to admin_weekly_rates_path, notice: "#{count} semaine(s) tarifée(s) à #{price.to_i} €."
+    price_cents = (price * 100).round
+    count = apply_bulk(from, to, price_cents)
+    redirect_to admin_weekly_rates_path, notice: "#{helpers.fr_plural(count, 'semaine tarifée')} à #{helpers.money(price_cents)}."
   end
 
   private

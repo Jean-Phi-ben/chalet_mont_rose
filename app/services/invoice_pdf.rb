@@ -10,6 +10,7 @@ class InvoicePdf
   include ActionView::Helpers::NumberHelper
   include ApplicationHelper
   include MoneyHelper
+  include TypographyHelper
 
   STONE_900 = "1c1917"
   STONE_500 = "78716c"
@@ -91,7 +92,8 @@ class InvoicePdf
     @doc.text "<b>Séjour</b>", inline_format: true
     @doc.text "Du #{fr_date_full(@booking.check_in)} au #{fr_date_full(@booking.check_out)}"
     @doc.fill_color STONE_500
-    @doc.text "#{@booking.weeks} semaine(s) · #{@booking.nights} nuits" + (@booking.guests_count ? " · #{@booking.guests_count} voyageur(s)" : "")
+    @doc.text [ fr_plural(@booking.weeks, "semaine"), fr_plural(@booking.nights, "nuit"),
+                (@booking.guests_count ? fr_plural(@booking.guests_count, "voyageur") : nil) ].compact.join(" · ")
     @doc.fill_color STONE_900
     @doc.move_down 16
   end

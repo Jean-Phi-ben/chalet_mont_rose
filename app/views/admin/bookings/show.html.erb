@@ -1,12 +1,5 @@
 <% content_for :title, "Réservation #{@booking.full_name} — Admin" %>
 
-<% status_styles = {
-  "pending"   => { label: "En attente de validation", cls: "bg-amber-50 text-amber-700 border-amber-200" },
-  "confirmed" => { label: "Confirmée",                 cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  "rejected"  => { label: "Refusée",                   cls: "bg-rose-50 text-rose-700 border-rose-200" },
-  "cancelled" => { label: "Annulée",                   cls: "bg-stone-100 text-stone-600 border-stone-200" }
-} %>
-<% s = status_styles.fetch(@booking.status, status_styles["pending"]) %>
 
 <div class="mb-6">
   <%= link_to admin_bookings_path, class: "text-xs text-stone-400 hover:text-stone-700" do %>
@@ -21,7 +14,7 @@
     </h1>
     <p class="text-sm text-stone-500 mt-1"><%= @booking.email %><% if @booking.phone.present? %> · <%= @booking.phone %><% end %></p>
   </div>
-  <span class="self-start text-[11px] uppercase tracking-widest px-3 py-1 rounded-full border <%= s[:cls] %>"><%= s[:label] %></span>
+  <%= booking_status_badge(@booking, long: true, size: :lg, class_name: "self-start") %>
 </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -69,7 +62,7 @@
     <div>
       <p class="text-[10px] text-stone-400 uppercase tracking-widest mb-1">Période</p>
       <p class="text-stone-800"><%= fr_date_full(@booking.check_in) %> <span class="text-stone-400">→</span> <%= fr_date_full(@booking.check_out) %></p>
-      <p class="text-xs text-stone-400 mt-1"><%= @booking.weeks %> semaine(s) · <%= @booking.nights %> nuits<% if @booking.guests_count %> · <%= @booking.guests_count %> voyageur<%= "s" if @booking.guests_count.to_i > 1 %><% end %></p>
+      <p class="text-xs text-stone-400 mt-1"><%= fr_plural(@booking.weeks, "semaine") %> · <%= fr_plural(@booking.nights, "nuit") %><% if @booking.guests_count %> · <%= @booking.guests_count %> voyageur<%= "s" if @booking.guests_count.to_i > 1 %><% end %></p>
     </div>
 
     <div class="border-t border-stone-100 pt-5">

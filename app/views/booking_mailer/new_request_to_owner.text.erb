@@ -7,7 +7,7 @@ Téléphone : <%= @booking.phone.presence || "—" %>
 Voyageurs : <%= @booking.guests_count || "—" %>
 Arrivée   : <%= fr_date_full(@booking.check_in) %>
 Départ    : <%= fr_date_full(@booking.check_out) %>
-Durée     : <%= @booking.weeks %> semaine(s) — <%= @booking.nights %> nuits
+Durée     : <%= fr_plural(@booking.weeks, "semaine") %> — <%= fr_plural(@booking.nights, "nuit") %>
 Total     : <%= money(@booking.total_price_cents) %>
 Arrhes    : <%= money(@booking.deposit_cents) %>
 

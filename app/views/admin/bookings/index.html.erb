@@ -1,11 +1,5 @@
 <% content_for :title, (@archived_mode ? "Archives" : "Réservations") + " — Admin" %>
 
-<% status_styles = {
-  "pending"   => { label: "En attente", cls: "bg-amber-50 text-amber-700 border-amber-200" },
-  "confirmed" => { label: "Confirmée",  cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  "rejected"  => { label: "Refusée",    cls: "bg-rose-50 text-rose-700 border-rose-200" },
-  "cancelled" => { label: "Annulée",    cls: "bg-stone-100 text-stone-600 border-stone-200" }
-} %>
 
 <% current_list = ->(opts = {}) {
      @archived_mode ? archived_admin_bookings_path(opts) : admin_bookings_path(opts)
@@ -121,7 +115,6 @@
         </thead>
         <tbody class="divide-y divide-stone-100">
           <% @bookings.each do |booking| %>
-            <% s        = status_styles.fetch(booking.status, status_styles["pending"]) %>
             <% deposit  = booking.deposit_invoice %>
             <% balance  = booking.balance_invoice %>
             <% contract = booking.contract %>
@@ -143,7 +136,7 @@
               <td class="px-4 py-3 font-medium text-stone-800"><%= money(booking.total_price_cents) %></td>
               <td class="px-4 py-3">
                 <div class="inline-flex items-center gap-2">
-                  <span class="text-[11px] uppercase tracking-widest px-2.5 py-1 rounded-full border <%= s[:cls] %>"><%= s[:label] %></span>
+                  <%= booking_status_badge(booking) %>
                   <% if booking.invoicing_archived? %>
                     <i class="fa-solid fa-lock text-stone-400 text-[11px]" title="Facturation archivée — verrouillée"></i>
                   <% end %>
@@ -156,7 +149,7 @@
                   <%= payment_pill("Solde",   invoice_state(balance),
                         title: balance ? "Solde : #{balance.payment_received? ? 'reçu' : 'en attente'}" : "Pas de facture solde") %>
                   <%= payment_pill("Caution", caution_state(caution),
-                        title: caution ? "Caution : #{caution.status}" : "Caution non créée") %>
+                        title: caution_status_label(caution)) %>
                 </div>
               </td>
               <td class="px-4 py-3">

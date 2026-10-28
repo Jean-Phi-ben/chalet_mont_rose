@@ -9,7 +9,7 @@
 <table cellpadding="6" style="border-collapse: collapse; font-family: Arial, sans-serif; color:#1c1917; margin: 16px 0;">
   <tr><td><strong>Arrivée</strong></td><td><%= fr_date_full(@booking.check_in) %></td></tr>
   <tr><td><strong>Départ</strong></td><td><%= fr_date_full(@booking.check_out) %></td></tr>
-  <tr><td><strong>Durée</strong></td><td><%= @booking.weeks %> semaine(s) · <%= @booking.nights %> nuits</td></tr>
+  <tr><td><strong>Durée</strong></td><td><%= fr_plural(@booking.weeks, "semaine") %> · <%= fr_plural(@booking.nights, "nuit") %></td></tr>
   <tr><td><strong>Total séjour</strong></td><td><%= money(@booking.total_price_cents) %></td></tr>
   <tr><td><strong>Arrhes à régler</strong></td><td><%= money(@booking.deposit_cents) %></td></tr>
 </table>

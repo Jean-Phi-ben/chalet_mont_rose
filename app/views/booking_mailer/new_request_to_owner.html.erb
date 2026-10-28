@@ -9,9 +9,9 @@
   <tr><td><strong>Voyageurs</strong></td><td><%= @booking.guests_count || "—" %></td></tr>
   <tr><td><strong>Arrivée</strong></td><td><%= fr_date_full(@booking.check_in) %></td></tr>
   <tr><td><strong>Départ</strong></td><td><%= fr_date_full(@booking.check_out) %></td></tr>
-  <tr><td><strong>Durée</strong></td><td><%= @booking.weeks %> semaine(s) — <%= @booking.nights %> nuits</td></tr>
+  <tr><td><strong>Durée</strong></td><td><%= fr_plural(@booking.weeks, "semaine") %> — <%= fr_plural(@booking.nights, "nuit") %></td></tr>
   <tr><td><strong>Total</strong></td><td><%= money(@booking.total_price_cents) %></td></tr>
-  <tr><td><strong>Arrhes (30 %)</strong></td><td><%= money(@booking.deposit_cents) %></td></tr>
+  <tr><td><strong>Arrhes (<%= @booking.deposit_percent_label %>)</strong></td><td><%= money(@booking.deposit_cents) %></td></tr>
 </table>
 
 <% if @booking.message.present? %>
