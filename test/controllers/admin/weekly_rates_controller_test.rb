@@ -35,6 +35,14 @@ class Admin::WeeklyRatesControllerTest < ActionDispatch::IntegrationTest
     assert_select "tr[data-blocked-week]"
   end
 
+  test "a browser form submission (Turbo Accept header) gets a turbo_stream, not a redirect" do
+    rate = WeeklyRate.ordered.first
+    patch admin_weekly_rate_url(rate), params: { weekly_rate: { blocked: "1" } },
+          headers: { "Accept" => "text/vnd.turbo-stream.html, text/html, application/xhtml+xml" }
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+  end
+
   test "note update via turbo_stream persists the note" do
     patch admin_weekly_rate_url(@rate),
           params: { weekly_rate: { note: "Vacances de février" } },

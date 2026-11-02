@@ -30,7 +30,8 @@ class Admin::WeeklyRatesController < Admin::BaseController
     if @weekly_rate.update(weekly_rate_params)
       respond_to do |format|
         format.turbo_stream
-        format.html { redirect_to admin_weekly_rates_path, notice: "Tarif mis à jour." }
+        # Repli sans Turbo : on revient sur la ligne modifiée, pas en haut de la liste.
+        format.html { redirect_to admin_weekly_rates_path(anchor: helpers.dom_id(@weekly_rate)), notice: "Tarif mis à jour." }
       end
     else
       # Valeur saisie invalide : la ligne est re-rendue avec le message d'erreur

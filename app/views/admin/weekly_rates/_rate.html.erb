@@ -22,9 +22,9 @@
   </td>
 
   <td class="px-5 py-3">
-    <%= form_with model: [:admin, rate], method: :patch, data: { controller: "autosubmit" } do |f| %>
+    <%= form_with model: [:admin, rate], method: :patch, id: dom_id(rate, :price_form), data: { controller: "autosubmit" } do |f| %>
       <div class="relative w-32">
-        <%= f.number_field :price_euros, value: rate.price_euros, step: 1, min: 1,
+        <%= f.number_field :price_euros, value: rate.price_euros, step: 1, min: 1, id: dom_id(rate, :price),
               data: { action: "change->autosubmit#submit" },
               class: "w-full border border-stone-200 rounded-lg pl-3 pr-7 py-1.5 text-sm text-stone-800 font-medium focus:outline-none focus:border-stone-900 focus:ring-1 focus:ring-stone-900 transition" %>
         <span class="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 text-sm">€</span>
@@ -54,9 +54,11 @@
   </td>
 
   <td class="px-5 py-3">
-    <%= form_with model: [:admin, rate], method: :patch, data: { controller: "autosubmit" } do |f| %>
+    <%# id unique par ligne : Turbo rend le focus à l'élément de même id après le remplacement
+        de la ligne ; avec des id dupliqués il « retrouvait » la 1re ligne et faisait défiler en haut. %>
+    <%= form_with model: [:admin, rate], method: :patch, id: dom_id(rate, :blocked_form), data: { controller: "autosubmit" } do |f| %>
       <label class="inline-flex items-center gap-2 text-xs text-stone-700 cursor-pointer" title="Semaine réservée par la famille : occupée sur le calendrier public, sans réservation ni facture">
-        <%= f.check_box :blocked, data: { action: "change->autosubmit#submit" }, class: "h-4 w-4 rounded border-stone-300 text-stone-900 focus:ring-stone-900" %>
+        <%= f.check_box :blocked, { id: dom_id(rate, :blocked), data: { action: "change->autosubmit#submit" }, class: "h-4 w-4 rounded border-stone-300 text-stone-900 focus:ring-stone-900" } %>
         <span><%= rate.blocked? ? "Réservée famille" : "Famille" %></span>
       </label>
     <% end %>
