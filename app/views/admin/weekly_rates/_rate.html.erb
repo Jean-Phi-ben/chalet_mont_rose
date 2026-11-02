@@ -68,7 +68,7 @@
         de la ligne ; avec des id dupliqués il « retrouvait » la 1re ligne et faisait défiler en haut. %>
     <%= form_with model: [:admin, rate], method: :patch, id: dom_id(rate, :blocked_form), data: { controller: "autosubmit" } do |f| %>
       <label class="inline-flex items-center gap-2 text-xs text-stone-700 cursor-pointer" title="Semaine réservée par la famille : occupée sur le calendrier public, sans réservation ni facture">
-        <%= f.check_box :blocked, { id: dom_id(rate, :blocked), data: { action: "change->autosubmit#submit" }, class: "h-4 w-4 rounded border-stone-300 text-stone-900 focus:ring-stone-900" } %>
+        <%= f.check_box :blocked, { id: dom_id(rate, :blocked), data: { action: "change->autosubmit#submit" } } %>
         <span><%= rate.blocked? ? "Réservée famille" : "Famille" %></span>
       </label>
     <% end %>

@@ -67,8 +67,7 @@
             <%= hidden_field_tag :year,   period.year %>
             <label class="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-stone-600 cursor-pointer">
               <%= check_box_tag :paid, "1", period.paid?,
-                    data: { action: "change->autosubmit#submit" },
-                    class: "w-4 h-4 accent-stone-900 cursor-pointer" %>
+                    data: { action: "change->autosubmit#submit" } %>
               Reversée
             </label>
           <% end %>
