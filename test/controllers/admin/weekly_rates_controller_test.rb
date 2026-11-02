@@ -16,7 +16,8 @@ class Admin::WeeklyRatesControllerTest < ActionDispatch::IntegrationTest
 
     get admin_weekly_rates_url
     assert_response :success
-    assert_select "tbody[data-controller=scroll-to]"
+    assert_select "[data-controller~=scroll-to] [data-scroll-to-target=scroller] table thead.sticky"
+    assert_select "[data-controller~=scroll-to] button[data-action='scroll-to#jump']", text: /Aujourd'hui/
     assert_select "tr##{ActionView::RecordIdentifier.dom_id(today)}[data-week-period=current][data-scroll-to-target=anchor].cal-today", text: /En cours/
     assert_select "tr##{ActionView::RecordIdentifier.dom_id(upcoming)}[data-week-period=upcoming][data-scroll-to-target=fallback]"
     assert_select "tr##{ActionView::RecordIdentifier.dom_id(past)}[data-week-period=past]:not([data-scroll-to-target])"
