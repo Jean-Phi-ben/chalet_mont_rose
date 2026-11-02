@@ -1,7 +1,7 @@
 <% fr_holiday = SchoolHolidays.france_for(rate.week_start) %>
 <% ch_holiday = SchoolHolidays.geneva_for(rate.week_start) %>
 <% tint = holiday_tint_style(france: fr_holiday, geneva: ch_holiday) %>
-<tr id="<%= dom_id(rate) %>" class="<%= "hover:bg-stone-50/60" unless tint %>" style="<%= tint %>">
+<tr id="<%= dom_id(rate) %>" class="<%= rate.blocked? ? "bg-stone-200/70" : ("hover:bg-stone-50/60" unless tint) %>" style="<%= tint unless rate.blocked? %>" <% if rate.blocked? %>data-blocked-week<% end %>>
   <td class="px-5 py-3 text-stone-400 tabular-nums"><%= rate.week_start.cweek %></td>
 
   <td class="px-5 py-3 text-stone-800">
@@ -51,6 +51,15 @@
         <span class="text-stone-300 italic group-hover:text-stone-500"><i class="fa-regular fa-note-sticky mr-1"></i>Ajouter…</span>
       <% end %>
     </button>
+  </td>
+
+  <td class="px-5 py-3">
+    <%= form_with model: [:admin, rate], method: :patch, data: { controller: "autosubmit" } do |f| %>
+      <label class="inline-flex items-center gap-2 text-xs text-stone-700 cursor-pointer" title="Semaine réservée par la famille : occupée sur le calendrier public, sans réservation ni facture">
+        <%= f.check_box :blocked, data: { action: "change->autosubmit#submit" }, class: "h-4 w-4 rounded border-stone-300 text-stone-900 focus:ring-stone-900" %>
+        <span><%= rate.blocked? ? "Réservée famille" : "Famille" %></span>
+      </label>
+    <% end %>
   </td>
 
   <td class="px-5 py-3">

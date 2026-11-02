@@ -44,28 +44,37 @@ class Booking < ApplicationRecord
 
   validate :no_overlap_with_other_confirmed, if: -> { confirmed? && check_in && check_out }
 
-  # Jours entièrement bloqués (nuits intermédiaires d'une réservation existante).
-  # On exclut :
-  #   - le check_in : le chalet est libre le matin (utilisable comme check_out d'une autre résa)
-  #   - le check_out : le chalet est libre l'après-midi (utilisable comme check_in d'une autre résa)
-  # Ces deux jours-là sont des "jours de transition" — voir transition_dates_between.
-  def self.blocked_dates_between(from, to)
-    confirmed
-      .where("check_in < ? AND check_out > ?", to + 1, from)
-      .each_with_object(Set.new) { |b, set| ((b.check_in + 1)...b.check_out).each { |d| set << d } }
+  # Disponibilité sur [from, to] en deux requêtes (réservations confirmées + semaines
+  # réservées par la famille) :
+  #   - :blocked    → nuits entièrement occupées (on exclut le samedi d'arrivée, chalet
+  #                   libre le matin, et le samedi de départ, libre l'après-midi) ;
+  #   - :transition → ces samedis d'arrivée/départ, sélectionnables par le client
+  #                   (fin d'un séjour et début d'un autre le même jour).
+  def self.availability_between(from, to)
+    blocked = Set.new
+    transition = Set.new
+    stays = confirmed.where("check_in <= ? AND check_out >= ?", to + 1, from).pluck(:check_in, :check_out)
+    stays += WeeklyRate.blocked.where("week_start <= ? AND week_start + 7 >= ?", to, from)
+                       .pluck(:week_start).map { |ws| [ ws, ws + 7 ] }
+    stays.each do |check_in, check_out|
+      ((check_in + 1)...check_out).each { |d| blocked << d }
+      transition << check_in  if check_in.between?(from, to)
+      transition << check_out if check_out.between?(from, to)
+    end
+    { blocked: blocked, transition: transition }
   end
 
-  # Samedis qui sont des "jours de transition" sur la fenêtre [from, to] :
-  # check_in ou check_out d'une réservation confirmée. Ils restent sélectionnables
-  # par le client (un samedi peut être à la fois la fin d'un séjour et le début
-  # d'un autre — turnover classique en location saisonnière).
+  def self.blocked_dates_between(from, to)
+    availability_between(from, to)[:blocked]
+  end
+
   def self.transition_dates_between(from, to)
-    confirmed
-      .where("check_in <= ? AND check_out >= ?", to, from)
-      .each_with_object(Set.new) do |b, set|
-        set << b.check_in  if b.check_in.between?(from, to)
-        set << b.check_out if b.check_out.between?(from, to)
-      end
+    availability_between(from, to)[:transition]
+  end
+
+  # Période indisponible : réservation confirmée OU semaine réservée par la famille.
+  def self.unavailable?(check_in, check_out, except_id: nil)
+    confirmed_overlap?(check_in, check_out, except_id: except_id) || WeeklyRate.blocked_overlap?(check_in, check_out)
   end
 
   # Existe-t-il une réservation confirmée qui chevauche [check_in, check_out) ?
@@ -286,9 +295,11 @@ class Booking < ApplicationRecord
   end
 
   def no_overlap_with_other_confirmed
-    return unless Booking.confirmed_overlap?(check_in, check_out, except_id: id)
-
-    errors.add(:base, "La période chevauche une autre réservation confirmée.")
+    if Booking.confirmed_overlap?(check_in, check_out, except_id: id)
+      errors.add(:base, "La période chevauche une autre réservation confirmée.")
+    elsif WeeklyRate.blocked_overlap?(check_in, check_out)
+      errors.add(:base, "La période chevauche une semaine réservée par la famille (à débloquer dans les tarifs).")
+    end
   end
 
   # Synchronise les coordonnées du client à chaque sauvegarde de la réservation.

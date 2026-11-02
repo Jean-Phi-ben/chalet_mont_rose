@@ -58,7 +58,7 @@ class Pricing
     rates = week_starts.map { |s| WeeklyRate.find_by(week_start: s) }
 
     return { bookable: false, reason: "semaine_non_tarifee" } if rates.any?(&:nil?)
-    return { bookable: false, reason: "semaine_indisponible" } if Booking.confirmed_overlap?(check_in, check_out, except_id: except_id)
+    return { bookable: false, reason: "semaine_indisponible" } if Booking.unavailable?(check_in, check_out, except_id: except_id)
 
     weeks   = week_starts.size
     nights  = (check_out - check_in).to_i

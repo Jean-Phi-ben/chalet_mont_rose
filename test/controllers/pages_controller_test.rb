@@ -25,6 +25,14 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     %w[6\ sdb Reçues double\ authentification Mont\ Blanc\ ] .each { |stale| assert_no_match stale.delete("\\"), response.body }
   end
 
+  test "a family week shows as occupied on the public calendar" do
+    saturday = Date.current.next_occurring(:saturday) + 14
+    WeeklyRate.create!(week_start: saturday, price_cents: 100_000, blocked: true)
+    get root_path
+    assert_select "button[data-date='#{(saturday + 2).iso8601}'][disabled][aria-label*='déjà réservé']"
+    assert_select "button[data-date='#{saturday.iso8601}'][aria-label*='arrivée ou départ possible']"
+  end
+
   test "home renders the full calendar with a bounded number of SQL queries" do
     WeeklyRate.create!(week_start: Date.current.next_occurring(:saturday), price_cents: 100_000)
     queries = 0

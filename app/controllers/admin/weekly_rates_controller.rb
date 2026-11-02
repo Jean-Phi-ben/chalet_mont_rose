@@ -76,7 +76,7 @@ class Admin::WeeklyRatesController < Admin::BaseController
   end
 
   def weekly_rate_params
-    params.require(:weekly_rate).permit(:week_start, :price_euros, :min_weeks, :note)
+    params.require(:weekly_rate).permit(:week_start, :price_euros, :min_weeks, :note, :blocked)
   end
 
   def next_saturday

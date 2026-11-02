@@ -1,7 +1,8 @@
 <% start_day  = month.beginning_of_month.beginning_of_week(:monday) %>
 <% last_day   = month.end_of_month.end_of_week(:monday) %>
-<% blocked    = Booking.blocked_dates_between(start_day, last_day) %>
-<% transition = Booking.transition_dates_between(start_day, last_day) %>
+<% availability = Booking.availability_between(start_day, last_day) %>
+<% blocked    = availability[:blocked] %>
+<% transition = availability[:transition] %>
 <% rates      = Pricing.nightly_cents_by_date(start_day, last_day) %>
 
 <div data-calendar-month>

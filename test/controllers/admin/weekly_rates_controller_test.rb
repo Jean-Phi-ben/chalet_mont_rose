@@ -26,6 +26,15 @@ class Admin::WeeklyRatesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 150_000, @rate.reload.price_cents
   end
 
+  test "ticking Famille blocks the week via turbo_stream and shows it as reserved" do
+    rate = WeeklyRate.ordered.first
+    patch admin_weekly_rate_url(rate), params: { weekly_rate: { blocked: "1" } }, as: :turbo_stream
+    assert_response :success
+    assert rate.reload.blocked?
+    assert_match "Réservée famille", response.body
+    assert_select "tr[data-blocked-week]"
+  end
+
   test "note update via turbo_stream persists the note" do
     patch admin_weekly_rate_url(@rate),
           params: { weekly_rate: { note: "Vacances de février" } },
