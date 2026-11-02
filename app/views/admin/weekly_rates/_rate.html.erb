@@ -1,8 +1,18 @@
 <% fr_holiday = SchoolHolidays.france_for(rate.week_start) %>
 <% ch_holiday = SchoolHolidays.geneva_for(rate.week_start) %>
 <% tint = holiday_tint_style(france: fr_holiday, geneva: ch_holiday) %>
-<tr id="<%= dom_id(rate) %>" class="<%= rate.blocked? ? "bg-stone-200/70" : ("hover:bg-stone-50/60" unless tint) %>" style="<%= tint unless rate.blocked? %>" <% if rate.blocked? %>data-blocked-week<% end %>>
-  <td class="px-5 py-3 text-stone-400 tabular-nums"><%= rate.week_start.cweek %></td>
+<% period = rate.period %>
+<%# data-scroll-to-target : la semaine en cours sert d'ancre à l'ouverture, sinon la première à venir. %>
+<tr id="<%= dom_id(rate) %>" data-week-period="<%= period %>"
+    <% if period == :current %>data-scroll-to-target="anchor"<% elsif period == :upcoming %>data-scroll-to-target="fallback"<% end %>
+    class="<%= rate.blocked? ? "bg-stone-200/70" : (period == :current ? "cal-today" : ("hover:bg-stone-50/60" unless tint)) %>"
+    style="<%= tint unless rate.blocked? || period == :current %>" <% if rate.blocked? %>data-blocked-week<% end %>>
+  <td class="px-5 py-3 text-stone-400 tabular-nums">
+    <%= rate.week_start.cweek %>
+    <% if period == :current %>
+      <span class="block text-[10px] uppercase tracking-widest text-amber-700 whitespace-nowrap">En cours</span>
+    <% end %>
+  </td>
 
   <td class="px-5 py-3 text-stone-800">
     <div>

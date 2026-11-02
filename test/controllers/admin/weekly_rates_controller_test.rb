@@ -7,6 +7,22 @@ class Admin::WeeklyRatesControllerTest < ActionDispatch::IntegrationTest
     @rate = WeeklyRate.create!(week_start: Date.new(2026, 1, 3), price_cents: 100_000)
   end
 
+  test "index flags the current week as the scroll anchor and upcoming weeks as fallback" do
+    current = Date.current.beginning_of_week(:saturday)
+    WeeklyRate.where(week_start: [ current - 7, current, current + 7 ]).delete_all
+    past     = WeeklyRate.create!(week_start: current - 7, price_cents: 100_000)
+    today    = WeeklyRate.create!(week_start: current,     price_cents: 100_000)
+    upcoming = WeeklyRate.create!(week_start: current + 7, price_cents: 100_000)
+
+    get admin_weekly_rates_url
+    assert_response :success
+    assert_select "tbody[data-controller=scroll-to]"
+    assert_select "tr##{ActionView::RecordIdentifier.dom_id(today)}[data-week-period=current][data-scroll-to-target=anchor].cal-today", text: /En cours/
+    assert_select "tr##{ActionView::RecordIdentifier.dom_id(upcoming)}[data-week-period=upcoming][data-scroll-to-target=fallback]"
+    assert_select "tr##{ActionView::RecordIdentifier.dom_id(past)}[data-week-period=past]:not([data-scroll-to-target])"
+    assert_select "tr[data-scroll-to-target=anchor]", 1
+  end
+
   test "index shows the week number column and inline price field" do
     get admin_weekly_rates_url
     assert_response :success

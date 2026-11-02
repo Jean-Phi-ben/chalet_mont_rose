@@ -35,6 +35,10 @@
         <span class="w-3.5 h-3.5 rounded bg-stone-300"></span>
         Réservée famille
       </span>
+      <span class="inline-flex items-center gap-1.5">
+        <span class="w-3.5 h-3.5 rounded cal-today"></span>
+        Semaine en cours
+      </span>
     </div>
 
     <div class="bg-white border border-stone-200 rounded-2xl overflow-hidden">
@@ -51,7 +55,8 @@
             <th class="text-right font-medium px-5 py-3">Actions</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-stone-100">
+        <%# À l'ouverture, la page se positionne sur la semaine en cours (ou la première à venir). %>
+        <tbody class="divide-y divide-stone-100" data-controller="scroll-to">
           <%= render partial: "rate", collection: @weekly_rates, as: :rate %>
         </tbody>
       </table>

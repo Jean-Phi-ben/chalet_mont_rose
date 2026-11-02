@@ -12,6 +12,7 @@ import ModalController    from "controllers/modal_controller"
 import NavbarController   from "controllers/navbar_controller"
 import NoteEditorController from "controllers/note_editor_controller"
 import NotesController from "controllers/notes_controller"
+import ScrollToController from "controllers/scroll_to_controller"
 import UsermenuController from "controllers/usermenu_controller"
 
 application.register("autosubmit", AutosubmitController)
@@ -26,4 +27,5 @@ application.register("modal",    ModalController)
 application.register("navbar",   NavbarController)
 application.register("note-editor", NoteEditorController)
 application.register("notes",       NotesController)
+application.register("scroll-to",   ScrollToController)
 application.register("usermenu",    UsermenuController)

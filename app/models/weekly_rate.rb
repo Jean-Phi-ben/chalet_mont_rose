@@ -21,6 +21,15 @@ class WeeklyRate < ApplicationRecord
     blocked.where("week_start < ? AND week_start + 7 > ?", check_out, check_in).exists?
   end
 
+  # :past, :current (la semaine qui contient aujourd'hui) ou :upcoming.
+  def period
+    current = Date.current.beginning_of_week(:saturday)
+    if week_start < current then :past
+    elsif week_start == current then :current
+    else :upcoming
+    end
+  end
+
   def week_end
     week_start + 7
   end
