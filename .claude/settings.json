@@ -1,14 +1,39 @@
 {
   "permissions": {
+    "defaultMode": "acceptEdits",
     "allow": [
-      "Bash(bin/rails test)",
-      "Bash(bin/rails test *)",
-      "Bash(RAILS_ENV=test bin/rails test *)",
-      "Bash(bin/brakeman)",
-      "Bash(bin/brakeman *)",
-      "Bash(wsl.exe -l -q)",
-      "Bash(ip -6 route show *)",
-      "PowerShell(ping *)"
+      "Bash(git:*)",
+      "Bash(ls:*)",
+      "Bash(python3:*)",
+      "Bash(backend/.venv/bin/python:*)",
+      "Bash(env:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(cloudflared:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker ps:*)",
+      "Bash(docker logs:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(git push:*)",
+      "Bash(docker compose down -v:*)",
+      "Bash(docker system prune:*)",
+      "Bash(docker volume rm:*)"
     ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
+    "excludedCommands": ["ssh", "docker", "make"],
+    "network": {
+      "allowedDomains": [
+        "pypi.org",
+        "files.pythonhosted.org",
+        "github.com",
+        "registry.npmjs.org"
+      ]
+    }
   }
 }
