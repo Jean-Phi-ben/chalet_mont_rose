@@ -9,6 +9,10 @@ production:
   purge_old_data:
     class: PurgeOldDataJob
     schedule: "every month on the 1st at 4am"
+  # Sans BEDS24_REFRESH_TOKEN / BEDS24_ROOM_ID le job se termine sans rien envoyer.
+  beds24_push_calendar:
+    class: Beds24::PushCalendarJob
+    schedule: "every day at 4:30am"
 
 development: {}
 test: {}
