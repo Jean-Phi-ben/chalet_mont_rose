@@ -20,6 +20,21 @@ namespace :weekly_rates do
 
     puts "Tarifs générés : #{created} créés, #{updated} mis à jour (#{first_saturday} → #{last_saturday})."
   end
+
+  desc "Importe une grille CSV (week_start,price_euros). DRY_RUN=1 pour simuler. Ex. : bin/rails \"weekly_rates:import[db/data/tarifs.csv]\""
+  task :import, [ :path ] => :environment do |_, args|
+    path = args[:path] or abort "Usage : bin/rails \"weekly_rates:import[chemin.csv]\""
+    dry_run = ENV["DRY_RUN"].present?
+    changes = WeeklyRatesImport.from_csv(path).call(dry_run: dry_run)
+
+    changes.each do |c|
+      before = c.created? ? "(nouvelle)" : "#{c.before_cents / 100} €"
+      marker = c.created? ? "+" : (c.changed? ? "~" : "=")
+      puts format("%s %s  %-11s → %d €", marker, c.week_start, before, c.after_cents / 100)
+    end
+    puts "#{dry_run ? 'Simulation' : 'Import'} : #{changes.count(&:created?)} créées, " \
+         "#{changes.count { |c| !c.created? && c.changed? }} modifiées, #{changes.count { |c| !c.created? && !c.changed? }} inchangées."
+  end
 end
 
 # Grille tarifaire indicative — chalet de standing au Bettex (Saint-Gervais-les-Bains),

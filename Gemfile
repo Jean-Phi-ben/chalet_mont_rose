@@ -80,3 +80,6 @@ gem "rails-i18n", "~> 8.0"
 
 # Export Excel de la grille des tarifs (back-office)
 gem "caxlsx", "~> 4.5"
+
+# Lecture des grilles CSV (weekly_rates:import) ; plus dans la bibliothèque standard à partir de Ruby 3.4
+gem "csv", "~> 3.3"
