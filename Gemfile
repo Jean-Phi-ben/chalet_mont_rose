@@ -77,3 +77,6 @@ gem "prawn-table"
 gem "faraday"
 
 gem "rails-i18n", "~> 8.0"
+
+# Export Excel de la grille des tarifs (back-office)
+gem "caxlsx", "~> 4.5"

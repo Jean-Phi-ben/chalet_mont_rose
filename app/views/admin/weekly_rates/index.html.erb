@@ -6,6 +6,10 @@
     <p class="text-sm text-stone-500 mt-1">Prix par semaine, du samedi au samedi. Cliquez sur un prix pour le modifier. Cochez « Famille » pour réserver une semaine sans réservation ni facture : elle apparaît occupée sur le calendrier public.</p>
   </div>
   <div class="flex items-center gap-3">
+    <%= link_to admin_weekly_rates_path(format: :xlsx), data: { turbo: false }, title: "Télécharger la grille des tarifs au format Excel (onglets Grille et Saisons)",
+          class: "inline-flex items-center gap-2 border border-stone-300 text-stone-700 px-4 py-2 rounded-xl text-sm hover:bg-stone-50 transition" do %>
+      <i class="fa-solid fa-file-excel"></i> Export Excel
+    <% end %>
     <%= link_to bulk_edit_admin_weekly_rates_path, class: "inline-flex items-center gap-2 border border-stone-300 text-stone-700 px-4 py-2 rounded-xl text-sm hover:bg-stone-50 transition" do %>
       <i class="fa-solid fa-layer-group"></i> Éditeur en lot
     <% end %>

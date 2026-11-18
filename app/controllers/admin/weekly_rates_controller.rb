@@ -4,6 +4,15 @@ class Admin::WeeklyRatesController < Admin::BaseController
   def index
     authorize WeeklyRate
     @weekly_rates = policy_scope(WeeklyRate).ordered
+
+    respond_to do |format|
+      format.html
+      format.xlsx do
+        send_data WeeklyRatesExport.new(@weekly_rates).to_xlsx,
+                  filename: "tarifs-chalet-mont-rose-#{Date.current.iso8601}.xlsx",
+                  type: Mime[:xlsx].to_s, disposition: "attachment"
+      end
+    end
   end
 
   def new
