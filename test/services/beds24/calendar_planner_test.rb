@@ -7,7 +7,7 @@ class Beds24::CalendarPlannerTest < ActiveSupport::TestCase
     @sat = Date.current.next_occurring(:saturday) + 7
   end
 
-  test "a free week becomes two entries: Saturday open, Sunday→Friday closed to arrival" do
+  test "a week becomes two entries: Saturday open, Sunday→Friday closed to arrival" do
     WeeklyRate.create!(week_start: @sat, price_cents: 220_000)
     entries = Beds24::CalendarPlanner.new.entries
 
@@ -19,20 +19,16 @@ class Beds24::CalendarPlannerTest < ActiveSupport::TestCase
     assert_operator saturday.price2, :>, saturday.price1
   end
 
-  test "family weeks and confirmed bookings are pushed as blackout nights with no availability" do
+  test "occupancy is not written in the calendar: family weeks and bookings go through mirror bookings" do
     WeeklyRate.create!(week_start: @sat, price_cents: 220_000, blocked: true)
     WeeklyRate.create!(week_start: @sat + 7, price_cents: 220_000)
-    WeeklyRate.create!(week_start: @sat + 14, price_cents: 300_000)
     Booking.create!(check_in: @sat + 7, check_out: @sat + 14, guests_count: 2, first_name: "A", last_name: "B",
                     email: "a@b.fr", total_price_cents: 220_000, deposit_cents: 66_000, status: :confirmed)
 
     entries = Beds24::CalendarPlanner.new.entries
-    # Famille + réservation = 14 nuits consécutives identiques (même prix) → une seule plage.
-    blackout = entries.first
-    assert_equal [ @sat, @sat + 13, 0, "blackout" ], blackout.to_h.values_at(:from, :to, :numAvail, :override)
-    assert_equal [ @sat + 14, @sat + 14, "none" ], entries[1].to_h.values_at(:from, :to, :override)
-    assert_equal [ @sat + 15, @sat + 20, "noCheckIn" ], entries[2].to_h.values_at(:from, :to, :override)
-    assert_equal 3, entries.size
+    assert_equal 4, entries.size
+    assert entries.all? { |e| e.numAvail == 1 && e.override != "blackout" }
+    assert_equal [ @sat, @sat + 7 ], entries.select { |e| e.override == "none" }.map(&:from)
   end
 
   test "past weeks are ignored and payload uses ISO dates" do

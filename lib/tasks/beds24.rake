@@ -18,7 +18,7 @@ namespace :beds24 do
     end
   end
 
-  desc "Pousse le calendrier (prix, restrictions, nuits occupées) vers Beds24. DRY_RUN=1 : affiche sans envoyer"
+  desc "Pousse le calendrier (prix, séjour minimum, arrivée le samedi) vers Beds24. DRY_RUN=1 : affiche sans envoyer"
   task push_calendar: :environment do
     planner = Beds24::CalendarPlanner.new
     entries = planner.entries
@@ -39,6 +39,35 @@ namespace :beds24 do
     else
       Beds24::Client.new.write_calendar(room_id: Beds24::Config.room_id, entries: entries.map(&:payload))
       puts "Envoyé à Beds24 (chambre #{Beds24::Config.room_id})."
+    end
+  end
+
+  desc "Pousse vers Beds24 toutes les réservations confirmées à venir et les semaines Famille. DRY_RUN=1 : affiche sans envoyer"
+  task push_bookings: :environment do
+    today = Date.current
+    records = Booking.confirmed.where("check_out >= ?", today).order(:check_in).to_a +
+              WeeklyRate.blocked.where("week_start + 7 >= ?", today).ordered.to_a
+    abort "Rien à pousser : aucune réservation confirmée ni semaine Famille à venir." if records.empty?
+
+    sync = Beds24::BookingSync.new(client: ENV["DRY_RUN"].present? ? nil : Beds24::Client.new)
+    records.each do |record|
+      payload = sync.payload_for(record)
+      label = record.is_a?(Booking) ? "réservation ##{record.id}" : "semaine Famille #{record.week_start}"
+      if ENV["DRY_RUN"].present?
+        puts "#{label} (Beds24 #{record.beds24_booking_id || 'nouvelle'}) : #{payload.to_json}"
+      else
+        id = sync.push(record)
+        puts "#{label} → Beds24 #{id}"
+      end
+    end
+    puts ENV["DRY_RUN"].present? ? "Simulation : rien n'a été envoyé." : "#{records.size} enregistrement(s) synchronisé(s)."
+  end
+
+  desc "Liste les réservations connues de Beds24 pour la chambre (toutes origines, à partir d'aujourd'hui)"
+  task bookings: :environment do
+    Beds24::Client.new.bookings(room_id: Beds24::Config.room_id, from: Date.current).each do |b|
+      puts format("%-8s %-10s %s → %s  %-28s %-24s api=%s",
+                  b["id"], b["status"], b["arrival"], b["departure"], "#{b['firstName']} #{b['lastName']}", b["referer"], b["apiReference"])
     end
   end
 

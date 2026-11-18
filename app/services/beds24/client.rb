@@ -53,6 +53,17 @@ module Beds24
                                       includeNumAvail: true, includeOverride: true).fetch("data", [])
     end
 
+    # Réservations Beds24 de la chambre arrivant à partir de `from` (toutes origines : site, Airbnb…).
+    def bookings(room_id:, from:)
+      get("bookings", roomId: room_id, arrivalFrom: from.iso8601).fetch("data", [])
+    end
+
+    # Crée (sans `id`) ou modifie (avec `id`) des réservations. Renvoie le tableau de résultats
+    # Beds24, un par réservation : { "success" => true, "new" => { "id" => … } } ou { "modified" => … }.
+    def post_bookings(bookings)
+      Array(post("bookings", bookings))
+    end
+
     # entries : tableau de hashes { from:, to:, price1:, price2:, minStay:, maxStay:, numAvail:, override: }.
     # Renvoie le nombre de plages écrites ; lève Error au premier refus.
     def write_calendar(room_id:, entries:)

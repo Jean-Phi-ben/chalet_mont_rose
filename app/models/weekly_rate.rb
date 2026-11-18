@@ -5,8 +5,11 @@ class WeeklyRate < ApplicationRecord
   validate :week_start_must_be_saturday
   validate :cannot_block_a_booked_week
 
-  # Tout changement de tarif ou de semaine « Famille » est répercuté sur Beds24 (Airbnb).
+  # Tout changement de tarif est répercuté sur le calendrier Beds24 (Airbnb) ; une semaine
+  # « Famille » cochée ou décochée devient un blocage Beds24 créé ou annulé.
   after_commit { Beds24.schedule_calendar_push }
+  after_commit(on: %i[create update]) { Beds24.schedule_booking_push(self) if saved_change_to_blocked? }
+  after_destroy_commit { Beds24.schedule_booking_cancel(beds24_booking_id) }
 
   scope :ordered, -> { order(:week_start) }
   scope :upcoming, -> { where("week_start >= ?", Date.current.beginning_of_week(:saturday)) }

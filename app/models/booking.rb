@@ -14,10 +14,10 @@ class Booking < ApplicationRecord
   # des factures doit rester continue et le contrat signé conservé. `prepend` : le
   # contrôle passe AVANT les suppressions en cascade déclarées ci-dessous.
   before_destroy :refuse_destroy_unless_deletable, prepend: true
-  # Une réservation confirmée (ou qui cesse de l'être) change les nuits occupées sur Beds24.
+  # Une réservation confirmée (ou qui cesse de l'être) a une réservation miroir dans Beds24.
   # NB : deux rappels nommés pareil se remplacent ; le second est donc un bloc.
-  after_commit :schedule_beds24_calendar_push, on: %i[create update], if: :beds24_relevant_change?
-  after_destroy_commit { Beds24.schedule_calendar_push if confirmed? }
+  after_commit :schedule_beds24_booking_push, on: %i[create update], if: :beds24_relevant_change?
+  after_destroy_commit { Beds24.schedule_booking_cancel(beds24_booking_id) }
   has_many :invoices, dependent: :destroy
   has_one  :contract, dependent: :destroy
   has_one  :caution,  dependent: :destroy
@@ -285,8 +285,8 @@ class Booking < ApplicationRecord
     (saved_change_to_status? || dates_changed) && (confirmed? || status_before_last_save == "confirmed")
   end
 
-  def schedule_beds24_calendar_push
-    Beds24.schedule_calendar_push
+  def schedule_beds24_booking_push
+    Beds24.schedule_booking_push(self)
   end
 
   def refuse_destroy_unless_deletable

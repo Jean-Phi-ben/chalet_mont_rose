@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_02_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_18_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -51,6 +51,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_100000) do
 
   create_table "bookings", force: :cascade do |t|
     t.integer "accommodation_cents", default: 0, null: false
+    t.bigint "beds24_booking_id"
     t.date "check_in", null: false
     t.date "check_out", null: false
     t.integer "cleaning_fee_cents", default: 0, null: false
@@ -73,6 +74,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_100000) do
     t.datetime "updated_at", null: false
     t.bigint "user_id"
     t.decimal "vat_rate_percent", precision: 5, scale: 2, default: "10.0", null: false
+    t.index ["beds24_booking_id"], name: "index_bookings_on_beds24_booking_id", unique: true
     t.index ["check_in"], name: "index_bookings_on_check_in"
     t.index ["client_id"], name: "index_bookings_on_client_id"
     t.index ["status"], name: "index_bookings_on_status"
@@ -218,6 +220,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_100000) do
   end
 
   create_table "weekly_rates", force: :cascade do |t|
+    t.bigint "beds24_booking_id"
     t.boolean "blocked", default: false, null: false
     t.datetime "created_at", null: false
     t.integer "min_weeks", default: 1, null: false
@@ -225,6 +228,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_02_100000) do
     t.integer "price_cents", null: false
     t.datetime "updated_at", null: false
     t.date "week_start", null: false
+    t.index ["beds24_booking_id"], name: "index_weekly_rates_on_beds24_booking_id", unique: true
     t.index ["blocked"], name: "index_weekly_rates_on_blocked"
     t.index ["week_start"], name: "index_weekly_rates_on_week_start", unique: true
   end

@@ -111,7 +111,7 @@ Clés notables :
 | `DEPOSIT_RATE` | Part d'arrhes (0.30 par défaut) |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Connexion Google (OmniAuth) |
 | `STAGING` | Instance de pré-production : emails non envoyés, Swikly en test, HTTPS non forcé |
-| `BEDS24_REFRESH_TOKEN`, `BEDS24_ROOM_ID`, `BEDS24_AIRBNB_*`, `BEDS24_MAX_STAY_NIGHTS` | Synchronisation du calendrier (prix direct et Airbnb majoré, 7 nuits, arrivée le samedi, nuits occupées) vers Beds24 ; sans jeton ni chambre, rien n'est envoyé. `bin/rails "beds24:setup[CODE]"`, `beds24:properties`, `beds24:push_calendar` (`DRY_RUN=1`), `beds24:calendar` |
+| `BEDS24_REFRESH_TOKEN`, `BEDS24_ROOM_ID`, `BEDS24_AIRBNB_*`, `BEDS24_MAX_STAY_NIGHTS` | Synchronisation vers Beds24 (Airbnb) : calendrier (prix direct et Airbnb majoré, 7 nuits, arrivée le samedi) et réservations miroir (réservations confirmées, semaines Famille) ; sans jeton ni chambre, rien n'est envoyé. `bin/rails "beds24:setup[CODE]"`, `beds24:properties`, `beds24:push_calendar`, `beds24:push_bookings` (`DRY_RUN=1`), `beds24:calendar`, `beds24:bookings` |
 
 > `MAILER_FROM` est **obligatoire en production** : sans lui, l'application refuse de démarrer.
 

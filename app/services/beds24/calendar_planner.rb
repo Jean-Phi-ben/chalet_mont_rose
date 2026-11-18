@@ -1,9 +1,11 @@
 module Beds24
   # Construit les plages à envoyer à POST /inventory/rooms/calendar à partir des tarifs
-  # du site. Une entrée par nuit, puis les nuits consécutives identiques sont fusionnées :
-  # pour une semaine libre, cela donne le samedi (arrivée possible) puis dimanche → vendredi
-  # (`noCheckIn`). Les nuits occupées (réservation confirmée, semaine « Famille ») partent
-  # avec `numAvail: 0` et `override: "blackout"`.
+  # du site : prix direct (price1), prix Airbnb (price2), séjour minimum et maximum, et
+  # jour d'arrivée (le samedi seulement). Une entrée par nuit, puis les nuits consécutives
+  # identiques sont fusionnées : une semaine donne le samedi (`none`) puis dimanche → vendredi
+  # (`noCheckIn`). Les nuits occupées ne passent pas par le calendrier mais par les
+  # réservations miroir (Beds24::BookingSync) : les écrire ici aussi ferait compter les
+  # nuits deux fois côté Beds24.
   class CalendarPlanner
     Entry = Struct.new(:from, :to, :price1, :price2, :minStay, :maxStay, :numAvail, :override, keyword_init: true) do
       def same_values?(other)
@@ -21,18 +23,13 @@ module Beds24
     end
 
     def entries
-      return [] if @rates.empty?
-
-      occupied = occupied_nights
       nightly = @rates.flat_map do |rate|
         price1 = AirbnbPricing.direct_nightly_euros(rate.price_cents)
         price2 = AirbnbPricing.nightly_euros(rate.price_cents)
         (rate.week_start...rate.week_end).map do |night|
-          free = !rate.blocked? && !occupied.include?(night)
           Entry.new(from: night, to: night, price1: price1, price2: price2,
                     minStay: Config.min_stay_nights, maxStay: Config.max_stay_nights,
-                    numAvail: free ? 1 : 0,
-                    override: free ? (night.saturday? ? "none" : "noCheckIn") : "blackout")
+                    numAvail: 1, override: night.saturday? ? "none" : "noCheckIn")
         end
       end
       merge(nightly)
@@ -42,15 +39,6 @@ module Beds24
     def last_night  = @rates.last && @rates.last.week_end - 1
 
     private
-
-    # Nuits occupées par une réservation confirmée : de l'arrivée (incluse) au départ (exclu).
-    def occupied_nights
-      return Set.new if @rates.empty?
-
-      Booking.confirmed.where("check_in <= ? AND check_out > ?", last_night, first_night)
-             .pluck(:check_in, :check_out)
-             .each_with_object(Set.new) { |(check_in, check_out), set| (check_in...check_out).each { |d| set << d } }
-    end
 
     def merge(nightly)
       nightly.each_with_object([]) do |entry, acc|

@@ -17,13 +17,21 @@ class Beds24PushCalendarJobTest < ActiveJob::TestCase
     %w[BEDS24_REFRESH_TOKEN BEDS24_ROOM_ID STAGING].each { |k| previous.key?(k) ? ENV[k] = previous[k] : ENV.delete(k) }
   end
 
+  def new_booking(status: :pending)
+    Booking.create!(check_in: @sat, check_out: @sat + 7, guests_count: 2, first_name: "A", last_name: "B",
+                    email: "a@b.fr", total_price_cents: 100_000, deposit_cents: 30_000, status: status)
+  end
+
   test "nothing is scheduled while Beds24 is not configured" do
     with_beds24_env(token: nil, room: nil) do
-      assert_no_enqueued_jobs { WeeklyRate.create!(week_start: @sat, price_cents: 100_000) }
+      assert_no_enqueued_jobs do
+        WeeklyRate.create!(week_start: @sat + 7, price_cents: 100_000, blocked: true)
+        new_booking(status: :confirmed)
+      end
     end
   end
 
-  test "saving a rate schedules one debounced push, not one per rate" do
+  test "saving rates schedules one debounced calendar push, not one per rate" do
     with_beds24_env do
       assert_enqueued_jobs 1, only: Beds24::PushCalendarJob do
         3.times { |i| WeeklyRate.create!(week_start: @sat + 7 * i, price_cents: 100_000) }
@@ -31,20 +39,34 @@ class Beds24PushCalendarJobTest < ActiveJob::TestCase
     end
   end
 
-  test "confirming or cancelling a booking schedules a push, a pending request does not" do
+  test "ticking or unticking Famille schedules a mirror booking push" do
     with_beds24_env do
-      booking = nil
-      assert_no_enqueued_jobs(only: Beds24::PushCalendarJob) do
-        booking = Booking.create!(check_in: @sat, check_out: @sat + 7, guests_count: 2, first_name: "A", last_name: "B",
-                                  email: "a@b.fr", total_price_cents: 100_000, deposit_cents: 30_000)
-      end
-      assert_enqueued_jobs(1, only: Beds24::PushCalendarJob) { booking.update!(status: :confirmed) }
-      Rails.cache.clear # fin de la fenêtre anti-rafale
-      assert_enqueued_jobs(1, only: Beds24::PushCalendarJob) { booking.update!(status: :cancelled) }
+      rate = nil
+      assert_enqueued_with(job: Beds24::PushBookingJob) { rate = WeeklyRate.create!(week_start: @sat, price_cents: 100_000, blocked: true) }
+      assert_no_enqueued_jobs(only: Beds24::PushBookingJob) { rate.update!(price_cents: 120_000) }
+      assert_enqueued_with(job: Beds24::PushBookingJob, args: [ rate ]) { rate.update!(blocked: false) }
     end
   end
 
-  test "the job sends the planned calendar to the configured room" do
+  test "confirming or cancelling a booking schedules a mirror push, a pending request does not" do
+    with_beds24_env do
+      booking = nil
+      assert_no_enqueued_jobs(only: Beds24::PushBookingJob) { booking = new_booking }
+      assert_enqueued_with(job: Beds24::PushBookingJob, args: [ booking ]) { booking.update!(status: :confirmed) }
+      assert_enqueued_with(job: Beds24::PushBookingJob, args: [ booking ]) { booking.update!(status: :cancelled) }
+      assert_no_enqueued_jobs(only: Beds24::PushCalendarJob) { booking.update!(status: :confirmed) }
+    end
+  end
+
+  test "deleting a mirrored booking schedules its cancellation in Beds24" do
+    with_beds24_env do
+      booking = new_booking(status: :cancelled)
+      booking.update_column(:beds24_booking_id, 777)
+      assert_enqueued_with(job: Beds24::CancelBookingJob, args: [ 777 ]) { booking.destroy! }
+    end
+  end
+
+  test "the calendar job sends the planned calendar to the configured room" do
     with_beds24_env do
       WeeklyRate.create!(week_start: @sat, price_cents: 220_000)
       sent = nil
@@ -56,6 +78,16 @@ class Beds24PushCalendarJobTest < ActiveJob::TestCase
       assert_equal 2, sent.last.size
       assert_equal({ from: @sat.iso8601, to: @sat.iso8601, price1: 315, price2: 417, minStay: 7, maxStay: 21, numAvail: 1, override: "none" },
                    sent.last.first)
+    end
+  end
+
+  test "the booking job pushes the record through BookingSync" do
+    with_beds24_env do
+      booking = new_booking(status: :confirmed)
+      fake = Object.new
+      fake.define_singleton_method(:post_bookings) { |b| b.map { { "success" => true, "new" => { "id" => 4242 } } } }
+      Beds24::Client.stub_new(fake) { Beds24::PushBookingJob.perform_now(booking) }
+      assert_equal 4242, booking.reload.beds24_booking_id
     end
   end
 end
