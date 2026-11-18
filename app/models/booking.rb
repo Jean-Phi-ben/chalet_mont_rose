@@ -280,9 +280,14 @@ class Booking < ApplicationRecord
     self.terms_version     ||= TERMS_VERSION
   end
 
+  # Champs recopiés dans la réservation miroir Beds24 (voir Beds24::BookingSync#booking_payload) :
+  # en modifier un sur une réservation confirmée met la copie à jour (montant, voyageurs, contact).
+  BEDS24_MIRRORED_ATTRIBUTES = %w[status check_in check_out guests_count first_name last_name
+                                  email phone total_price_cents].freeze
+
   def beds24_relevant_change?
-    dates_changed = saved_change_to_check_in? || saved_change_to_check_out?
-    (saved_change_to_status? || dates_changed) && (confirmed? || status_before_last_save == "confirmed")
+    saved_changes.keys.intersect?(BEDS24_MIRRORED_ATTRIBUTES) &&
+      (confirmed? || status_before_last_save == "confirmed")
   end
 
   def schedule_beds24_booking_push

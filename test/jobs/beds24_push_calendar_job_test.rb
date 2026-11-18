@@ -58,6 +58,19 @@ class Beds24PushCalendarJobTest < ActiveJob::TestCase
     end
   end
 
+  test "changing the amount, guests or contact of a confirmed booking updates its mirror" do
+    with_beds24_env do
+      booking = new_booking(status: :confirmed)
+      assert_enqueued_with(job: Beds24::PushBookingJob, args: [ booking ]) { booking.update!(total_price_cents: 1_234_500) }
+      assert_enqueued_with(job: Beds24::PushBookingJob, args: [ booking ]) { booking.update!(guests_count: 8) }
+      assert_enqueued_with(job: Beds24::PushBookingJob, args: [ booking ]) { booking.update!(phone: "+33600000000") }
+      assert_no_enqueued_jobs(only: Beds24::PushBookingJob) { booking.update!(message: "Arrivée tardive") }
+
+      pending = new_booking
+      assert_no_enqueued_jobs(only: Beds24::PushBookingJob) { pending.update!(total_price_cents: 1_234_500) }
+    end
+  end
+
   test "deleting a mirrored booking schedules its cancellation in Beds24" do
     with_beds24_env do
       booking = new_booking(status: :cancelled)
