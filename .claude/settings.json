@@ -13,11 +13,11 @@
       "Bash(cloudflared:*)",
       "Bash(docker compose:*)",
       "Bash(docker ps:*)",
-      "Bash(docker logs:*)"
+      "Bash(docker logs:*)",
+      "Bash(git push:*)"
     ],
     "deny": [
       "Bash(rm -rf:*)",
-      "Bash(git push:*)",
       "Bash(docker compose down -v:*)",
       "Bash(docker system prune:*)",
       "Bash(docker volume rm:*)"
