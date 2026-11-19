@@ -5,6 +5,10 @@
 # Lot 2 — réservations : chaque réservation confirmée et chaque semaine « Famille » a une
 #   réservation miroir dans Beds24 (Beds24::BookingSync), créée, modifiée ou annulée par
 #   Beds24::PushBookingJob ; c'est elle qui ferme les nuits sur Airbnb.
+# Lot 3 (à venir) — import des réservations Airbnb dans le site. Attention : Airbnb collecte et
+#   reverse lui-même la taxe de séjour. Une réservation importée d'Airbnb doit donc avoir
+#   `tourist_tax_cents = 0` (ou être exclue) pour ne pas figurer dans les déclarations de taxe de
+#   séjour du site (TouristTaxPeriod), qui la feraient payer une seconde fois à la commune.
 #
 # Réglages : Beds24::Config (variables BEDS24_*). Sans BEDS24_REFRESH_TOKEN et BEDS24_ROOM_ID,
 # rien n'est envoyé.

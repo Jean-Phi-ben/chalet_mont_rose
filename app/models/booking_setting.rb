@@ -5,6 +5,9 @@ class BookingSetting < ApplicationRecord
   validates :cleaning_fee_cents, numericality: { greater_than_or_equal_to: 0, only_integer: true }
   validates :tourist_tax_per_person_per_night_cents, numericality: { greater_than_or_equal_to: 0, only_integer: true }
 
+  # Le ménage est intégré au prix de nuit Airbnb (Beds24::AirbnbPricing) : le changer repousse le calendrier.
+  after_commit { Beds24.schedule_calendar_push if saved_change_to_cleaning_fee_cents? }
+
   def self.current
     first || create!
   end

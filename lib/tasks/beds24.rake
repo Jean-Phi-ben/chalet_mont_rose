@@ -25,7 +25,7 @@ namespace :beds24 do
     abort "Aucun tarif à venir." if entries.empty?
 
     coef = Beds24::AirbnbPricing.coefficient
-    puts "Mode Airbnb #{Beds24::Config.airbnb_mode} : coefficient #{coef.round(4)} (× #{(1 + Beds24::Config.airbnb_cleaning_rate).to_f} ménage)"
+    puts "Mode Airbnb #{Beds24::Config.airbnb_mode} : coefficient #{coef.round(4)}, ménage #{planner.cleaning_week_cents / 100} € par semaine inclus"
     puts format("%-10s → %-10s %7s %7s %4s %4s %4s  %s", "du", "au", "direct", "airbnb", "min", "max", "dispo", "override")
     entries.each do |e|
       puts format("%s → %s %7d %7d %4d %4d %5d  %s", e.from, e.to, e.price1, e.price2, e.minStay, e.maxStay, e.numAvail, e.override)

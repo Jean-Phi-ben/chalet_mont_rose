@@ -6,8 +6,10 @@ module Beds24
   #   :net_ht          — préserver le net HT (SARL assujettie, TVA sur la commission
   #                      autoliquidée)                      : P / (1 − f·(1 + τ))   τ = TVA hébergement
   #   :no_vat_recovery — TVA 20 % sur la commission non récupérable : P / (1 − f·1,2)
-  # Le ménage (10 % du séjour sur le site) est intégré au prix de nuit : Airbnb ne sait pas
-  # exprimer des frais de ménage en pourcentage, et ses frais hôte s'y appliquent aussi.
+  # Le ménage (forfait par semaine sur le site, BookingSetting#cleaning_fee_cents) est intégré au
+  # prix de nuit : les frais de ménage Airbnb sont comptés une fois par séjour, alors que le site
+  # les facture par semaine (2 semaines = 2 forfaits) ; les frais hôte s'y appliquent aussi.
+  # La taxe de séjour n'y figure pas : Airbnb la collecte et la reverse lui-même.
   module AirbnbPricing
     module_function
 
@@ -25,9 +27,10 @@ module Beds24
       end
     end
 
-    # Prix de nuit Airbnb en euros entiers (arrondi au-dessus) pour une semaine à `week_cents`.
-    def nightly_euros(week_cents, mode: Config.airbnb_mode, cleaning_rate: Config.airbnb_cleaning_rate)
-      week = BigDecimal(week_cents.to_s) * (1 + BigDecimal(cleaning_rate.to_s)) * coefficient(mode)
+    # Prix de nuit Airbnb en euros entiers (arrondi au-dessus) pour une semaine à `week_cents`,
+    # ménage de la semaine (`cleaning_week_cents`) compris.
+    def nightly_euros(week_cents, cleaning_week_cents:, mode: Config.airbnb_mode)
+      week = (BigDecimal(week_cents.to_s) + BigDecimal(cleaning_week_cents.to_s)) * coefficient(mode)
       (week / 7 / 100).ceil.to_i
     end
 

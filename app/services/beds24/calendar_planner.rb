@@ -18,14 +18,18 @@ module Beds24
       end
     end
 
-    def initialize(rates: WeeklyRate.upcoming.ordered, from: Date.current.beginning_of_week(:saturday))
+    def initialize(rates: WeeklyRate.upcoming.ordered, from: Date.current.beginning_of_week(:saturday),
+                   cleaning_week_cents: BookingSetting.current.cleaning_fee_cents)
       @rates = rates.to_a.select { |r| r.week_start >= from }
+      @cleaning_week_cents = cleaning_week_cents.to_i
     end
+
+    attr_reader :cleaning_week_cents
 
     def entries
       nightly = @rates.flat_map do |rate|
         price1 = AirbnbPricing.direct_nightly_euros(rate.price_cents)
-        price2 = AirbnbPricing.nightly_euros(rate.price_cents)
+        price2 = AirbnbPricing.nightly_euros(rate.price_cents, cleaning_week_cents: @cleaning_week_cents)
         (rate.week_start...rate.week_end).map do |night|
           Entry.new(from: night, to: night, price1: price1, price2: price2,
                     minStay: Config.min_stay_nights, maxStay: Config.max_stay_nights,

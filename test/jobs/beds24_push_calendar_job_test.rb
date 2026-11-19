@@ -39,6 +39,14 @@ class Beds24PushCalendarJobTest < ActiveJob::TestCase
     end
   end
 
+  test "changing the weekly cleaning fee schedules a calendar push, the tourist tax does not" do
+    with_beds24_env do
+      setting = BookingSetting.current
+      assert_no_enqueued_jobs(only: Beds24::PushCalendarJob) { setting.update!(tourist_tax_per_person_per_night_cents: 300) }
+      assert_enqueued_jobs(1, only: Beds24::PushCalendarJob) { setting.update!(cleaning_fee_cents: 45_000) }
+    end
+  end
+
   test "ticking or unticking Famille schedules a mirror booking push" do
     with_beds24_env do
       rate = nil
@@ -89,7 +97,7 @@ class Beds24PushCalendarJobTest < ActiveJob::TestCase
 
       assert_equal 42, sent.first
       assert_equal 2, sent.last.size
-      assert_equal({ from: @sat.iso8601, to: @sat.iso8601, price1: 315, price2: 417, minStay: 7, maxStay: 21, numAvail: 1, override: "none" },
+      assert_equal({ from: @sat.iso8601, to: @sat.iso8601, price1: 315, price2: 448, minStay: 7, maxStay: 21, numAvail: 1, override: "none" },
                    sent.last.first)
     end
   end
